@@ -1,0 +1,32 @@
+/*******************************************************************************
+ * Copyright (c) 2006 Koji Hisano <hisano@gmail.com>
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Common Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/cpl-v10.html
+ *
+ * Contributors:
+ *     Koji Hisano - initial API and implementation
+ *******************************************************************************/
+package jp.sf.skype.connector;
+
+public abstract class MessageProcessor {
+    private Object lock;
+    private ConnectorListener parent;
+
+    final void init(Object lock, ConnectorListener parent) {
+        this.lock = lock;
+    }
+
+    protected abstract void messageReceived(String message);
+
+    protected final void releaseLock() {
+        synchronized (lock) {
+            lock.notify();
+        }
+    }
+
+    protected final void processedAllMessages() {
+        Connector.getInstance().removeConnectorListener(parent);
+    }
+}

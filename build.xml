@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<project name="skype" default="jar" basedir=".">
+    <property name="build.dir" value="bin"/>
+    <property name="lib.dir" value="lib"/>
+    <property name="src.dir" value="src"/>
+    <property name="release.dir" value="release"/>
+
+    <target name="prepare">
+        <mkdir dir="${build.dir}"/>
+    </target>
+
+    <target name="compile" depends="prepare">
+        <javac srcdir="${src.dir}" destdir="${build.dir}" classpath="${lib.dir}/lib/swt.jar"/>
+    </target>
+
+    <target name="jar" depends="compile">
+        <jar basedir="${build.dir}" includes="**/**" destfile="${release.dir}/skype.jar"/>
+    </target>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+</project>
+
