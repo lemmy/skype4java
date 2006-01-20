@@ -151,19 +151,21 @@ public final class Application {
         public void messageReceived(final String message) {
             final String dataHeader = "APPLICATION " + getName() + " ";
             if (isConnectedMessage(message)) {
-                String streamId = message.substring(("APPLICATION " + getName() + " STREAMS ").length());
-                int delimiterIndex = streamId.indexOf(':');
-                String friendId = streamId.substring(0, delimiterIndex);
-                Friend friend;
-                try {
-                    friend = Skype.getContactList().getFriend(friendId);
-                } catch (SkypeException e) {
-                    throw new IllegalStateException("can't get friend: friendId = " + friendId);
+                String streamIds = message.substring(("APPLICATION " + getName() + " STREAMS ").length());
+                for (String streamId: streamIds.split(" ")) {
+                    int delimiterIndex = streamId.indexOf(':');
+                    String friendId = streamId.substring(0, delimiterIndex);
+                    Friend friend;
+                    try {
+                        friend = Skype.getContactList().getFriend(friendId);
+                    } catch (SkypeException e) {
+                        throw new IllegalStateException("can't get friend: friendId = " + friendId);
+                    }
+                    int number = Integer.parseInt(streamId.substring(delimiterIndex + 1));
+                    Stream stream = new Stream(Application.this, friend, number);
+                    streams.put(streamId, stream);
+                    fireConnected(stream);
                 }
-                int number = Integer.parseInt(streamId.substring(delimiterIndex + 1));
-                Stream stream = new Stream(Application.this, friend, number);
-                streams.put(streamId, stream);
-                fireConnected(stream);
             }
             if (message.startsWith(dataHeader)) {
                 handleData(message.substring(dataHeader.length()));
