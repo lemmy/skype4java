@@ -63,6 +63,14 @@ public final class Skype {
     public static String getVersion() throws SkypeException {
         return Utils.getProperty("SKYPEVERSION");
     }
+    
+    public static boolean isInstalled() {
+        return getInstalledPath() != null;
+    }
+
+    public static String getInstalledPath() {
+        return Connector.getInstance().getInstalledPath();
+    }
 
     public static boolean isRunning() throws SkypeException {
         try {

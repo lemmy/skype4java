@@ -41,6 +41,35 @@ public final class Win32Connector extends Connector {
         initResource();
     }
 
+    @Override
+    public String getInstalledPath() {
+        return getHKCUValue("Software\\Skype\\Phone", "SkypePath");
+    }
+
+    private String getHKCUValue(String keyName, String dataName) {
+        TCHAR key = new TCHAR(0, keyName, true);
+        int[] phkResult = new int[1];
+        if (OS.RegOpenKeyEx(OS.HKEY_CURRENT_USER, key, 0, OS.KEY_READ, phkResult) != 0) {
+            return null;
+        }
+        String result = null;
+        int[] lpcbData = new int[1];
+        if (OS.RegQueryValueEx(phkResult[0], new TCHAR(0, dataName, true), 0, null, (TCHAR) null, lpcbData) == 0) {
+            result = "";
+            int length = lpcbData[0] / TCHAR.sizeof;
+            if (length != 0) {
+                TCHAR lpData = new TCHAR(0, length);
+                if (OS.RegQueryValueEx(phkResult[0], new TCHAR(0, dataName, true), 0, null, lpData, lpcbData) == 0) {
+                    length = Math.max(0, lpData.length() - 1);
+                    result = lpData.toString(0, length);
+                }
+            }
+        }
+        if (phkResult[0] != 0)
+            OS.RegCloseKey(phkResult[0]);
+        return result;
+    }
+
     private void initResource() {
         final Object object = new Object();
         Thread thread = new Thread("Win32EventDispatcher") {

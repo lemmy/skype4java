@@ -10,10 +10,17 @@
  *******************************************************************************/
 package jp.sf.skype;
 
-import jp.sf.skype.Skype;
 import junit.framework.TestCase;
 
 public class SystemTest extends TestCase {
+    public void testIsInstalled() throws Exception {
+        assertTrue(Skype.isInstalled());
+    }
+
+    public void testGetInstalledPath() throws Exception {
+        assertEquals("C:\\Program Files\\Skype\\Phone\\Skype.exe", Skype.getInstalledPath());
+    }
+    
     public void testIsRunning() throws Exception {
         assertTrue(Skype.isRunning());
     }

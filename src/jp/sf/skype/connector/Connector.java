@@ -69,6 +69,8 @@ public abstract class Connector {
 
     protected abstract void sendCommand(String command);
 
+    public abstract String getInstalledPath();
+
     public final boolean isRunning() throws ConnectorException {
         return connect(getCommandResponseTime()) != Status.NOT_RUNNING;
     }
