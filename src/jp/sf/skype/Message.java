@@ -31,7 +31,7 @@ public final class Message {
     }
 
     public Date getStartTime() throws SkypeException {
-        return new Date(Long.parseLong(getProperty("TIMESTAMP")));
+        return Utils.parseUnixTime(getProperty("TIMESTAMP"));
     }
 
     public String getPartnerId() throws SkypeException {

@@ -12,7 +12,12 @@ package jp.sf.skype;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import jp.sf.skype.connector.Connector;
+import jp.sf.skype.connector.ConnectorException;
 
 public final class Friend {
     public enum Status {
@@ -149,5 +154,38 @@ public final class Friend {
 
     public void setDisplayName(String displayName) throws SkypeException {
         Utils.setProperty("USER", getId(), "DISPLAYNAME", displayName);
+    }
+    
+    public Message[] getAllMessages() throws SkypeException {
+        String[] ids = getHistory("MESSAGES");
+        Message[] messages = new Message[ids.length];
+        for (int i = 0; i < ids.length; i++) {
+            messages[i] = new Message(ids[i]);
+        }
+        List<Message> messageList = Arrays.asList(messages);
+        Collections.reverse(messageList);
+        return messageList.toArray(new Message[0]);
+    }
+
+    public Call[] getAllCalls() throws SkypeException {
+        String[] ids = getHistory("CALLS");
+        Call[] calls = new Call[ids.length];
+        for (int i = 0; i < ids.length; i++) {
+            calls[i] = new Call(ids[i]);
+        }
+        return calls;
+    }
+
+    private String[] getHistory(String type) throws SkypeException {
+        try {
+            String responseHeader = type + " ";
+            String response = Connector.getInstance().execute("SEARCH " + type + " " + getId(), responseHeader);
+            Utils.checkError(response);
+            String data = response.substring(responseHeader.length());
+            return Utils.convertToArray(data);
+        } catch (ConnectorException e) {
+            Utils.convertToSkypeException(e);
+            return null;
+        }
     }
 }

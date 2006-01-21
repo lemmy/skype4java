@@ -75,7 +75,7 @@ public final class Call {
     }
 
     public Date getStartTime() throws SkypeException {
-        return new Date(Long.parseLong(getProperty("TIMESTAMP")));
+        return Utils.parseUnixTime(getProperty("TIMESTAMP"));
     }
 
     public Friend getParter() throws SkypeException {

@@ -10,6 +10,9 @@
  *******************************************************************************/
 package jp.sf.skype;
 
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 import jp.sf.skype.connector.Connector;
 import jp.sf.skype.connector.ConnectorException;
 
@@ -129,6 +132,13 @@ final class Utils {
             array[i] = array[i].trim();
         }
         return array;
+    }
+
+    static Date parseUnixTime(String time) {
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        calendar.setTimeInMillis(Long.parseLong(time) * 1000);
+        calendar.setTimeZone(TimeZone.getDefault());
+        return calendar.getTime();
     }
 
     private Utils() {
