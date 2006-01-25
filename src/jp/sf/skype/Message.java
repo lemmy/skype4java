@@ -34,6 +34,10 @@ public final class Message {
         return Utils.parseUnixTime(getProperty("TIMESTAMP"));
     }
 
+    public User getParter() throws SkypeException {
+        return new User(getPartnerId());
+    }
+
     public String getPartnerId() throws SkypeException {
         return getProperty("PARTNER_HANDLE");
     }
