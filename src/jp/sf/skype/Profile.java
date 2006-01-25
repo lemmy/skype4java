@@ -50,8 +50,8 @@ public final class Profile {
             if (this == compared) {
                 return true;
             }
-            if (compared instanceof Friend) {
-                return toString().equals(((Friend) compared).getId());
+            if (compared instanceof CallForwardingRule) {
+                return toString().equals(((Profile) compared).toString());
             }
             return false;
         }
