@@ -268,14 +268,6 @@ public final class Profile {
         setProfileProperty("TIMEZONE", "" + newValue);
     }
 
-    public String getDisplayName() throws SkypeException {
-        return getProfileProperty("DISPLAYNAME");
-    }
-
-    public void setDisplayName(String newValue) throws SkypeException {
-        setProfileProperty("DISPLAYNAME", newValue);
-    }
-
     public boolean isVideoCapable() throws SkypeException {
         return Boolean.parseBoolean(getProfileProperty("IS_VIDEO_CAPABLE"));
     }
