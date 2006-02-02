@@ -90,17 +90,13 @@ public final class Stream {
         }
     }
 
-    public void addCommunicationListener(StreamListener listener) {
-        if (listener == null) {
-            throw new IllegalArgumentException("listener is null");
-        }
+    public void addStreamListener(StreamListener listener) {
+        Utils.checkNotNull("listener", listener);
         listeners.add(listener);
     }
 
-    public void removeCommunicationListener(StreamListener listener) {
-        if (listener == null) {
-            throw new IllegalArgumentException("listener is null");
-        }
+    public void removeStreamListener(StreamListener listener) {
+        Utils.checkNotNull("listener", listener);
         listeners.remove(listener);
     }
 
