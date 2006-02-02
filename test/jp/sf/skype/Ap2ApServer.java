@@ -17,11 +17,14 @@ public class Ap2ApServer {
         final Object lock = new Object();
         application.addApplicationListener(new ApplicationAdapter() {
             public void connected(final Stream stream) {
-                stream.addCommunicationListener(new StreamAdapter() {
+                stream.addStreamListener(new StreamAdapter() {
                     @Override
                     public void textReceived(String text) {
                         try {
                             stream.write(text);
+                            if ("disconnect".equals(text)) {
+                                stream.disconnect();
+                            }
                         } catch (SkypeException e) {
                             synchronized (lock) {
                                 lock.notify();
@@ -45,6 +48,13 @@ public class Ap2ApServer {
                         }
                     }
                 });
+            }
+            
+            @Override
+            public void disconnected(Stream stream) {
+                synchronized (lock) {
+                    lock.notify();
+                }
             }
         });
         synchronized (lock) {

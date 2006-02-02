@@ -150,9 +150,12 @@ public final class Application {
     private class DataListener implements ConnectorListener {
         public void messageReceived(final String message) {
             final String dataHeader = "APPLICATION " + getName() + " ";
-            if (isConnectedMessage(message)) {
+            if (isStreamMessage(message)) {
                 String streamIds = message.substring(("APPLICATION " + getName() + " STREAMS ").length());
                 for (String streamId: streamIds.split(" ")) {
+                    if (streams.containsKey(streamId)) {
+                        continue;
+                    }
                     int delimiterIndex = streamId.indexOf(':');
                     String friendId = streamId.substring(0, delimiterIndex);
                     Friend friend;
@@ -166,15 +169,23 @@ public final class Application {
                     streams.put(streamId, stream);
                     fireConnected(stream);
                 }
+                NEXT: for (String existedStreamId: streams.keySet()) {
+                    for (String streamId: streamIds.split(" ")) {
+                        if (existedStreamId.equals(streamId)) {
+                            continue;
+                        }
+                    }
+                    fireDisconnected(streams.get(existedStreamId));
+                }
             }
             if (message.startsWith(dataHeader)) {
                 handleData(message.substring(dataHeader.length()));
             }
         }
 
-        private boolean isConnectedMessage(final String message) {
+        private boolean isStreamMessage(final String message) {
             String header = "APPLICATION " + getName() + " STREAMS ";
-            return message.startsWith(header) && header.length() < message.length();
+            return message.startsWith(header);
         }
     }
 

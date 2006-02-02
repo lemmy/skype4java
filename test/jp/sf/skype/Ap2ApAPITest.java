@@ -22,8 +22,9 @@ public class Ap2ApAPITest extends TestCase {
             Stream stream = application.connect(friend);
             checkConnectableFriendsAfterConnecting(application);
             checkConnectedFriends(application, friend);
-            checkTextCommnunication(stream);
-            checkDatagramCommnunication(stream);
+            checkWrite(stream);
+            checkSend(stream);
+            checkDisconnect(application, stream);
         } finally {
             application.finish();
         }
@@ -45,10 +46,10 @@ public class Ap2ApAPITest extends TestCase {
         assertEquals(friend, connectableFriends[0]);
     }
 
-    private void checkTextCommnunication(Stream stream) throws Exception {
+    private void checkWrite(Stream stream) throws Exception {
         final Object lock = new Object();
         final String[] result = new String[1];
-        stream.addCommunicationListener(new StreamAdapter() {
+        stream.addStreamListener(new StreamAdapter() {
             @Override
             public void textReceived(String text) {
                 result[0] = text;
@@ -57,20 +58,21 @@ public class Ap2ApAPITest extends TestCase {
                 }
             }
         });
-        stream.write("Hello, World!");
         synchronized (lock) {
+            stream.write("Hello, World!");
             try {
                 lock.wait(10000);
             } catch (InterruptedException e) {
+                fail();
             }
         }
         assertEquals("Hello, World!", result[0]);
     }
 
-    private void checkDatagramCommnunication(Stream stream) throws Exception {
+    private void checkSend(Stream stream) throws Exception {
         final Object lock = new Object();
         final String[] result = new String[1];
-        stream.addCommunicationListener(new StreamAdapter() {
+        stream.addStreamListener(new StreamAdapter() {
             @Override
             public void datagramReceived(String datagram) {
                 result[0] = datagram;
@@ -79,13 +81,33 @@ public class Ap2ApAPITest extends TestCase {
                 }
             }
         });
-        stream.send("Hello, World!");
         synchronized (lock) {
+            stream.send("Hello, World!");
             try {
                 lock.wait(10000);
             } catch (InterruptedException e) {
+                fail();
             }
         }
         assertEquals("Hello, World!", result[0]);
+    }
+
+    private void checkDisconnect(Application application, Stream stream) throws Exception {
+        final Object lock = new Object();
+        application.addApplicationListener(new ApplicationAdapter() {
+            public void disconnected(Stream stream) {
+                synchronized (lock) {
+                    lock.notify();
+                }
+            }
+        });
+        synchronized (lock) {
+            stream.write("disconnect");
+            try {
+                lock.wait(10000);
+            } catch (InterruptedException e) {
+                fail();
+            }
+        }
     }
 }
