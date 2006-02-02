@@ -94,8 +94,11 @@ public class Ap2ApAPITest extends TestCase {
 
     private void checkDisconnect(Application application, Stream stream) throws Exception {
         final Object lock = new Object();
+        final boolean[] result = new boolean[1];
         application.addApplicationListener(new ApplicationAdapter() {
+            @Override
             public void disconnected(Stream stream) {
+                result[0] = true;
                 synchronized (lock) {
                     lock.notify();
                 }
@@ -109,5 +112,6 @@ public class Ap2ApAPITest extends TestCase {
                 fail();
             }
         }
+        assertTrue(result[0]);
     }
 }

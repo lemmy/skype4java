@@ -152,27 +152,31 @@ public final class Application {
             final String dataHeader = "APPLICATION " + getName() + " ";
             if (isStreamMessage(message)) {
                 String streamIds = message.substring(("APPLICATION " + getName() + " STREAMS ").length());
-                for (String streamId: streamIds.split(" ")) {
-                    if (streams.containsKey(streamId)) {
-                        continue;
+                if (!"".equals(streamIds)) {
+                    for (String streamId: streamIds.split(" ")) {
+                        if (streams.containsKey(streamId)) {
+                            continue;
+                        }
+                        int delimiterIndex = streamId.indexOf(':');
+                        String friendId = streamId.substring(0, delimiterIndex);
+                        Friend friend;
+                        try {
+                            friend = Skype.getContactList().getFriend(friendId);
+                        } catch (SkypeException e) {
+                            throw new IllegalStateException("can't get friend: friendId = " + friendId);
+                        }
+                        int number = Integer.parseInt(streamId.substring(delimiterIndex + 1));
+                        Stream stream = new Stream(Application.this, friend, number);
+                        streams.put(streamId, stream);
+                        fireConnected(stream);
                     }
-                    int delimiterIndex = streamId.indexOf(':');
-                    String friendId = streamId.substring(0, delimiterIndex);
-                    Friend friend;
-                    try {
-                        friend = Skype.getContactList().getFriend(friendId);
-                    } catch (SkypeException e) {
-                        throw new IllegalStateException("can't get friend: friendId = " + friendId);
-                    }
-                    int number = Integer.parseInt(streamId.substring(delimiterIndex + 1));
-                    Stream stream = new Stream(Application.this, friend, number);
-                    streams.put(streamId, stream);
-                    fireConnected(stream);
                 }
                 NEXT: for (String existedStreamId: streams.keySet()) {
-                    for (String streamId: streamIds.split(" ")) {
-                        if (existedStreamId.equals(streamId)) {
-                            continue;
+                    if (!"".equals(streamIds)) {
+                        for (String streamId: streamIds.split(" ")) {
+                            if (existedStreamId.equals(streamId)) {
+                                continue NEXT;
+                            }
                         }
                     }
                     fireDisconnected(streams.get(existedStreamId));

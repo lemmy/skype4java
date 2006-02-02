@@ -21,10 +21,11 @@ public class Ap2ApServer {
                     @Override
                     public void textReceived(String text) {
                         try {
-                            stream.write(text);
                             if ("disconnect".equals(text)) {
                                 stream.disconnect();
+                                return;
                             }
+                            stream.write(text);
                         } catch (SkypeException e) {
                             synchronized (lock) {
                                 lock.notify();
@@ -39,12 +40,11 @@ public class Ap2ApServer {
                         try {
                             stream.send(datagram);
                         } catch (SkypeException e) {
-                            System.err.println("couldn't respond to " + stream.getFriend().getId() + " datagram");
-                            e.printStackTrace();
-                        } finally {
                             synchronized (lock) {
                                 lock.notify();
                             }
+                            System.err.println("couldn't respond to " + stream.getFriend().getId() + " datagram");
+                            e.printStackTrace();
                         }
                     }
                 });
