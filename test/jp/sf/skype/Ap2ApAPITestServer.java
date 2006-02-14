@@ -10,10 +10,10 @@
  *******************************************************************************/
 package jp.sf.skype;
 
-public class Ap2ApServer {
+public final class Ap2ApAPITestServer {
     public static void main(String[] args) throws Exception {
         Skype.setDebug(true);
-        final Application application = Skype.addApplication("AP2AP");
+        final Application application = Skype.addApplication(Ap2ApAPITest.APPLICATION_NAME);
         final Object lock = new Object();
         application.addApplicationListener(new ApplicationAdapter() {
             public void connected(final Stream stream) {

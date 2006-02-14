@@ -12,10 +12,12 @@ package jp.sf.skype;
 
 import junit.framework.TestCase;
 
-public class Ap2ApAPITest extends TestCase {
+public final class Ap2ApAPITest extends TestCase {
+    static final String APPLICATION_NAME = Ap2ApAPITest.class.getName();
+    
     public void testApplication() throws Exception {
         Skype.setDebug(true);
-        Application application = Skype.addApplication("AP2AP");
+        Application application = Skype.addApplication(APPLICATION_NAME);
         Friend friend = TestData.getFriend();
         checkConnectableFriendsBeforeConnecting(application);
         try {
