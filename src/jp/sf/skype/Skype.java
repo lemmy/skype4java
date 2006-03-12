@@ -278,7 +278,7 @@ public final class Skype {
 
     public static Application addApplication(String name) throws SkypeException {
         Application application = new Application(name);
-        application.initialize();
+        application.initalize();
         return application;
     }
 
