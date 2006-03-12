@@ -73,6 +73,16 @@ public final class Call {
             Utils.convertToSkypeException(e);
         }
     }
+    
+    public void forward() throws SkypeException {
+        try {
+            Connector.getInstance().setDebug(true);
+            String response = Connector.getInstance().execute("ALTER CALL " + getId() + " END FORWARD_CALL");
+            Utils.checkError(response);
+        } catch (ConnectorException e) {
+            Utils.convertToSkypeException(e);
+        }
+    }
 
     public Date getStartTime() throws SkypeException {
         return Utils.parseUnixTime(getProperty("TIMESTAMP"));
