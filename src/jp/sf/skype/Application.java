@@ -30,7 +30,7 @@ public final class Application {
         this.name = name;
     }
 
-    void initalize() throws SkypeException {
+    void initialize() throws SkypeException {
         try {
             String createResponse = Connector.getInstance().execute("CREATE APPLICATION " + name);
             try {

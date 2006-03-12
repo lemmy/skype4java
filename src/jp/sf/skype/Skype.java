@@ -278,7 +278,7 @@ public final class Skype {
 
     public static Application addApplication(String name) throws SkypeException {
         Application application = new Application(name);
-        application.initalize();
+        application.initialize();
         return application;
     }
 
@@ -360,7 +360,7 @@ public final class Skype {
     public static void removeMessageReceivedListener(MessageReceivedListener listener) {
         Utils.checkNotNull("listener", listener);
         messageReceivedListeners.remove(listener);
-        if (!messageReceivedListeners.isEmpty()) {
+        if (messageReceivedListeners.isEmpty()) {
             Connector.getInstance().removeConnectorListener(messageListener);
             messageListener = null;
         }
@@ -400,7 +400,7 @@ public final class Skype {
     public static void removeCallReceivedListener(CallReceivedListener listener) {
         Utils.checkNotNull("listener", listener);
         callReceivedListeners.remove(listener);
-        if (!callReceivedListeners.isEmpty()) {
+        if (callReceivedListeners.isEmpty()) {
             Connector.getInstance().removeConnectorListener(callListener);
             callListener = null;
         }

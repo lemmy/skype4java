@@ -88,7 +88,7 @@ public final class Call {
         return Utils.parseUnixTime(getProperty("TIMESTAMP"));
     }
 
-    public User getParter() throws SkypeException {
+    public User getPartner() throws SkypeException {
         return new User(getPartnerId());
     }
 
