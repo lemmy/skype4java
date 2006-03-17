@@ -278,42 +278,76 @@ public final class Skype {
 
     public static Application addApplication(String name) throws SkypeException {
         Application application = new Application(name);
-        application.initalize();
+        application.initialize();
         return application;
     }
 
+    /**
+     * Gets the current audio input device of this Skype.
+     * @return the audio input device name of this Skype, or <code>null</code> if the device is the default.
+     * @throws SkypeException
+     * @see #setAudioInputDevice(String)
+     */
+    public static String getAudioInputDevice() throws SkypeException {
+        return convertDefaultDeviceToNull(Utils.getProperty("AUDIO_IN"));
+    }
+
+    /**
+     * Gets the current audio output device of this Skype.
+     * @return the audio output device name of this Skype, or <code>null</code> if the device is the default.
+     * @throws SkypeException
+     * @see #setAudioOutputDevice(String)
+     */
+    public static String getAudioOutputDevice() throws SkypeException {
+        return convertDefaultDeviceToNull(Utils.getProperty("AUDIO_OUT"));
+    }
+
     public static String getVideoDevice() throws SkypeException {
-        try {
-            String responseHeader = "VIDEO_IN ";
-            String response = Connector.getInstance().execute("GET VIDEO_IN", responseHeader);
-            Utils.checkError(response);
-            String name = response.substring(responseHeader.length());
-            if (!isDefaultVideoDevice(name)) {
-                return name;
-            } else {
-                return null;
-            }
-        } catch (ConnectorException e) {
-            Utils.convertToSkypeException(e);
+        return convertDefaultDeviceToNull(Utils.getProperty("VIDEO_IN"));
+    }
+
+    private static String convertDefaultDeviceToNull(String deviceName) {
+        if (isDefaultDevice(deviceName)) {
             return null;
+        } else {
+            return deviceName;
         }
     }
 
-    public static void setVideoDevice(String name) throws SkypeException {
-        try {
-            if (isDefaultVideoDevice(name)) {
-                name = "";
-            }
-            String responseHeader = "VIDEO_IN ";
-            String response = Connector.getInstance().execute("SET VIDEO_IN " + name, responseHeader);
-            Utils.checkError(response);
-        } catch (ConnectorException e) {
-            Utils.convertToSkypeException(e);
-        }
+    private static boolean isDefaultDevice(String deviceName) {
+        return "".equals(deviceName);
     }
 
-    private static boolean isDefaultVideoDevice(String name) {
-        return name == null || "".equals(name);
+    /**
+     * Sets the current audio input device of this Skype.
+     * @param deviceName the audio input device name. A <code>null</code> value means the default.
+     * @throws SkypeException
+     * @see #getAudioInputDevice()
+     */
+    public static void setAudioInputDevice(String deviceName) throws SkypeException {
+        Utils.setProperty("AUDIO_IN", convertNullToDefaultDevice(deviceName));
+    }
+
+    /**
+     * Sets the current audio output device of this Skype.
+     * @param deviceName the audio output device name. A <code>null</code> value means the default.
+     * @throws SkypeException
+     * @see #getAudioOutputDevice()
+     */
+    public static void setAudioOutputDevice(String deviceName) throws SkypeException {
+        Utils.setProperty("AUDIO_OUT", convertNullToDefaultDevice(deviceName));
+    }
+
+    public static void setVideoDevice(String deviceName) throws SkypeException {
+        Utils.setProperty("VIDEO_IN", convertNullToDefaultDevice(deviceName));
+    }
+
+    private static String convertNullToDefaultDevice(String deviceName) {
+        if (deviceName == null) {
+            return "";
+        } else {
+            return deviceName;
+        }
     }
 
     public static void openVideoTestWindow() throws SkypeException {
