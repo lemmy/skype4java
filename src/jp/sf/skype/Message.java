@@ -50,8 +50,8 @@ public final class Message {
         return Type.valueOf(getProperty("TYPE"));
     }
 
-    public Type getStatus() throws SkypeException {
-        return Type.valueOf(getProperty("STATUS"));
+    public Status getStatus() throws SkypeException {
+        return Status.valueOf(getProperty("STATUS"));
     }
 
     public int getFailureReasonCode() throws SkypeException {
