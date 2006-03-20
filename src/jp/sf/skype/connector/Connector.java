@@ -41,7 +41,7 @@ public abstract class Connector {
         if (debug) {
             debugListener = new ConnectorListener() {
                 public void messageReceived(String message) {
-                    System.out.println("<- " + message);
+                    System.err.println("<- " + message);
                 }
             };
             addConnectorListener(debugListener);
@@ -91,7 +91,7 @@ public abstract class Connector {
         addConnectorListener(listener, false);
         synchronized (lock) {
             if (isDebug()) {
-                System.out.println("-> " + command);
+                System.err.println("-> " + command);
             }
             sendCommand(command);
             try {
@@ -149,7 +149,7 @@ public abstract class Connector {
         synchronized (lock) {
             try {
                 if (isDebug()) {
-                    System.out.println("-> " + command);
+                    System.err.println("-> " + command);
                 }
                 sendCommand(command);
                 lock.wait(commandResponseTime);
