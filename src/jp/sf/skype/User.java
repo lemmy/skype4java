@@ -34,7 +34,7 @@ public class User {
      * HANDLE HASCALLEQUIPMENT BUDDYSTATUS, ISAUTHORIZED ISBLOCKED
      * LASTONLINETIMESTAMP
      */
-    User(String id) {
+    public User(String id) {
         this.id = id;
     }
 
