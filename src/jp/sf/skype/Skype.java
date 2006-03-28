@@ -12,6 +12,7 @@ package jp.sf.skype;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import jp.sf.skype.Call.Status;
 import jp.sf.skype.connector.Connector;
@@ -414,12 +415,25 @@ public final class Skype {
         try {
             if (callListener == null) {
                 callListener = new ConnectorListener() {
+                    private List<String> deliveredCalls = new LinkedList<String>();
                     public void messageReceived(String call) {
-                        if (call.startsWith("CALL ")) {
+                        if (call.startsWith("CALL ") && call.contains(" STATUS ")) {
                             String data = call.substring("CALL ".length());
                             String id = data.substring(0, data.indexOf(' '));
-                            if (call.endsWith(" STATUS RINGING")) {
-                                fireCallReceived(new Call(id));
+                            Call.Status status = Call.Status.valueOf(data.substring(data.lastIndexOf(' ') + 1));
+                            switch (status) {
+                                case RINGING:
+                                    synchronized(deliveredCalls) {
+                                        if (!deliveredCalls.contains(id)) {
+                                            deliveredCalls.add(id);
+                                            fireCallReceived(new Call(id));
+                                        }
+                                    }
+                                    break;
+                                case FINISHED: case MISSED: case REFUSED:
+                                    synchronized(deliveredCalls) {
+                                        deliveredCalls.remove(id);
+                                    }
                             }
                         }
                     }
