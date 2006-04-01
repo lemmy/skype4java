@@ -122,7 +122,7 @@ final class Utils {
 
     static void checkNotNull(String name, Object value) {
         if (value == null) {
-            throw new IllegalArgumentException(name + " is null");
+            throw new NullPointerException("The " + name + " must not be null.");
         }
     }
 
