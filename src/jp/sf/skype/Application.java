@@ -25,6 +25,10 @@ public final class Application {
     private Map<String, Stream> streams = new HashMap<String, Stream>();
     private ConnectorListener dataListener = new DataListener();
 
+    private boolean isFinished;
+    private Object isFinishedFieldMutex = new Object();
+    private Thread shutdownHookForFinish;
+
     Application(String name) {
         assert name != null;
         this.name = name;
@@ -42,19 +46,36 @@ public final class Application {
                 Utils.checkError(retryResponse);
             }
             Connector.getInstance().addConnectorListener(dataListener);
+            shutdownHookForFinish = new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        Connector.getInstance().execute("DELETE APPLICATION " + Application.this.getName());
+                        System.err.println("finish");
+                    } catch (ConnectorException e) {
+                    }
+                }
+            };
+            Runtime.getRuntime().addShutdownHook(shutdownHookForFinish);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
         }
     }
 
     public void finish() throws SkypeException {
-        try {
-            String response = Connector.getInstance().execute("DELETE APPLICATION " + getName());
-            Utils.checkError(response);
-        } catch (ConnectorException e) {
-            Utils.convertToSkypeException(e);
+        synchronized (isFinishedFieldMutex) {
+            if (!isFinished) {
+                try {
+                    String response = Connector.getInstance().execute("DELETE APPLICATION " + getName());
+                    Utils.checkError(response);
+                } catch (ConnectorException e) {
+                    Utils.convertToSkypeException(e);
+                }
+                Connector.getInstance().removeConnectorListener(dataListener);
+                Runtime.getRuntime().removeShutdownHook(shutdownHookForFinish);
+                isFinished = true;
+            }
         }
-        Connector.getInstance().removeConnectorListener(dataListener);
     }
 
     private void handleData(String dataResponse) {
