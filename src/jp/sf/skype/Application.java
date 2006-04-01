@@ -11,9 +11,11 @@
 package jp.sf.skype;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import jp.sf.skype.connector.Connector;
 import jp.sf.skype.connector.ConnectorException;
 import jp.sf.skype.connector.ConnectorListener;
@@ -21,7 +23,7 @@ import jp.sf.skype.connector.MessageProcessor;
 
 public final class Application {
     private final String name;
-    private List<ApplicationListener> listeners = new ArrayList<ApplicationListener>();
+    private List<ApplicationListener> listeners = Collections.synchronizedList(new ArrayList<ApplicationListener>());
     private Map<String, Stream> streams = new HashMap<String, Stream>();
     private ConnectorListener dataListener = new DataListener();
 
@@ -155,16 +157,12 @@ public final class Application {
     }
 
     public void addApplicationListener(ApplicationListener listener) {
-        if (listener == null) {
-            throw new IllegalArgumentException("listener is null");
-        }
+        Utils.checkNotNull("listener", listener);
         listeners.add(listener);
     }
 
     public void removeApplicationListener(ApplicationListener listener) {
-        if (listener == null) {
-            throw new IllegalArgumentException("listener is null");
-        }
+        Utils.checkNotNull("listener", listener);
         listeners.remove(listener);
     }
 
