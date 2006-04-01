@@ -53,7 +53,6 @@ public final class Application {
                 public void run() {
                     try {
                         Connector.getInstance().execute("DELETE APPLICATION " + Application.this.getName());
-                        System.err.println("finish");
                     } catch (ConnectorException e) {
                     }
                 }
