@@ -52,6 +52,30 @@ public final class Skype {
     private static List<MessageReceivedListener> messageReceivedListeners = new ArrayList<MessageReceivedListener>();
     private static ConnectorListener callListener;
     private static List<CallReceivedListener> callReceivedListeners = new ArrayList<CallReceivedListener>();
+    private static Thread userThread;
+    private static Object userThreadFieldMutex = new Object();
+    
+    public static void setDeamon(boolean on) {
+        synchronized (userThreadFieldMutex) {
+            if (!on && userThread == null) {
+                userThread = new Thread("SkypeUserThread") {
+                    public void run() {
+                        Object wait = new Object();
+                        synchronized (wait) {
+                            try {
+                                wait.wait();
+                            } catch (InterruptedException e) {
+                            }
+                        }
+                    };
+                };
+                userThread.start();
+            } else if (on && userThread != null) {
+                userThread.interrupt();
+                userThread = null;
+            }
+        }
+    }
 
     public static void setDebug(boolean on) throws SkypeException {
         try {
