@@ -11,10 +11,14 @@
 package jp.sf.skype.connector;
 
 public class ConnectorException extends Exception {
-    ConnectorException() {
+    public ConnectorException() {
     }
 
-    ConnectorException(String message) {
+    public ConnectorException(String message) {
         super(message);
+    }
+
+    public ConnectorException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

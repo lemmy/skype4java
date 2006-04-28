@@ -10,7 +10,16 @@
  *******************************************************************************/
 package jp.sf.skype.connector;
 
-public class NotAttachedException extends ConnectorException {
-    NotAttachedException() {
+import jp.sf.skype.connector.Connector.Status;
+
+public final class NotAttachedException extends ConnectorException {
+    private final Status status;
+
+    NotAttachedException(Status status) {
+        this.status = status;
+    }
+
+    public Status getStatus() {
+        return status;
     }
 }

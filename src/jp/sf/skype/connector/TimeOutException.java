@@ -10,8 +10,8 @@
  *******************************************************************************/
 package jp.sf.skype.connector;
 
-public class TimeOutException extends ConnectorException {
-    TimeOutException(String message) {
+public final class TimeOutException extends ConnectorException {
+    public TimeOutException(String message) {
         super(message);
     }
 }
