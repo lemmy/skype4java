@@ -25,6 +25,15 @@ import org.eclipse.swt.internal.win32.WNDCLASS;
 import org.eclipse.swt.widgets.Display;
 
 public final class WindowsConnector extends Connector {
+    private static WindowsConnector instance;
+    
+    public static synchronized WindowsConnector getInstance() {
+        if (instance == null) {
+            instance = new WindowsConnector();
+        }
+        return instance;
+    }
+
     private static final int ATTACH_SUCCESS = 0;
     private static final int ATTACH_PENDING_AUTHORIZATION = 1;
     private static final int ATTACH_REFUSED = 2;
@@ -34,21 +43,10 @@ public final class WindowsConnector extends Connector {
     private static final int ATTACH_MESSAGE_ID = OS.RegisterWindowMessage(new TCHAR(0, "SkypeControlAPIAttach", true));
     private static final int DISCOVER_MESSAGE_ID = OS.RegisterWindowMessage(new TCHAR(0, "SkypeControlAPIDiscover", true));
     
-    private static WindowsConnector instance;
-
-    private boolean isInitialized;
-
     private Display display;
     private TCHAR windowClass;
     private int windowHandle;
     private int skypeWindowHandle;
-    
-    public static synchronized WindowsConnector getInstance() {
-        if (instance == null) {
-            instance = new WindowsConnector();
-        }
-        return instance;
-    }
 
     private WindowsConnector() {
     }
@@ -83,52 +81,9 @@ public final class WindowsConnector extends Connector {
     }
 
     @Override
-    protected synchronized Status connect(int timeout) throws ConnectorException {
-        if (!isInitialized) {
-            initialized(timeout);
-            isInitialized = true;
-        }
+    protected void initialize(int timeout) throws ConnectorException {
         final Object object = new Object();
-        ConnectorListener listener = new ConnectorListener() {
-            public void messageReceived(String message) {
-                if (message.startsWith("TRIED TO ATTACH")) {
-                    removeConnectorListener(this);
-                    synchronized (object) {
-                        object.notify();
-                    }
-                }
-            }
-        };
-        try {
-            addConnectorListener(listener, false);
-        } catch (ConnectorException e) {
-            throw new InternalError("The listener couldn't be added."); // The flow must not reach here.
-        }
-        synchronized (object) {
-            try {
-                long start = System.currentTimeMillis();
-                long restTime = timeout;
-                while (0 <= restTime) {
-                    OS.SendMessage(HWND_BROADCAST, DISCOVER_MESSAGE_ID, windowHandle, 0);
-                    object.wait(1000);
-                    Status status = getStatus();
-                    if (status != Status.NOT_RUNNING) {
-                        return status;
-                    }
-                    restTime = timeout - (System.currentTimeMillis() - start);
-                }
-                throw new TimeOutException("Trying to connect failed by timeout.");
-            } catch (InterruptedException e) {
-                throw new ConnectorException("Trying to connect was interrupted.", e);
-            } finally {
-                removeConnectorListener(listener);
-            }
-        }
-    }
-
-    private void initialized(int timeout) throws ConnectorException {
-        final Object object = new Object();
-        Thread thread = new Thread("Win32EventDispatcher") {
+        Thread thread = new Thread("SkypeEventDispatcher") {
             public void run() {
                 display = new Display();
                 windowClass = new TCHAR(0, "" + System.currentTimeMillis() + (int) (Math.random() * 1000), true);
@@ -165,10 +120,50 @@ public final class WindowsConnector extends Connector {
                 long start = System.currentTimeMillis();
                 object.wait(timeout);
                 if (timeout <= System.currentTimeMillis() - start) {
-                    throw new ConnectorException("The Win32 connector couldn't be initialized by timeout.");
+                    throw new ConnectorException("The Windows connector couldn't be initialized by timeout.");
                 }
             } catch (InterruptedException e) {
-                throw new ConnectorException("The Win32 connector initialization was interrupted.", e);
+                throw new ConnectorException("The Windows connector initialization was interrupted.", e);
+            }
+        }
+    }
+
+    @Override
+    protected Status connectImpl(int timeout) throws ConnectorException {
+        final Object object = new Object();
+        ConnectorListener listener = new ConnectorListener() {
+            public void messageReceived(String message) {
+                if (message.startsWith("TRIED TO ATTACH")) {
+                    removeConnectorListener(this);
+                    synchronized (object) {
+                        object.notify();
+                    }
+                }
+            }
+        };
+        try {
+            addConnectorListener(listener, false);
+        } catch (ConnectorException e) {
+            throw new InternalError("The listener couldn't be added."); // The flow must not reach here.
+        }
+        synchronized (object) {
+            try {
+                long start = System.currentTimeMillis();
+                long restTime = timeout;
+                while (0 <= restTime) {
+                    OS.SendMessage(HWND_BROADCAST, DISCOVER_MESSAGE_ID, windowHandle, 0);
+                    object.wait(1000);
+                    Status status = getStatus();
+                    if (status != Status.NOT_RUNNING) {
+                        return status;
+                    }
+                    restTime = timeout - (System.currentTimeMillis() - start);
+                }
+                throw new TimeOutException("Trying to connect failed by timeout.");
+            } catch (InterruptedException e) {
+                throw new ConnectorException("Trying to connect was interrupted.", e);
+            } finally {
+                removeConnectorListener(listener);
             }
         }
     }
@@ -213,6 +208,12 @@ public final class WindowsConnector extends Connector {
             }
         }
         return OS.DefWindowProc(hwnd, msg, wParam, lParam);
+    }
+
+    @Override
+    protected void disposeImpl() {
+        // TODO WindowsConnector#disposeImpl()
+        throw new UnsupportedOperationException("WindowsConnector#disposeImpl() is not implemented yet.");
     }
 
     @Override

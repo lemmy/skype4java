@@ -52,6 +52,7 @@ public abstract class Connector {
 
     private Status status = Status.NOT_RUNNING;
 
+    private boolean isInitialized;
     private int connectTimeout = 60000;
     private int commandTimeout = 10000;
     private List<ConnectorListener> listeners = Collections.synchronizedList(new ArrayList<ConnectorListener>());
@@ -110,11 +111,28 @@ public abstract class Connector {
         return "skype";
     }
 
-    public final Status connect() throws ConnectorException {
-        return connect(getConnectTimeout());
+    public final synchronized Status connect() throws ConnectorException {
+        int timeout = getConnectTimeout();
+        if (!isInitialized) {
+            initialize(timeout);
+            isInitialized = true;
+        }
+        return connectImpl(timeout);
     }
 
-    protected abstract Status connect(int timeout) throws ConnectorException;
+    protected abstract void initialize(int timeout) throws ConnectorException;
+
+    protected abstract Status connectImpl(int timeout) throws ConnectorException;
+    
+    public final synchronized void dispose() throws ConnectorException {
+        if (!isInitialized) {
+            return;
+        }
+        disposeImpl();
+        isInitialized = false;
+    }
+
+    protected abstract void disposeImpl();
 
     public final boolean isRunning() throws ConnectorException {
         try {
