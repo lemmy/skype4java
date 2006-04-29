@@ -199,7 +199,7 @@ public abstract class Connector {
         return execute(command, responseHeaders, true);
     }
 
-    private String execute(String command, final String[] responseHeaders, boolean checkAttached) throws ConnectorException {
+    protected String execute(String command, final String[] responseHeaders, boolean checkAttached) throws ConnectorException {
         Utils.checkNotNull("command", command);
         Utils.checkNotNull("responseHeaders", responseHeaders);
         if (checkAttached) {
