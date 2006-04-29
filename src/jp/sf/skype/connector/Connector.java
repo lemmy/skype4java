@@ -285,10 +285,10 @@ public abstract class Connector {
 
     protected final void addConnectorListener(ConnectorListener listener, boolean checkAttached) throws ConnectorException {
         Utils.checkNotNull("listener", listener);
+        listeners.add(listener);
         if (checkAttached) {
             assureAttached();
         }
-        listeners.add(listener);
     }
 
     public final void removeConnectorListener(ConnectorListener listener) {
