@@ -10,6 +10,6 @@
  *******************************************************************************/
 package jp.sf.skype;
 
-public interface CallListener {
-    void statusChanged();
+public interface CallStatusChangedListener {
+    void statusChanged(Call call);
 }

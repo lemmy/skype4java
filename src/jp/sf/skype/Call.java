@@ -10,7 +10,11 @@
  *******************************************************************************/
 package jp.sf.skype;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+
 import jp.sf.skype.connector.Connector;
 import jp.sf.skype.connector.ConnectorException;
 
@@ -36,6 +40,7 @@ public final class Call {
     }
 
     private final String id;
+    private final List<CallStatusChangedListener> listeners = Collections.synchronizedList(new ArrayList<CallStatusChangedListener>());
 
     Call(String id) {
         this.id = id;
@@ -43,6 +48,23 @@ public final class Call {
 
     public String getId() {
         return id;
+    }
+
+    public void addCallStatusChangedListener(CallStatusChangedListener listener) {
+        Utils.checkNotNull("listener", listener);
+        listeners.add(listener);
+    }
+
+    public void removeCallStatusChangedListener(CallStatusChangedListener listener) {
+        Utils.checkNotNull("listener", listener);
+        listeners.remove(listener);
+    }
+
+    void fireStatusChanged(Status status) {
+        CallStatusChangedListener[] listeners = this.listeners.toArray(new CallStatusChangedListener[0]); // イベント通知中にリストが変更される可能性があるため
+        for (CallStatusChangedListener listener : listeners) {
+            listener.statusChanged(this);
+        }
     }
 
     public void hold() throws SkypeException {
