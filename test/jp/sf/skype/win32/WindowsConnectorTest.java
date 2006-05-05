@@ -18,6 +18,7 @@ public final class WindowsConnectorTest extends TestCase {
         TestUtils.showMessageDialog("Open [Tools - Options - Privacy - Manage other programs' access to Skype] and ensure that there is no java application (JAVAW.EXE or JAVA.EXE), please.");
         TestUtils.showMessageDialog("Select [Another program wants to use Skype - Do not allow this program to use Skype] when Skype shows the authorization dialog, please.");
         assertEquals(Connector.Status.REFUSED, WindowsConnector.getInstance().connect());
+        TestUtils.showMessageDialog("Open [Tools - Options - Privacy - Manage other programs' access to Skype] and ensure that there is no java application (JAVAW.EXE or JAVA.EXE) for next test, please.");
     }
 
     public void testNotAvailableAfterTryingToConnect() throws Exception {
