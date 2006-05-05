@@ -10,6 +10,6 @@
  *******************************************************************************/
 package jp.sf.skype.connector;
 
-public interface ConnectorListener {
-    void messageReceived(String message);
+public interface ConnectorStatusChangedListener {
+    void statusChanged(Connector.Status newStatus);
 }

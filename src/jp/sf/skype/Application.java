@@ -18,14 +18,14 @@ import java.util.Map;
 
 import jp.sf.skype.connector.Connector;
 import jp.sf.skype.connector.ConnectorException;
-import jp.sf.skype.connector.ConnectorListener;
+import jp.sf.skype.connector.ConnectorMessageReceivedListener;
 import jp.sf.skype.connector.MessageProcessor;
 
 public final class Application {
     private final String name;
     private List<ApplicationListener> listeners = Collections.synchronizedList(new ArrayList<ApplicationListener>());
     private Map<String, Stream> streams = new HashMap<String, Stream>();
-    private ConnectorListener dataListener = new DataListener();
+    private ConnectorMessageReceivedListener dataListener = new DataListener();
 
     private boolean isFinished;
     private Object isFinishedFieldMutex = new Object();
@@ -47,7 +47,7 @@ public final class Application {
                 String retryResponse = Connector.getInstance().execute("CREATE APPLICATION " + name);
                 Utils.checkError(retryResponse);
             }
-            Connector.getInstance().addConnectorListener(dataListener);
+            Connector.getInstance().addConnectorMessageReceivedListener(dataListener);
             shutdownHookForFinish = new Thread() {
                 @Override
                 public void run() {
@@ -72,7 +72,7 @@ public final class Application {
                 } catch (ConnectorException e) {
                     Utils.convertToSkypeException(e);
                 }
-                Connector.getInstance().removeConnectorListener(dataListener);
+                Connector.getInstance().removeConnectorMessageReceivedListener(dataListener);
                 Runtime.getRuntime().removeShutdownHook(shutdownHookForFinish);
                 isFinished = true;
             }
@@ -165,7 +165,7 @@ public final class Application {
         listeners.remove(listener);
     }
 
-    private class DataListener implements ConnectorListener {
+    private class DataListener implements ConnectorMessageReceivedListener {
         public void messageReceived(final String message) {
             final String dataHeader = "APPLICATION " + getName() + " ";
             if (isStreamMessage(message)) {

@@ -12,20 +12,21 @@ package jp.sf.skype;
 
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
+
 import junit.framework.Assert;
 
-final class TestUtils {
-    static void showCheckDialog(String message) {
+public final class TestUtils {
+    public static void showCheckDialog(String message) {
         JOptionPane pane = new JOptionPane(message, JOptionPane.QUESTION_MESSAGE, JOptionPane.YES_NO_OPTION);
-        JDialog dialog = pane.createDialog(null, "ƒeƒXƒg");
+        JDialog dialog = pane.createDialog(null, "Check by the tester");
         dialog.setVisible(true);
         int result = ((Integer) pane.getValue()).intValue();
         if (result != JOptionPane.YES_OPTION) {
-            Assert.fail(message + " ¨ Ž¸”s");
+            Assert.fail("\"" + message + "\" -> Failed");
         }
     }
 
-    static void showMessageDialog(String message) {
+    public static void showMessageDialog(String message) {
         JOptionPane.showMessageDialog(null, message);
     }
 

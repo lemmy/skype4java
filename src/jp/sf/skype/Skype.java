@@ -17,7 +17,7 @@ import java.util.List;
 import jp.sf.skype.Call.Status;
 import jp.sf.skype.connector.Connector;
 import jp.sf.skype.connector.ConnectorException;
-import jp.sf.skype.connector.ConnectorListener;
+import jp.sf.skype.connector.ConnectorMessageReceivedListener;
 import jp.sf.skype.connector.MessageProcessor;
 
 public final class Skype {
@@ -48,9 +48,9 @@ public final class Skype {
 
     private static ContactList contactList;
     private static Profile profile;
-    private static ConnectorListener messageListener;
+    private static ConnectorMessageReceivedListener messageListener;
     private static List<MessageReceivedListener> messageReceivedListeners = new ArrayList<MessageReceivedListener>();
-    private static ConnectorListener callListener;
+    private static ConnectorMessageReceivedListener callListener;
     private static List<CallReceivedListener> callReceivedListeners = new ArrayList<CallReceivedListener>();
     private static Thread userThread;
     private static Object userThreadFieldMutex = new Object();
@@ -398,7 +398,7 @@ public final class Skype {
         messageReceivedListeners.add(listener);
         try {
             if (messageListener == null) {
-                messageListener = new ConnectorListener() {
+                messageListener = new ConnectorMessageReceivedListener() {
                     public void messageReceived(String message) {
                         if (message.startsWith("MESSAGE ")) {
                             String data = message.substring("MESSAGE ".length());
@@ -409,7 +409,7 @@ public final class Skype {
                         }
                     }
                 };
-                Connector.getInstance().addConnectorListener(messageListener);
+                Connector.getInstance().addConnectorMessageReceivedListener(messageListener);
             }
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
@@ -420,7 +420,7 @@ public final class Skype {
         Utils.checkNotNull("listener", listener);
         messageReceivedListeners.remove(listener);
         if (messageReceivedListeners.isEmpty()) {
-            Connector.getInstance().removeConnectorListener(messageListener);
+            Connector.getInstance().removeConnectorMessageReceivedListener(messageListener);
             messageListener = null;
         }
     }
@@ -438,7 +438,7 @@ public final class Skype {
         callReceivedListeners.add(listener);
         try {
             if (callListener == null) {
-                callListener = new ConnectorListener() {
+                callListener = new ConnectorMessageReceivedListener() {
                     private List<String> deliveredCalls = new LinkedList<String>();
                     public void messageReceived(String call) {
                         if (call.startsWith("CALL ") && call.contains(" STATUS ")) {
@@ -462,7 +462,7 @@ public final class Skype {
                         }
                     }
                 };
-                Connector.getInstance().addConnectorListener(callListener);
+                Connector.getInstance().addConnectorMessageReceivedListener(callListener);
             }
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
@@ -473,7 +473,7 @@ public final class Skype {
         Utils.checkNotNull("listener", listener);
         callReceivedListeners.remove(listener);
         if (callReceivedListeners.isEmpty()) {
-            Connector.getInstance().removeConnectorListener(callListener);
+            Connector.getInstance().removeConnectorMessageReceivedListener(callListener);
             callListener = null;
         }
     }

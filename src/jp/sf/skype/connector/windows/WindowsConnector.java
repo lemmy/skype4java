@@ -14,8 +14,7 @@ import java.io.UnsupportedEncodingException;
 
 import jp.sf.skype.connector.Connector;
 import jp.sf.skype.connector.ConnectorException;
-import jp.sf.skype.connector.ConnectorListener;
-import jp.sf.skype.connector.TimeOutException;
+import jp.sf.skype.connector.ConnectorMessageReceivedListener;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.internal.Callback;
@@ -38,11 +37,14 @@ public final class WindowsConnector extends Connector {
     private static final int ATTACH_PENDING_AUTHORIZATION = 1;
     private static final int ATTACH_REFUSED = 2;
     private static final int ATTACH_NOT_AVAILABLE = 3;
+    private static final int ATTACH_API_AVAILABLE = 0x8001;
     private static final int HWND_BROADCAST = 0xffff;
     private static final int WM_COPYDATA = 0x004a;
     private static final int ATTACH_MESSAGE_ID = OS.RegisterWindowMessage(new TCHAR(0, "SkypeControlAPIAttach", true));
     private static final int DISCOVER_MESSAGE_ID = OS.RegisterWindowMessage(new TCHAR(0, "SkypeControlAPIDiscover", true));
-    
+
+    private static final String CONNECTOR_STATUS_CHANGED_MESSAGE = "ConnectorStatusChanged";
+
     private Display display;
     private TCHAR windowClass;
     private int windowHandle;
@@ -131,10 +133,9 @@ public final class WindowsConnector extends Connector {
     @Override
     protected Status connectImpl(int timeout) throws ConnectorException {
         final Object object = new Object();
-        ConnectorListener listener = new ConnectorListener() {
+        ConnectorMessageReceivedListener listener = new ConnectorMessageReceivedListener() {
             public void messageReceived(String message) {
-                if (message.startsWith("TRIED TO ATTACH")) {
-                    removeConnectorListener(this);
+                if (message.equals(CONNECTOR_STATUS_CHANGED_MESSAGE)) {
                     synchronized (object) {
                         object.notify();
                     }
@@ -142,39 +143,39 @@ public final class WindowsConnector extends Connector {
             }
         };
         try {
-            addConnectorListener(listener, false);
+            addConnectorMessageReceivedListener(listener, false);
         } catch (ConnectorException e) {
             throw new InternalError("The listener couldn't be added."); // The flow must not reach here.
         }
         synchronized (object) {
             try {
-                long start = System.currentTimeMillis();
-                long restTime = timeout;
-                while (0 <= restTime) {
+                while (true) {
                     OS.SendMessage(HWND_BROADCAST, DISCOVER_MESSAGE_ID, windowHandle, 0);
-                    object.wait(1000);
+                    long start = System.currentTimeMillis();
+                    object.wait(timeout);
+                    if (timeout <= System.currentTimeMillis() - start) {
+                        setStatus(Status.NOT_RUNNING);
+                    }
                     Status status = getStatus();
-                    if (status != Status.NOT_RUNNING) {
+                    if (status != Status.PENDING_AUTHORIZATION) {
                         return status;
                     }
-                    restTime = timeout - (System.currentTimeMillis() - start);
+                    Thread.sleep(1000);
                 }
-                throw new TimeOutException("Trying to connect failed by timeout.");
             } catch (InterruptedException e) {
                 throw new ConnectorException("Trying to connect was interrupted.", e);
             } finally {
-                removeConnectorListener(listener);
+                removeConnectorMessageReceivedListener(listener);
             }
         }
     }
 
     int messageReceived(int hwnd, int msg, int wParam, int lParam) {
         if (msg == ATTACH_MESSAGE_ID) {
-            if (lParam == ATTACH_PENDING_AUTHORIZATION) {
-                setStatus(Status.PENDING_AUTHORIZATION);
-                return 1;
-            }
             switch (lParam) {
+                case ATTACH_PENDING_AUTHORIZATION:
+                    setStatus(Status.PENDING_AUTHORIZATION);
+                    break;
                 case ATTACH_SUCCESS:
                     skypeWindowHandle = wParam;
                     setStatus(Status.ATTACHED);
@@ -185,8 +186,11 @@ public final class WindowsConnector extends Connector {
                 case ATTACH_NOT_AVAILABLE:
                     setStatus(Status.NOT_AVAILABLE);
                     break;
+                case ATTACH_API_AVAILABLE:
+                    setStatus(Status.API_AVAILABLE);
+                    break;
             }
-            fireMessageReceived("TRIED TO ATTACH");
+            fireMessageReceived(CONNECTOR_STATUS_CHANGED_MESSAGE);
             return 1;
         } else if (msg == WM_COPYDATA) {
             if (wParam == skypeWindowHandle) {

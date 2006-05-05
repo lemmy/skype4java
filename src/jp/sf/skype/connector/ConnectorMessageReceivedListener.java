@@ -10,23 +10,6 @@
  *******************************************************************************/
 package jp.sf.skype.connector;
 
-public abstract class MessageProcessor {
-    private Object lock;
-    private ConnectorMessageReceivedListener parent;
-
-    final void init(Object lock, ConnectorMessageReceivedListener parent) {
-        this.lock = lock;
-    }
-
-    protected abstract void messageReceived(String message);
-
-    protected final void releaseLock() {
-        synchronized (lock) {
-            lock.notify();
-        }
-    }
-
-    protected final void processedAllMessages() {
-        Connector.getInstance().removeConnectorMessageReceivedListener(parent);
-    }
+public interface ConnectorMessageReceivedListener {
+    void messageReceived(String receivedMessage);
 }

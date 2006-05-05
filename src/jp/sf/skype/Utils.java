@@ -24,7 +24,7 @@ final class Utils {
         } else if (e instanceof jp.sf.skype.connector.TimeOutException) {
             r = new TimeOutException(e.getMessage());
         } else {
-            throw new IllegalStateException("can't convert connector exception to skype exception");
+            r = new SkypeException(e.getMessage());
         }
         r.initCause(e);
         throw r;

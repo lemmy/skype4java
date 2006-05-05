@@ -17,7 +17,7 @@ import java.util.List;
 
 public abstract class Connector {
     public enum Status {
-        ATTACHED, REFUSED, NOT_AVAILABLE, PENDING_AUTHORIZATION, NOT_RUNNING;
+        PENDING_AUTHORIZATION, ATTACHED, REFUSED, NOT_AVAILABLE, API_AVAILABLE, NOT_RUNNING;
     }
 
     private static Connector instance;
@@ -48,43 +48,50 @@ public abstract class Connector {
     }
 
     private boolean debug = false;
-    private ConnectorListener debugListener;
+    private ConnectorMessageReceivedListener debugListener;
+    private Object debugFieldMutex = new Object();
 
     private Status status = Status.NOT_RUNNING;
 
     private boolean isInitialized;
-    private int connectTimeout = 60000;
+    private int connectTimeout = 10000;
     private int commandTimeout = 10000;
-    private List<ConnectorListener> listeners = Collections.synchronizedList(new ArrayList<ConnectorListener>());
+    private List<ConnectorMessageReceivedListener> messageReceivedListeners = Collections.synchronizedList(new ArrayList<ConnectorMessageReceivedListener>());
+    private List<ConnectorStatusChangedListener> statusChangedListeners = Collections.synchronizedList(new ArrayList<ConnectorStatusChangedListener>());
     private int commandCount;
 
     protected Connector() {
     }
 
     public final void setDebug(boolean on) throws ConnectorException {
-        if (debug == on) {
-            return;
-        }
-        debug = on;
-        if (debug) {
-            debugListener = new ConnectorListener() {
-                public void messageReceived(String message) {
-                    System.err.println("<- " + message);
-                }
-            };
-            addConnectorListener(debugListener);
-        } else {
-            removeConnectorListener(debugListener);
-            debugListener = null;
+        synchronized (debugFieldMutex) {
+            if (debug == on) {
+                return;
+            }
+            debug = on;
+            if (debug) {
+                debugListener = new ConnectorMessageReceivedListener() {
+                    public void messageReceived(String message) {
+                        System.err.println("<- " + message);
+                    }
+                };
+                addConnectorMessageReceivedListener(debugListener);
+            } else {
+                removeConnectorMessageReceivedListener(debugListener);
+                debugListener = null;
+            }
         }
     }
 
     private boolean isDebug() {
         return debug;
     }
-    
-    protected final void setStatus(Status status) {
-        this.status = status;
+
+    protected final void setStatus(Status newStatus) {
+        if (status != newStatus) {
+            status = newStatus;
+            fireStatusChanged(newStatus);
+        }
     }
 
     public final Status getStatus() {
@@ -150,13 +157,13 @@ public abstract class Connector {
         Utils.checkNotNull("processor", processor);
         assureAttached();
         final Object lock = new Object();
-        ConnectorListener listener = new ConnectorListener() {
+        ConnectorMessageReceivedListener listener = new ConnectorMessageReceivedListener() {
             public void messageReceived(String message) {
                 processor.messageReceived(message);
             }
         };
         processor.init(lock, listener);
-        addConnectorListener(listener, false);
+        addConnectorMessageReceivedListener(listener, false);
         if (isDebug()) {
             System.err.println("-> " + command);
         }
@@ -173,7 +180,7 @@ public abstract class Connector {
             } catch (InterruptedException e) {
                 throw new ConnectorException("The '" + command + "' command was interrupted.", e);
             } finally {
-                removeConnectorListener(listener);
+                removeConnectorMessageReceivedListener(listener);
             }
         }
     }
@@ -207,7 +214,7 @@ public abstract class Connector {
         }
         final Object lock = new Object();
         final String[] response = new String[1];
-        ConnectorListener listener = new ConnectorListener() {
+        ConnectorMessageReceivedListener listener = new ConnectorMessageReceivedListener() {
             public void messageReceived(String message) {
                 for (String responseHeader : responseHeaders) {
                     if (message.startsWith(responseHeader)) {
@@ -220,7 +227,7 @@ public abstract class Connector {
                 }
             }
         };
-        addConnectorListener(listener, false);
+        addConnectorMessageReceivedListener(listener, false);
         if (isDebug()) {
             System.err.println("-> " + command);
         }
@@ -237,7 +244,7 @@ public abstract class Connector {
             } catch (InterruptedException e) {
                 throw new ConnectorException("The '" + command + "' command was interrupted.");
             } finally {
-                removeConnectorListener(listener);
+                removeConnectorMessageReceivedListener(listener);
             }
         }
         return response[0];
@@ -279,30 +286,52 @@ public abstract class Connector {
         }
     }
 
-    public final void addConnectorListener(ConnectorListener listener) throws ConnectorException {
-        addConnectorListener(listener, true);
+    public final void addConnectorMessageReceivedListener(ConnectorMessageReceivedListener listener) throws ConnectorException {
+        addConnectorMessageReceivedListener(listener, true);
     }
 
-    protected final void addConnectorListener(ConnectorListener listener, boolean checkAttached) throws ConnectorException {
+    protected final void addConnectorMessageReceivedListener(ConnectorMessageReceivedListener listener, boolean checkAttached) throws ConnectorException {
         Utils.checkNotNull("listener", listener);
-        listeners.add(listener);
+        messageReceivedListeners.add(listener);
         if (checkAttached) {
             assureAttached();
         }
     }
 
-    public final void removeConnectorListener(ConnectorListener listener) {
+    public final void removeConnectorMessageReceivedListener(ConnectorMessageReceivedListener listener) {
         Utils.checkNotNull("listener", listener);
-        listeners.remove(listener);
+        messageReceivedListeners.remove(listener);
     }
 
     protected final void fireMessageReceived(final String message) {
         assert message != null;
         new Thread("MessageSender") {
             public void run() {
-                ConnectorListener[] listeners = Connector.this.listeners.toArray(new ConnectorListener[0]);
-                for (ConnectorListener listener : listeners) {
+                ConnectorMessageReceivedListener[] listeners = messageReceivedListeners.toArray(new ConnectorMessageReceivedListener[0]);
+                for (ConnectorMessageReceivedListener listener : listeners) {
                     listener.messageReceived(message);
+                }
+            };
+        }.start();
+    }
+
+    public final void addConnectorStatusChangedListener(ConnectorStatusChangedListener listener) throws ConnectorException {
+        Utils.checkNotNull("listener", listener);
+        statusChangedListeners.add(listener);
+    }
+
+    public final void removeConnectorStatusChangedListener(ConnectorStatusChangedListener listener) {
+        Utils.checkNotNull("listener", listener);
+        statusChangedListeners.remove(listener);
+    }
+
+    protected final void fireStatusChanged(final Status status) {
+        assert status != null;
+        new Thread("StatusSender") {
+            public void run() {
+                ConnectorStatusChangedListener[] listeners = statusChangedListeners.toArray(new ConnectorStatusChangedListener[0]);
+                for (ConnectorStatusChangedListener listener : listeners) {
+                    listener.statusChanged(status);
                 }
             };
         }.start();
