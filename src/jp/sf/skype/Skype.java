@@ -14,6 +14,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
 import jp.sf.skype.Call.Status;
 import jp.sf.skype.connector.Connector;
 import jp.sf.skype.connector.ConnectorException;
@@ -48,8 +49,12 @@ public final class Skype {
 
     private static ContactList contactList;
     private static Profile profile;
+    private static Object messageListenerMutex = new Object();
     private static ConnectorMessageReceivedListener messageListener;
     private static List<MessageReceivedListener> messageReceivedListeners = new ArrayList<MessageReceivedListener>();
+    private static Object chatMessageListenerMutex = new Object();
+    private static ConnectorMessageReceivedListener chatMessageListener;
+    private static List<ChatMessageReceivedListener> chatMessageReceivedListeners = new ArrayList<ChatMessageReceivedListener>();
     private static ConnectorMessageReceivedListener callListener;
     private static List<CallReceivedListener> callReceivedListeners = new ArrayList<CallReceivedListener>();
     private static Thread userThread;
@@ -395,41 +400,89 @@ public final class Skype {
 
     public static void addMessageReceivedListener(MessageReceivedListener listener) throws SkypeException {
         Utils.checkNotNull("listener", listener);
-        messageReceivedListeners.add(listener);
-        try {
-            if (messageListener == null) {
-                messageListener = new ConnectorMessageReceivedListener() {
-                    public void messageReceived(String message) {
-                        if (message.startsWith("MESSAGE ")) {
-                            String data = message.substring("MESSAGE ".length());
-                            String id = data.substring(0, data.indexOf(' '));
-                            if (message.endsWith(" STATUS RECEIVED")) {
-                                fireMessageReceived(new Message(id));
+        synchronized (messageListenerMutex) {
+            messageReceivedListeners.add(listener);
+            try {
+                if (messageListener == null) {
+                    messageListener = new ConnectorMessageReceivedListener() {
+                        public void messageReceived(String message) {
+                            if (message.startsWith("MESSAGE ")) {
+                                String data = message.substring("MESSAGE ".length());
+                                String id = data.substring(0, data.indexOf(' '));
+                                if (message.endsWith(" STATUS RECEIVED")) {
+                                    fireMessageReceived(new Message(id));
+                                }
                             }
                         }
-                    }
-                };
-                Connector.getInstance().addConnectorMessageReceivedListener(messageListener);
+                    };
+                    Connector.getInstance().addConnectorMessageReceivedListener(messageListener);
+                }
+            } catch (ConnectorException e) {
+                Utils.convertToSkypeException(e);
             }
-        } catch (ConnectorException e) {
-            Utils.convertToSkypeException(e);
         }
     }
 
     public static void removeMessageReceivedListener(MessageReceivedListener listener) {
         Utils.checkNotNull("listener", listener);
-        messageReceivedListeners.remove(listener);
-        if (messageReceivedListeners.isEmpty()) {
-            Connector.getInstance().removeConnectorMessageReceivedListener(messageListener);
-            messageListener = null;
+        synchronized (messageListenerMutex) {
+            messageReceivedListeners.remove(listener);
+            if (messageReceivedListeners.isEmpty()) {
+                Connector.getInstance().removeConnectorMessageReceivedListener(messageListener);
+                messageListener = null;
+            }
         }
     }
 
     private static void fireMessageReceived(Message message) {
         assert message != null;
-        MessageReceivedListener[] listeners = messageReceivedListeners.toArray(new MessageReceivedListener[0]); // イベント通知中にリストが変更される可能性があるため
+        MessageReceivedListener[] listeners = messageReceivedListeners.toArray(new MessageReceivedListener[0]);
         for (MessageReceivedListener listener : listeners) {
             listener.messageReceived(message);
+        }
+    }
+
+    public static void addChatMessageReceivedListener(ChatMessageReceivedListener listener) throws SkypeException {
+        Utils.checkNotNull("listener", listener);
+        synchronized (chatMessageListenerMutex) {
+            chatMessageReceivedListeners.add(listener);
+            try {
+                if (chatMessageListener == null) {
+                    chatMessageListener = new ConnectorMessageReceivedListener() {
+                        public void messageReceived(String message) {
+                            if (message.startsWith("MESSAGE ")) {
+                                String data = message.substring("MESSAGE ".length());
+                                String id = data.substring(0, data.indexOf(' '));
+                                if (message.endsWith(" STATUS RECEIVED")) {
+                                    fireChatMessageReceived(new ChatMessage(id));
+                                }
+                            }
+                        }
+                    };
+                    Connector.getInstance().addConnectorMessageReceivedListener(chatMessageListener);
+                }
+            } catch (ConnectorException e) {
+                Utils.convertToSkypeException(e);
+            }
+        }
+    }
+
+    public static void removeChatMessageReceivedListener(ChatMessageReceivedListener listener) {
+        Utils.checkNotNull("listener", listener);
+        synchronized (chatMessageListenerMutex) {
+            chatMessageReceivedListeners.remove(listener);
+            if (chatMessageReceivedListeners.isEmpty()) {
+                Connector.getInstance().removeConnectorMessageReceivedListener(messageListener);
+                messageListener = null;
+            }
+        }
+    }
+
+    private static void fireChatMessageReceived(ChatMessage message) {
+        assert message != null;
+        ChatMessageReceivedListener[] listeners = chatMessageReceivedListeners.toArray(new ChatMessageReceivedListener[0]);
+        for (ChatMessageReceivedListener listener : listeners) {
+            listener.chatMessageReceived(message);
         }
     }
 

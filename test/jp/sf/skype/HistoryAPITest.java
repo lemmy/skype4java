@@ -24,9 +24,9 @@ public class HistoryAPITest extends TestCase {
         assertEquals(Skype.getProfile().getId(), latest.getPartnerId());
         // TODO Invalid PROPとエラーが返ってくる(Skypeのバグ?)
 //      assertEquals(Skype.getProfile().getDisplayName(), latest.getPartnerDisplayName());
-        assertTrue(new Date().getTime() - 10000 <= latest.getStartTime().getTime());
+        assertTrue(new Date().getTime() - 10000 <= latest.getTime().getTime());
         assertEquals(Message.Type.TEXT, latest.getType());
-        assertEquals("テスト", latest.getMessage());
+        assertEquals("テスト", latest.getContent());
     }
 
     public void testGetAllCalls() throws Exception {

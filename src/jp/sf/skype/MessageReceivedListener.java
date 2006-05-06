@@ -11,5 +11,5 @@
 package jp.sf.skype;
 
 public interface MessageReceivedListener {
-    void messageReceived(Message message);
+    void messageReceived(Message receivedMessage);
 }

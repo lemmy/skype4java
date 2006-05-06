@@ -16,8 +16,7 @@ public class SkypeTest extends TestCase {
     public void testMessageReceived() throws Exception {
         final Object lock = new Object();
         final Message[] result = new Message[1];
-        Skype.addMessageReceivedListener(new MessageReceivedAdapter() {
-            @Override
+        Skype.addMessageReceivedListener(new MessageReceivedListener() {
             public void messageReceived(Message message) {
                 result[0] = message;
                 synchronized (lock) {
@@ -35,6 +34,6 @@ public class SkypeTest extends TestCase {
         Message message = result[0];
         assertEquals(TestData.getFriendId(), message.getPartnerId());
         assertEquals(TestData.getFriendDisplayName(), message.getPartnerDisplayName());
-        assertEquals("test", message.getMessage());
+        assertEquals("test", message.getContent());
     }
 }

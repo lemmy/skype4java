@@ -10,7 +10,6 @@
  *******************************************************************************/
 package jp.sf.skype;
 
-public class MessageReceivedAdapter implements MessageReceivedListener {
-    public void messageReceived(Message message) {
-    }
+public interface ChatMessageReceivedListener {
+    void chatMessageReceived(ChatMessage receivedChatMessage);
 }

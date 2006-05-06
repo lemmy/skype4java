@@ -12,18 +12,22 @@ package jp.sf.skype;
 
 import java.util.Date;
 
-public final class Message {
+public final class ChatMessage {
     public enum Type {
-        AUTHREQUEST, TEXT, CONTACTS, UNKNOWN;
+        SETTOPIC, SAID, ADDEDMEMBERS, SAWMEMBERS, CREATEDCHATWITH, LEFT, UNKNOWN;
     }
 
     public enum Status {
-        SENDING, SENT, FAILED, RECEIVED, READ, IGNORED, QUEUED;
+        SENDING, SENT, RECEIVED, READ;
+    }
+    
+    public enum LeaveReason {
+        USER_NOT_FOUND, USER_INCAPABLE, ADDER_MUST_BE_FRIEND, ADDED_MUST_BE_AUTHORIZED, UNSUBSCRIBE;
     }
 
     private final String id;
 
-    Message(String id) {
+    ChatMessage(String id) {
         this.id = id;
     }
 
@@ -35,6 +39,7 @@ public final class Message {
         return Utils.parseUnixTime(getProperty("TIMESTAMP"));
     }
 
+    /*
     public User getParter() throws SkypeException {
         return new User(getPartnerId());
     }
@@ -46,24 +51,48 @@ public final class Message {
     public String getPartnerDisplayName() throws SkypeException {
         return getProperty("PARTNER_DISPNAME");
     }
+    */
 
     public Type getType() throws SkypeException {
         return Type.valueOf(getProperty("TYPE"));
     }
 
     public Status getStatus() throws SkypeException {
-        return Status.valueOf(Utils.getPropertyWithCommandId("MESSAGE", getId(), "STATUS"));
+        return Status.valueOf(Utils.getPropertyWithCommandId("CHATMESSAGE", "MESSAGE", getId(), "STATUS"));
     }
 
-    public int getFailureReasonCode() throws SkypeException {
-        return Integer.parseInt(getProperty("FAILUREREASON"));
+    public LeaveReason getLeaveReason() throws SkypeException {
+        return LeaveReason.valueOf(getProperty("LEAVEREASON"));
     }
 
     public String getContent() throws SkypeException {
         return getProperty("BODY");
     }
 
+    public Chat getChat() throws SkypeException {
+        return new Chat(getProperty("CHATNAME"));
+    }
+
+    public User[] getAllUsers() throws SkypeException {
+        String value = getProperty("USERS");
+        if ("".equals(value)) {
+            return new User[0];
+        }
+        String[] ids = value.split(" ");
+        User[] users = new User[ids.length];
+        for (int i = 0; i < ids.length; i++) {
+            users[i] = new User(ids[i]);
+        }
+        return users;
+    }
+
+    /*
+    public boolean isSeen() throws SkypeException {
+        return Boolean.parseBoolean(getProperty("SEEN"));
+    }
+    */
+
     private String getProperty(String name) throws SkypeException {
-        return Utils.getProperty("MESSAGE", getId(), name);
+        return Utils.getProperty("CHATMESSAGE", "MESSAGE", getId(), name);
     }
 }

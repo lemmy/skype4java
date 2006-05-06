@@ -39,10 +39,31 @@ final class Utils {
         }
     }
 
-    static String getProperty(String type, String id, String name) throws SkypeException {
+    static String getPropertyWithCommandId(String type, String id, String name) throws SkypeException {
+        return getPropertyWithCommandId(type, type, id, name);
+    }
+
+    static String getPropertyWithCommandId(String commandType, String responseType, String id, String name) throws SkypeException {
         try {
-            String command = "GET " + type + " " + id + " " + name;
-            String responseHeader = type + " " + id + " " + name + " ";
+            String command = "GET " + commandType + " " + id + " " + name;
+            String responseHeader = responseType + " " + id + " " + name + " ";
+            String response = Connector.getInstance().executeWithId(command, responseHeader);
+            checkError(response);
+            return response.substring((responseHeader).length());
+        } catch (ConnectorException e) {
+            convertToSkypeException(e);
+            return null;
+        }
+    }
+
+    static String getProperty(String type, String id, String name) throws SkypeException {
+        return getProperty(type, type, id, name);
+    }
+
+    static String getProperty(String commandType, String responseType, String id, String name) throws SkypeException {
+        try {
+            String command = "GET " + commandType + " " + id + " " + name;
+            String responseHeader = responseType + " " + id + " " + name + " ";
             String response = Connector.getInstance().execute(command, responseHeader);
             checkError(response);
             return response.substring((responseHeader).length());
