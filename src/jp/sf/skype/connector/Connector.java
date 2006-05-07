@@ -50,9 +50,8 @@ public abstract class Connector {
     private boolean debug = false;
     private ConnectorMessageReceivedListener debugListener;
     private Object debugFieldMutex = new Object();
-
+    private String applicationName = "Skype API for Java";
     private Status status = Status.NOT_RUNNING;
-
     private boolean isInitialized;
     private int connectTimeout = 10000;
     private int commandTimeout = 10000;
@@ -85,6 +84,15 @@ public abstract class Connector {
 
     private boolean isDebug() {
         return debug;
+    }
+    
+    public final void setApplicationName(String applicationName) {
+        Utils.checkNotNull("applicationName", applicationName);
+        this.applicationName = applicationName;
+    }
+
+    public final String getApplicationName() {
+        return applicationName;
     }
 
     protected final void setStatus(Status newStatus) {
@@ -124,7 +132,16 @@ public abstract class Connector {
             initialize(timeout);
             isInitialized = true;
         }
-        return connectImpl(timeout);
+        Status status = connectImpl(timeout);
+        if (status == Status.ATTACHED) {
+            try {
+                execute("PROTOCOL 9999", new String[] {"PROTOCOL "}, false);
+                execute("NAME " + getApplicationName(), new String[] {"NAME " + getApplicationName()}, false);
+            } catch (TimeOutException e) {
+                status = Status.NOT_RUNNING;
+            }
+        }
+        return status;
     }
 
     protected abstract void initialize(int timeout) throws ConnectorException;
@@ -253,36 +270,12 @@ public abstract class Connector {
     protected abstract void sendCommand(String command);
 
     private void assureAttached() throws ConnectorException {
-        long start = System.currentTimeMillis();
-        int connectTimeout = getConnectTimeout();
         Status status = getStatus();
         if (status != Status.ATTACHED) {
-            status = tryToConnect();
-            while (status == Status.PENDING_AUTHORIZATION) {
-                if (connectTimeout / 5 != 0) {
-                    try {
-                        Thread.sleep(connectTimeout / 5);
-                    } catch (InterruptedException e) {
-                        throw new ConnectorException("Trying to connect was interrupted.", e);
-                    }
-                }
-                status = tryToConnect();
-                if (connectTimeout <= System.currentTimeMillis() - start) {
-                    break;
-                }
-            }
+            status = connect();
             if (status != Status.ATTACHED) {
                 throw new NotAttachedException(status);
             }
-        }
-    }
-
-    private Status tryToConnect() throws ConnectorException {
-        assert status != null;
-        try {
-            return connect();
-        } catch (TimeOutException e) {
-            throw new NotAttachedException(Status.NOT_RUNNING);
         }
     }
 

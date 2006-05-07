@@ -144,7 +144,7 @@ public class User {
         return Skype.chat(getId());
     }
 
-    public Message send(String message) throws SkypeException {
+    public ChatMessage send(String message) throws SkypeException {
         return Skype.chat(getId()).send(message);
     }
 
@@ -156,15 +156,15 @@ public class User {
         Utils.setProperty("USER", getId(), "DISPLAYNAME", displayName);
     }
     
-    public Message[] getAllMessages() throws SkypeException {
-        String[] ids = getHistory("MESSAGES");
-        Message[] messages = new Message[ids.length];
+    public ChatMessage[] getAllChatMessages() throws SkypeException {
+        String[] ids = getHistory("CHATMESSAGES");
+        ChatMessage[] messages = new ChatMessage[ids.length];
         for (int i = 0; i < ids.length; i++) {
-            messages[i] = new Message(ids[i]);
+            messages[i] = new ChatMessage(ids[i]);
         }
-        List<Message> messageList = Arrays.asList(messages);
+        List<ChatMessage> messageList = Arrays.asList(messages);
         Collections.reverse(messageList);
-        return messageList.toArray(new Message[0]);
+        return messageList.toArray(new ChatMessage[0]);
     }
 
     public Call[] getAllCalls() throws SkypeException {

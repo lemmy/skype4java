@@ -39,26 +39,24 @@ public final class ChatMessage {
         return Utils.parseUnixTime(getProperty("TIMESTAMP"));
     }
 
-    /*
-    public User getParter() throws SkypeException {
-        return new User(getPartnerId());
+    public User getSender() throws SkypeException {
+        return new User(getSenderId());
     }
 
-    public String getPartnerId() throws SkypeException {
-        return getProperty("PARTNER_HANDLE");
+    public String getSenderId() throws SkypeException {
+        return getProperty("FROM_HANDLE");
     }
 
-    public String getPartnerDisplayName() throws SkypeException {
-        return getProperty("PARTNER_DISPNAME");
+    public String getSenderDisplayName() throws SkypeException {
+        return getProperty("FROM_DISPNAME");
     }
-    */
 
     public Type getType() throws SkypeException {
         return Type.valueOf(getProperty("TYPE"));
     }
 
     public Status getStatus() throws SkypeException {
-        return Status.valueOf(Utils.getPropertyWithCommandId("CHATMESSAGE", "MESSAGE", getId(), "STATUS"));
+        return Status.valueOf(Utils.getPropertyWithCommandId("CHATMESSAGE", getId(), "STATUS"));
     }
 
     public LeaveReason getLeaveReason() throws SkypeException {
@@ -93,6 +91,6 @@ public final class ChatMessage {
     */
 
     private String getProperty(String name) throws SkypeException {
-        return Utils.getProperty("CHATMESSAGE", "MESSAGE", getId(), name);
+        return Utils.getProperty("CHATMESSAGE", getId(), name);
     }
 }

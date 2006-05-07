@@ -15,9 +15,9 @@ import junit.framework.TestCase;
 public class SkypeTest extends TestCase {
     public void testMessageReceived() throws Exception {
         final Object lock = new Object();
-        final Message[] result = new Message[1];
-        Skype.addMessageReceivedListener(new MessageReceivedListener() {
-            public void messageReceived(Message message) {
+        final ChatMessage[] result = new ChatMessage[1];
+        Skype.addChatMessageReceivedListener(new ChatMessageReceivedListener() {
+            public void chatMessageReceived(ChatMessage message) {
                 result[0] = message;
                 synchronized (lock) {
                     lock.notify();
@@ -31,9 +31,9 @@ public class SkypeTest extends TestCase {
             } catch (InterruptedException e) {
             }
         }
-        Message message = result[0];
-        assertEquals(TestData.getFriendId(), message.getPartnerId());
-        assertEquals(TestData.getFriendDisplayName(), message.getPartnerDisplayName());
+        ChatMessage message = result[0];
+        assertEquals(TestData.getFriendId(), message.getSenderId());
+        assertEquals(TestData.getFriendDisplayName(), message.getSenderDisplayName());
         assertEquals("test", message.getContent());
     }
 }

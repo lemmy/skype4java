@@ -11,21 +11,22 @@
 package jp.sf.skype;
 
 import java.util.Date;
+
 import junit.framework.TestCase;
 
 public class HistoryAPITest extends TestCase {
     public void testGetAllMessages() throws Exception {
         TestUtils.showMessageDialog(TestData.getFriendId() + "にチャットメッセージ「テスト」を送信後、10秒以内にこのダイアログを閉じてください");
         Friend friend = TestData.getFriend();
-        Message[] messages = friend.getAllMessages();
+        ChatMessage[] messages = friend.getAllChatMessages();
         assertTrue(0 < messages.length);
-        Message latest = messages[0];
+        ChatMessage latest = messages[0];
         // TODO PartnerIdなのに自分のIdが返ってくる(Skypeのバグ?)
-        assertEquals(Skype.getProfile().getId(), latest.getPartnerId());
+        assertEquals(Skype.getProfile().getId(), latest.getSenderId());
         // TODO Invalid PROPとエラーが返ってくる(Skypeのバグ?)
 //      assertEquals(Skype.getProfile().getDisplayName(), latest.getPartnerDisplayName());
         assertTrue(new Date().getTime() - 10000 <= latest.getTime().getTime());
-        assertEquals(Message.Type.TEXT, latest.getType());
+        assertEquals(ChatMessage.Type.SAID, latest.getType());
         assertEquals("テスト", latest.getContent());
     }
 

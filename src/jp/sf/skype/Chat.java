@@ -28,14 +28,13 @@ public final class Chat {
         return id;
     }
 
-    public Message send(String message) throws SkypeException {
+    public ChatMessage send(String message) throws SkypeException {
         try {
-            String responseHeader = "MESSAGE ";
-            // TODO Skype APIƒhƒLƒ…ƒƒ“ƒg‚ÌŒë‚è‚ğ•ñ
+            String responseHeader = "CHATMESSAGE ";
             String response = Connector.getInstance().execute("CHATMESSAGE " + getId() + " " + message, responseHeader);
             Utils.checkError(response);
             String id = response.substring(responseHeader.length(), response.indexOf(" STATUS "));
-            return new Message(id);
+            return new ChatMessage(id);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return null;
