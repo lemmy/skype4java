@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     Koji Hisano - initial API and implementation
+ *     Kamil Sarelo - modified getInstalledPath() to support installing by an administrator account and added some JavaDoc
  *******************************************************************************/
 package jp.sf.skype.connector.windows;
 
@@ -24,8 +25,16 @@ import org.eclipse.swt.internal.win32.WNDCLASS;
 import org.eclipse.swt.widgets.Display;
 
 public final class WindowsConnector extends Connector {
+    /**
+     * The singleton instance of the WindowsConnector class.
+     */
     private static WindowsConnector instance;
-    
+
+    /**
+     * Gets the singleton instance of the WindowsConnector class.
+     * 
+     * @return the singleton instance of the WindowsConnector class
+     */
     public static synchronized WindowsConnector getInstance() {
         if (instance == null) {
             instance = new WindowsConnector();
@@ -33,14 +42,63 @@ public final class WindowsConnector extends Connector {
         return instance;
     }
 
+    /**
+     * The attached response type (value is 0).
+     * <p>
+     * This response is sent when the client is attached.
+     * </p>
+     */
     private static final int ATTACH_SUCCESS = 0;
+    /**
+     * The pending authorization response type (value is 1).
+     * <p>
+     * This response is sent when Skype acknowledges the connection request and is waiting for user confirmation.
+     * The client is not yet attached and must wait for the {@ses #ATTACH_SUCCESS} message.
+     * </p>
+     */
     private static final int ATTACH_PENDING_AUTHORIZATION = 1;
+    /**
+     * The refused response type (value is 2).
+     * <p>
+     * This response is sent when the user has explicitly denied the access of the client.
+     * </p>
+     */
     private static final int ATTACH_REFUSED = 2;
+    /**
+     * The not available response type (value is 3).
+     * <p>
+     * This response is sent when the API is not available at the moment because no user is currently logged in.
+     * The client must wait for a {@see #ATTACH_API_AVAILABLE} broadcast before attempting to connect again.
+     * </p>
+     */
     private static final int ATTACH_NOT_AVAILABLE = 3;
+    /**
+     * The available response type (value is 0x8001).
+     * <p>
+     * This response is sent when the API becomes available.
+     */
     private static final int ATTACH_API_AVAILABLE = 0x8001;
+    
+    /**
+     * The window handle indicating all top-level windows in the system.
+     * @see <a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/windowing/messagesandmessagequeues/messagesandmessagequeuesreference/messagesandmessagequeuesfunctions/sendmessage.asp">MSDN Library</a>
+     */
     private static final int HWND_BROADCAST = 0xffff;
+    /**
+     * The window message type to pass data to another application.
+     * @see <a href="http://search.msdn.microsoft.com/search/Redirect.aspx?title=WM_COPYDATA+Message&url=http://msdn.microsoft.com/library/en-us/winui/winui/windowsuserinterface/dataexchange/datacopy/datacopyreference/datacopymessages/wm_copydata.asp">MSDN Library</a>
+     */
     private static final int WM_COPYDATA = 0x004a;
+
+    /**
+     * The window message type of the response for initiating communication from Skype
+     * @see #DISCOVER_MESSAGE_ID
+     */
     private static final int ATTACH_MESSAGE_ID = OS.RegisterWindowMessage(new TCHAR(0, "SkypeControlAPIAttach", true));
+    /**
+     * The window message type of the request to initiate communication with Skype
+     * @see #ATTACH_MESSAGE_ID
+     */
     private static final int DISCOVER_MESSAGE_ID = OS.RegisterWindowMessage(new TCHAR(0, "SkypeControlAPIDiscover", true));
 
     private static final String CONNECTOR_STATUS_CHANGED_MESSAGE = "ConnectorStatusChanged";
@@ -53,15 +111,32 @@ public final class WindowsConnector extends Connector {
     private WindowsConnector() {
     }
 
+    /**
+     * Returns the location of Skype.exe file from the MS Windows registry (implicit it check if Skype is installed or not).
+     * Checks in the registry if the key: {HKCU\Software\Skype\Phone, SkypePath} exists;
+     * if not, it checks again but now for {HKLM\Software\Skype\Phone, SkypePath};
+     * if HKCU key does not exist but the HKLM key is present, Skype has been installed from an administrator account has but not been used from the current account;
+     * otherwise there is no Skype installed.
+     * 
+     * @return   the path to the <code>Skype.exe</code> file if Skype is installed or <code>null</code>.
+     */
     @Override
     public String getInstalledPath() {
-        return getHKCUValue("Software\\Skype\\Phone", "SkypePath");
+        String result = getRegistryValue(OS.HKEY_CURRENT_USER, "Software\\Skype\\Phone", "SkypePath");
+        if (result == null) {
+            result = getRegistryValue(OS.HKEY_LOCAL_MACHINE, "Software\\Skype\\Phone", "SkypePath");
+        }
+        return result;
     }
 
-    private String getHKCUValue(String keyName, String dataName) {
-        TCHAR key = new TCHAR(0, keyName, true);
+    /**
+     * Returns the value to which the specified key and data is mapped in the Windows registry, or null if the registry contains no mapping for this key and/or data.
+     * 
+     * @return   the value to which the specified key and data is mapped or <code>null</code>.
+     */
+    private String getRegistryValue(int hKey, String keyName, String dataName) {
         int[] phkResult = new int[1];
-        if (OS.RegOpenKeyEx(OS.HKEY_CURRENT_USER, key, 0, OS.KEY_READ, phkResult) != 0) {
+        if (OS.RegOpenKeyEx(hKey, new TCHAR(0, keyName, true), 0, OS.KEY_READ, phkResult) != 0) {
             return null;
         }
         String result = null;
@@ -77,8 +152,9 @@ public final class WindowsConnector extends Connector {
                 }
             }
         }
-        if (phkResult[0] != 0)
+        if (phkResult[0] != 0) {
             OS.RegCloseKey(phkResult[0]);
+        }
         return result;
     }
 
