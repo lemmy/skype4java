@@ -85,7 +85,7 @@ public final class Application {
                 String data = dataResponse.substring("RECEIVED ".length());
                 String streamId = data.substring(0, data.indexOf('='));
                 String dataHeader = "ALTER APPLICATION " + getName() + " READ " + streamId;
-                String response = Connector.getInstance().execute(dataHeader);
+                String response = Connector.getInstance().executeWithId(dataHeader, dataHeader);
                 Utils.checkError(response);
                 String text = response.substring(dataHeader.length() + 1);
                 streams.get(streamId).fireTextReceived(text);
