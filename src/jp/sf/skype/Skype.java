@@ -12,6 +12,7 @@ package jp.sf.skype;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -51,9 +52,10 @@ public final class Skype {
     private static Profile profile;
     private static Object chatMessageListenerMutex = new Object();
     private static ConnectorMessageReceivedListener chatMessageListener;
-    private static List<ChatMessageReceivedListener> chatMessageReceivedListeners = new ArrayList<ChatMessageReceivedListener>();
+    private static List<ChatMessageReceivedListener> chatMessageReceivedListeners = Collections.synchronizedList(new ArrayList<ChatMessageReceivedListener>());
+    private static Object callListenerMutex = new Object();
     private static ConnectorMessageReceivedListener callListener;
-    private static List<CallReceivedListener> callReceivedListeners = new ArrayList<CallReceivedListener>();
+    private static List<CallReceivedListener> callReceivedListeners = Collections.synchronizedList(new ArrayList<CallReceivedListener>());
     private static Thread userThread;
     private static Object userThreadFieldMutex = new Object();
     
@@ -79,12 +81,8 @@ public final class Skype {
         }
     }
 
-    public static void setDebug(boolean on) throws SkypeException {
-        try {
-            Connector.getInstance().setDebug(on);
-        } catch (ConnectorException e) {
-            Utils.convertToSkypeException(e);
-        }
+    public static void setDebug(boolean on) {
+        Connector.getInstance().setDebug(on);
     }
 
     public static String getVersion() throws SkypeException {
@@ -395,27 +393,23 @@ public final class Skype {
         return profile;
     }
 
-    public static void addChatMessageReceivedListener(ChatMessageReceivedListener listener) throws SkypeException {
+    public static void addChatMessageReceivedListener(ChatMessageReceivedListener listener) {
         Utils.checkNotNull("listener", listener);
         synchronized (chatMessageListenerMutex) {
             chatMessageReceivedListeners.add(listener);
-            try {
-                if (chatMessageListener == null) {
-                    chatMessageListener = new ConnectorMessageReceivedListener() {
-                        public void messageReceived(String message) {
-                            if (message.startsWith("CHATMESSAGE ")) {
-                                String data = message.substring("CHATMESSAGE ".length());
-                                String id = data.substring(0, data.indexOf(' '));
-                                if (message.endsWith(" STATUS RECEIVED")) {
-                                    fireChatMessageReceived(new ChatMessage(id));
-                                }
+            if (chatMessageListener == null) {
+                chatMessageListener = new ConnectorMessageReceivedListener() {
+                    public void messageReceived(String message) {
+                        if (message.startsWith("CHATMESSAGE ")) {
+                            String data = message.substring("CHATMESSAGE ".length());
+                            String id = data.substring(0, data.indexOf(' '));
+                            if (message.endsWith(" STATUS RECEIVED")) {
+                                fireChatMessageReceived(new ChatMessage(id));
                             }
                         }
-                    };
-                    Connector.getInstance().addConnectorMessageReceivedListener(chatMessageListener);
-                }
-            } catch (ConnectorException e) {
-                Utils.convertToSkypeException(e);
+                    }
+                };
+                Connector.getInstance().addConnectorMessageReceivedListener(chatMessageListener);
             }
         }
     }
@@ -439,10 +433,10 @@ public final class Skype {
         }
     }
 
-    public static void addCallReceivedListener(CallReceivedListener listener) throws SkypeException {
+    public static void addCallReceivedListener(CallReceivedListener listener) {
         Utils.checkNotNull("listener", listener);
-        callReceivedListeners.add(listener);
-        try {
+        synchronized (callListenerMutex) {
+            callReceivedListeners.add(listener);
             if (callListener == null) {
                 callListener = new ConnectorMessageReceivedListener() {
                     private List<String> deliveredCalls = new LinkedList<String>();
@@ -470,23 +464,23 @@ public final class Skype {
                 };
                 Connector.getInstance().addConnectorMessageReceivedListener(callListener);
             }
-        } catch (ConnectorException e) {
-            Utils.convertToSkypeException(e);
         }
     }
 
     public static void removeCallReceivedListener(CallReceivedListener listener) {
         Utils.checkNotNull("listener", listener);
-        callReceivedListeners.remove(listener);
-        if (callReceivedListeners.isEmpty()) {
-            Connector.getInstance().removeConnectorMessageReceivedListener(callListener);
-            callListener = null;
+        synchronized (callListenerMutex) {
+            callReceivedListeners.remove(listener);
+            if (callReceivedListeners.isEmpty()) {
+                Connector.getInstance().removeConnectorMessageReceivedListener(callListener);
+                callListener = null;
+            }
         }
     }
 
     private static void fireCallReceived(Call call) {
         assert call != null;
-        CallReceivedListener[] listeners = callReceivedListeners.toArray(new CallReceivedListener[0]); // イベント通知中にリストが変更される可能性があるため
+        CallReceivedListener[] listeners = callReceivedListeners.toArray(new CallReceivedListener[0]);
         for (CallReceivedListener listener : listeners) {
             listener.callReceived(call);
         }

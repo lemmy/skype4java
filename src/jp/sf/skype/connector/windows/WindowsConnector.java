@@ -218,11 +218,7 @@ public final class WindowsConnector extends Connector {
                 }
             }
         };
-        try {
-            addConnectorMessageReceivedListener(listener, false);
-        } catch (ConnectorException e) {
-            throw new InternalError("The listener couldn't be added."); // The flow must not reach here.
-        }
+        addConnectorMessageReceivedListener(listener);
         synchronized (object) {
             try {
                 while (true) {
