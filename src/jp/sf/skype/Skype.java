@@ -55,7 +55,7 @@ public final class Skype {
     private static List<ChatMessageListener> chatMessageListeners = Collections.synchronizedList(new ArrayList<ChatMessageListener>());
     private static Object callListenerMutex = new Object();
     private static ConnectorMessageReceivedListener callListener;
-    private static List<CallReceivedListener> callReceivedListeners = Collections.synchronizedList(new ArrayList<CallReceivedListener>());
+    private static List<CallListener> callListeners = Collections.synchronizedList(new ArrayList<CallListener>());
     private static Thread userThread;
     private static Object userThreadFieldMutex = new Object();
     
@@ -452,31 +452,56 @@ public final class Skype {
         }
     }
 
-    public static void addCallReceivedListener(CallReceivedListener listener) throws SkypeException {
+    public static void addCallListener(CallListener listener) throws SkypeException {
         Utils.checkNotNull("listener", listener);
         synchronized (callListenerMutex) {
-            callReceivedListeners.add(listener);
+            callListeners.add(listener);
             if (callListener == null) {
                 callListener = new ConnectorMessageReceivedListener() {
                     private List<String> deliveredCalls = new LinkedList<String>();
-                    public void messageReceived(String call) {
-                        if (call.startsWith("CALL ") && call.contains(" STATUS ")) {
-                            String data = call.substring("CALL ".length());
+                    public void messageReceived(String receivedMessage) {
+                        if (receivedMessage.startsWith("CALL ")) {
+                            String data = receivedMessage.substring("CALL ".length());
                             String id = data.substring(0, data.indexOf(' '));
-                            Call.Status status = Call.Status.valueOf(data.substring(data.lastIndexOf(' ') + 1));
-                            switch (status) {
-                                case RINGING:
-                                    synchronized(deliveredCalls) {
-                                        if (!deliveredCalls.contains(id)) {
-                                            deliveredCalls.add(id);
-                                            fireCallReceived(new Call(id));
+                            String propertyNameAndValue = data.substring(data.indexOf(' ') + 1);
+                            String propertyName = propertyNameAndValue.substring(0, propertyNameAndValue.indexOf(' '));
+                            if ("STATUS".equals(propertyName)) {
+                                String propertyValue = propertyNameAndValue.substring(propertyNameAndValue.indexOf(' ') + 1);
+                                Call.Status status = Call.Status.valueOf(propertyValue);
+                                switch (status) {
+                                    case RINGING:
+                                        synchronized(deliveredCalls) {
+                                            if (!deliveredCalls.contains(id)) {
+                                                deliveredCalls.add(id);
+                                                Call call = new Call(id);
+                                                CallListener[] listeners = callListeners.toArray(new CallListener[0]);
+                                                try {
+                                                    switch (call.getType()) {
+                                                    case OUTGOING_P2P:
+                                                    case OUTGOING_PSTN:
+                                                        for (CallListener listener : listeners) {
+                                                            listener.callMaked(call);
+                                                        }
+                                                        break;
+                                                    case INCOMING_P2P:
+                                                    case INCOMING_PSTN:
+                                                        for (CallListener listener : listeners) {
+                                                            listener.callReceived(call);
+                                                        }
+                                                        break;
+                                                    }
+                                                } catch (SkypeException e) {
+                                                    // TODO add handler for exception
+                                                    e.printStackTrace();
+                                                }
+                                            }
                                         }
-                                    }
-                                    break;
-                                case FINISHED: case MISSED: case REFUSED:
-                                    synchronized(deliveredCalls) {
-                                        deliveredCalls.remove(id);
-                                    }
+                                        break;
+                                    case FINISHED: case MISSED: case REFUSED: case CANCELLED:
+                                        synchronized(deliveredCalls) {
+                                            deliveredCalls.remove(id);
+                                        }
+                                }
                             }
                         }
                     }
@@ -490,22 +515,14 @@ public final class Skype {
         }
     }
 
-    public static void removeCallReceivedListener(CallReceivedListener listener) {
+    public static void removeCallListener(CallListener listener) {
         Utils.checkNotNull("listener", listener);
         synchronized (callListenerMutex) {
-            callReceivedListeners.remove(listener);
-            if (callReceivedListeners.isEmpty()) {
+            callListeners.remove(listener);
+            if (callListeners.isEmpty()) {
                 Connector.getInstance().removeConnectorMessageReceivedListener(callListener);
                 callListener = null;
             }
-        }
-    }
-
-    private static void fireCallReceived(Call call) {
-        assert call != null;
-        CallReceivedListener[] listeners = callReceivedListeners.toArray(new CallReceivedListener[0]);
-        for (CallReceivedListener listener : listeners) {
-            listener.callReceived(call);
         }
     }
 

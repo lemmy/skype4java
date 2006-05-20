@@ -67,7 +67,8 @@ public class CallAPITest extends TestCase {
 
     public void testCallReceived() throws Exception {
         final Call[] result = new Call[1];
-        Skype.addCallReceivedListener(new CallReceivedListener() {
+        Skype.addCallListener(new CallAdapter() {
+            @Override
             public void callReceived(Call call) {
                 result[0] = call;
             }

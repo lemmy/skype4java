@@ -46,6 +46,19 @@ public final class Call {
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object compared) {
+        if (compared instanceof Call) {
+            return id.equals(((Call)compared).id);
+        }
+        return false;
+    }
+
     public String getId() {
         return id;
     }
@@ -89,7 +102,7 @@ public final class Call {
 
     private void setStatus(String status) throws SkypeException {
         try {
-            String response = Connector.getInstance().execute("SET CALL " + getId() + " STATUS " + status, "CALL " + getId() + " STATUS ");
+            String response = Connector.getInstance().executeWithId("SET CALL " + getId() + " STATUS " + status, "CALL " + getId() + " STATUS ");
             Utils.checkError(response);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);

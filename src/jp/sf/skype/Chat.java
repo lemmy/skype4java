@@ -24,8 +24,32 @@ public final class Chat {
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object compared) {
+        if (compared instanceof Chat) {
+            return id.equals(((Chat)compared).id);
+        }
+        return false;
+    }
+
     public String getId() {
         return id;
+    }
+
+    public void setTopic(String newValue) throws SkypeException {
+        try {
+            String command = "ALTER CHAT " + id + " SETTOPIC " + newValue;
+            String responseHeader = "ALTER CHAT SETTOPIC";
+            String response = Connector.getInstance().execute(command, responseHeader);
+            Utils.checkError(response);
+        } catch (ConnectorException e) {
+            Utils.convertToSkypeException(e);
+        }
     }
 
     public ChatMessage send(String message) throws SkypeException {

@@ -10,6 +10,10 @@
  *******************************************************************************/
 package jp.sf.skype;
 
-public interface CallReceivedListener {
-    void callReceived(Call call);
+public class CallAdapter implements CallListener {
+    public void callReceived(Call receivedCall) {
+    }
+
+    public void callMaked(Call makedCall) {
+    }
 }
