@@ -14,7 +14,6 @@ import junit.framework.TestCase;
 
 public class ChatMessageTest extends TestCase {
     public void testListener() throws Exception {
-        Skype.setDebug(true);
         final boolean[] sent = new boolean[1];
         Skype.addChatMessageListener(new ChatMessageAdapter() {
             @Override
