@@ -26,32 +26,14 @@ public class ChatMessageTest extends TestCase {
         TestUtils.showMessageDialog("Please, send a chat message to " + TestData.getFriendId() + ".");
         assertTrue(sent[0]);
 
-        final boolean[] sending = new boolean[1];
-        Skype.addChatMessageListener(new ChatMessageAdapter() {
-            @Override
-            public void chatMessageSending(ChatMessage sendingChatMessage) {
-                sending[0] = true;
-                Skype.removeChatMessageListener(this);
-            }
-        });
-        TestUtils.showMessageDialog("Please, send a chat message to " + TestData.getFriendId() + " after " + TestData.getFriendId() + " log off.");
-        assertTrue(sending[0]);
-
         final boolean[] received = new boolean[1];
-        final boolean[] read = new boolean[1];
         Skype.addChatMessageListener(new ChatMessageAdapter() {
             @Override
             public void chatMessageReceived(ChatMessage receivedChatMessage) {
                 received[0] = true;
             }
-            @Override
-            public void chatMessageRead(ChatMessage readChatMessage) {
-                read[0] = true;
-                Skype.removeChatMessageListener(this);
-            }
         });
-        TestUtils.showMessageDialog("Please, receive a chat message from " + TestData.getFriendId() + " and read it.");
+        TestUtils.showMessageDialog("Please, receive a chat message from " + TestData.getFriendId() + ".");
         assertTrue(received[0]);
-        assertTrue(read[0]);
     }
 }

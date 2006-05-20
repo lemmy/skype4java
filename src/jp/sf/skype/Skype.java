@@ -419,21 +419,13 @@ public final class Skype {
                                 String propertyValue = propertyNameAndValue.substring(propertyNameAndValue.indexOf(' ') + 1);
                                 ChatMessageListener[] listeners = chatMessageListeners.toArray(new ChatMessageListener[0]);
                                 ChatMessage chatMessage = new ChatMessage(id);
-                                if ("SENDING".equals(propertyValue)) {
-                                    for (ChatMessageListener listener : listeners) {
-                                        listener.chatMessageSending(chatMessage);
-                                    }
-                                } else if ("SENT".equals(propertyValue)) {
+                                if ("SENT".equals(propertyValue)) {
                                     for (ChatMessageListener listener : listeners) {
                                         listener.chatMessageSent(chatMessage);
                                     }
                                 } else if ("RECEIVED".equals(propertyValue)) {
                                     for (ChatMessageListener listener : listeners) {
                                         listener.chatMessageReceived(chatMessage);
-                                    }
-                                } else if ("READ".equals(propertyValue)) {
-                                    for (ChatMessageListener listener : listeners) {
-                                        listener.chatMessageRead(chatMessage);
                                     }
                                 }
                             }

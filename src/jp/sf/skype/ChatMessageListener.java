@@ -12,7 +12,5 @@ package jp.sf.skype;
 
 public interface ChatMessageListener {
     void chatMessageReceived(ChatMessage receivedChatMessage);
-    void chatMessageRead(ChatMessage readChatMessage);
-    void chatMessageSending(ChatMessage sendingChatMessage);
     void chatMessageSent(ChatMessage sentChatMessage);
 }

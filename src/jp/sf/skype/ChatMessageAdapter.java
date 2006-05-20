@@ -14,12 +14,6 @@ public class ChatMessageAdapter implements ChatMessageListener {
     public void chatMessageReceived(ChatMessage receivedChatMessage) {
     }
 
-    public void chatMessageRead(ChatMessage readChatMessage) {
-    }
-
-    public void chatMessageSending(ChatMessage sendingChatMessage) {
-    }
-
     public void chatMessageSent(ChatMessage sentChatMessage) {
     }
 }
