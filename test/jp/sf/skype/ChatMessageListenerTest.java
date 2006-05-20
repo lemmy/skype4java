@@ -12,8 +12,8 @@ package jp.sf.skype;
 
 import junit.framework.TestCase;
 
-public class ChatMessageTest extends TestCase {
-    public void testListener() throws Exception {
+public class ChatMessageListenerTest extends TestCase {
+    public void testBasic() throws Exception {
         final boolean[] sent = new boolean[1];
         Skype.addChatMessageListener(new ChatMessageAdapter() {
             @Override
