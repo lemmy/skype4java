@@ -52,7 +52,7 @@ public final class Skype {
     private static Profile profile;
     private static Object chatMessageListenerMutex = new Object();
     private static ConnectorMessageReceivedListener chatMessageListener;
-    private static List<ChatMessageReceivedListener> chatMessageReceivedListeners = Collections.synchronizedList(new ArrayList<ChatMessageReceivedListener>());
+    private static List<ChatMessageListener> chatMessageListeners = Collections.synchronizedList(new ArrayList<ChatMessageListener>());
     private static Object callListenerMutex = new Object();
     private static ConnectorMessageReceivedListener callListener;
     private static List<CallReceivedListener> callReceivedListeners = Collections.synchronizedList(new ArrayList<CallReceivedListener>());
@@ -402,18 +402,40 @@ public final class Skype {
         return profile;
     }
 
-    public static void addChatMessageReceivedListener(ChatMessageReceivedListener listener) throws SkypeException {
+    public static void addChatMessageListener(ChatMessageListener listener) throws SkypeException {
         Utils.checkNotNull("listener", listener);
         synchronized (chatMessageListenerMutex) {
-            chatMessageReceivedListeners.add(listener);
+            chatMessageListeners.add(listener);
             if (chatMessageListener == null) {
                 chatMessageListener = new ConnectorMessageReceivedListener() {
                     public void messageReceived(String message) {
+                        assert message != null;
                         if (message.startsWith("CHATMESSAGE ")) {
                             String data = message.substring("CHATMESSAGE ".length());
                             String id = data.substring(0, data.indexOf(' '));
-                            if (message.endsWith(" STATUS RECEIVED")) {
-                                fireChatMessageReceived(new ChatMessage(id));
+                            String propertyNameAndValue = data.substring(data.indexOf(' ') + 1);
+                            String propertyName = propertyNameAndValue.substring(0, propertyNameAndValue.indexOf(' '));
+                            if ("STATUS".equals(propertyName)) {
+                                String propertyValue = propertyNameAndValue.substring(propertyNameAndValue.indexOf(' ') + 1);
+                                ChatMessageListener[] listeners = chatMessageListeners.toArray(new ChatMessageListener[0]);
+                                ChatMessage chatMessage = new ChatMessage(id);
+                                if ("SENDING".equals(propertyValue)) {
+                                    for (ChatMessageListener listener : listeners) {
+                                        listener.chatMessageSending(chatMessage);
+                                    }
+                                } else if ("SENT".equals(propertyValue)) {
+                                    for (ChatMessageListener listener : listeners) {
+                                        listener.chatMessageSent(chatMessage);
+                                    }
+                                } else if ("RECEIVED".equals(propertyValue)) {
+                                    for (ChatMessageListener listener : listeners) {
+                                        listener.chatMessageReceived(chatMessage);
+                                    }
+                                } else if ("READ".equals(propertyValue)) {
+                                    for (ChatMessageListener listener : listeners) {
+                                        listener.chatMessageRead(chatMessage);
+                                    }
+                                }
                             }
                         }
                     }
@@ -427,22 +449,14 @@ public final class Skype {
         }
     }
 
-    public static void removeChatMessageReceivedListener(ChatMessageReceivedListener listener) {
+    public static void removeChatMessageListener(ChatMessageListener listener) {
         Utils.checkNotNull("listener", listener);
         synchronized (chatMessageListenerMutex) {
-            chatMessageReceivedListeners.remove(listener);
-            if (chatMessageReceivedListeners.isEmpty()) {
+            chatMessageListeners.remove(listener);
+            if (chatMessageListeners.isEmpty()) {
                 Connector.getInstance().removeConnectorMessageReceivedListener(chatMessageListener);
                 chatMessageListener = null;
             }
-        }
-    }
-
-    private static void fireChatMessageReceived(ChatMessage message) {
-        assert message != null;
-        ChatMessageReceivedListener[] listeners = chatMessageReceivedListeners.toArray(new ChatMessageReceivedListener[0]);
-        for (ChatMessageReceivedListener listener : listeners) {
-            listener.chatMessageReceived(message);
         }
     }
 

@@ -31,6 +31,19 @@ public final class ChatMessage {
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object compared) {
+        if (compared instanceof ChatMessage) {
+            return id.equals(((ChatMessage)compared).id);
+        }
+        return false;
+    }
+
     public String getId() {
         return id;
     }
