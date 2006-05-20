@@ -62,7 +62,7 @@ public abstract class Connector {
     protected Connector() {
     }
 
-    public final void setDebug(boolean on) {
+    public final void setDebug(boolean on) throws ConnectorException {
         synchronized (debugFieldMutex) {
             if (debug == on) {
                 return;
@@ -180,7 +180,7 @@ public abstract class Connector {
             }
         };
         processor.init(lock, listener);
-        addConnectorMessageReceivedListener(listener);
+        addConnectorMessageReceivedListener(listener, false);
         if (isDebug()) {
             System.err.println("-> " + command);
         }
@@ -244,7 +244,7 @@ public abstract class Connector {
                 }
             }
         };
-        addConnectorMessageReceivedListener(listener);
+        addConnectorMessageReceivedListener(listener, false);
         if (isDebug()) {
             System.err.println("-> " + command);
         }
@@ -279,9 +279,16 @@ public abstract class Connector {
         }
     }
 
-    public final void addConnectorMessageReceivedListener(ConnectorMessageReceivedListener listener) {
+    public final void addConnectorMessageReceivedListener(ConnectorMessageReceivedListener listener) throws ConnectorException {
+        addConnectorMessageReceivedListener(listener, true);
+    }
+
+    protected final void addConnectorMessageReceivedListener(ConnectorMessageReceivedListener listener, boolean checkAttached) throws ConnectorException {
         Utils.checkNotNull("listener", listener);
         messageReceivedListeners.add(listener);
+        if (checkAttached) {
+            assureAttached();
+        }
     }
 
     public final void removeConnectorMessageReceivedListener(ConnectorMessageReceivedListener listener) {

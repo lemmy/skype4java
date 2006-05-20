@@ -81,8 +81,12 @@ public final class Skype {
         }
     }
 
-    public static void setDebug(boolean on) {
-        Connector.getInstance().setDebug(on);
+    public static void setDebug(boolean on) throws SkypeException {
+        try {
+            Connector.getInstance().setDebug(on);
+        } catch (ConnectorException e) {
+            Utils.convertToSkypeException(e);
+        }
     }
 
     public static String getVersion() throws SkypeException {
@@ -275,10 +279,15 @@ public final class Skype {
         }
     }
 
-    public static Chat chat(String target) throws SkypeException {
+    public static Chat chat(String[] skypeIds) throws SkypeException {
+        Utils.checkNotNull("skypeIds", skypeIds);
+        return chat(Skype.toCommaSeparatedString(skypeIds));
+    }
+
+    public static Chat chat(String skypeId) throws SkypeException {
         try {
             String responseHeader = "CHAT ";
-            String response = Connector.getInstance().execute("CHAT CREATE " + target, responseHeader);
+            String response = Connector.getInstance().execute("CHAT CREATE " + skypeId, responseHeader);
             Utils.checkError(response);
             String id = response.substring(responseHeader.length(), response.indexOf(" STATUS "));
             return new Chat(id);
@@ -288,10 +297,10 @@ public final class Skype {
         }
     }
 
-    public static VoiceMail leaveVoiceMail(String target) throws SkypeException {
+    public static VoiceMail leaveVoiceMail(String skypeId) throws SkypeException {
         try {
             String responseHeader = "VOICEMAIL ";
-            String response = Connector.getInstance().execute("VOICEMAIL " + target, responseHeader);
+            String response = Connector.getInstance().execute("VOICEMAIL " + skypeId, responseHeader);
             Utils.checkError(response);
             String id = response.substring(responseHeader.length(), response.indexOf(' ', responseHeader.length()));
             return new VoiceMail(id);
@@ -393,7 +402,7 @@ public final class Skype {
         return profile;
     }
 
-    public static void addChatMessageReceivedListener(ChatMessageReceivedListener listener) {
+    public static void addChatMessageReceivedListener(ChatMessageReceivedListener listener) throws SkypeException {
         Utils.checkNotNull("listener", listener);
         synchronized (chatMessageListenerMutex) {
             chatMessageReceivedListeners.add(listener);
@@ -409,7 +418,11 @@ public final class Skype {
                         }
                     }
                 };
-                Connector.getInstance().addConnectorMessageReceivedListener(chatMessageListener);
+                try {
+                    Connector.getInstance().addConnectorMessageReceivedListener(chatMessageListener);
+                } catch (ConnectorException e) {
+                    Utils.convertToSkypeException(e);
+                }
             }
         }
     }
@@ -433,7 +446,7 @@ public final class Skype {
         }
     }
 
-    public static void addCallReceivedListener(CallReceivedListener listener) {
+    public static void addCallReceivedListener(CallReceivedListener listener) throws SkypeException {
         Utils.checkNotNull("listener", listener);
         synchronized (callListenerMutex) {
             callReceivedListeners.add(listener);
@@ -462,7 +475,11 @@ public final class Skype {
                         }
                     }
                 };
-                Connector.getInstance().addConnectorMessageReceivedListener(callListener);
+                try {
+                    Connector.getInstance().addConnectorMessageReceivedListener(callListener);
+                } catch (ConnectorException e) {
+                    Utils.convertToSkypeException(e);
+                }
             }
         }
     }
