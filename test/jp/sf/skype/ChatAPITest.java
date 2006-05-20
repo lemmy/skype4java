@@ -16,7 +16,9 @@ public class ChatAPITest extends TestCase {
     public void testChat() throws Exception {
         Friend friend = Skype.getContactList().getFriend(TestData.getFriendId());
         Chat chat = friend.chat();
-        chat.send("テスト");
-        TestUtils.showCheckDialog(TestData.getFriendId() + "にチャットメッセージ「テスト」が送信されましたか？");
+        chat.send("Test Message");
+        TestUtils.showCheckDialog(TestData.getFriendId() + " has received \"Test Message\"？");
+        chat.setTopic("New Topic");
+        TestUtils.showCheckDialog("Topic was changed to \"New Topic\"？");
     }
 }
