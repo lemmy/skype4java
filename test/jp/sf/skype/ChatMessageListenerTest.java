@@ -30,6 +30,7 @@ public class ChatMessageListenerTest extends TestCase {
             @Override
             public void chatMessageReceived(ChatMessage receivedChatMessage) {
                 received[0] = true;
+                Skype.removeChatMessageListener(this);
             }
         });
         TestUtils.showMessageDialog("Please, receive a chat message from " + TestData.getFriendId() + ".");
