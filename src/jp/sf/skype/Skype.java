@@ -16,11 +16,9 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import jp.sf.skype.Call.Status;
 import jp.sf.skype.connector.Connector;
 import jp.sf.skype.connector.ConnectorException;
 import jp.sf.skype.connector.ConnectorMessageReceivedListener;
-import jp.sf.skype.connector.MessageProcessor;
 
 public final class Skype {
     public enum OptionsPage {
@@ -236,43 +234,11 @@ public final class Skype {
     public static Call call(String skypeId) throws SkypeException {
         Utils.checkNotNull("skypeIds", skypeId);
         try {
-            final Call[] call = new Call[1];
-            final String[] error = new String[1];
-            MessageProcessor processor = new MessageProcessor() {
-                public void messageReceived(String message) {
-                    if (message.startsWith("CALL ")) {
-                        String response = message.substring("CALL ".length());
-                        String id = response.substring(0, response.indexOf(' '));
-                        if (call[0] == null) {
-                            call[0] = new Call(id);
-                        }
-                        if (call[0].getId().equals(id)) {
-                            processStatus(response.substring(id.length() + 1));
-                            releaseLock();
-                        }
-                    } else if (message.startsWith("ERROR ")) {
-                        if (call[0] == null) {
-                            error[0] = message.substring("ERROR ".length());
-                            releaseLock();
-                        }
-                    }
-                }
-
-                private void processStatus(String response) {
-                    if (response.startsWith("STATUS ")) {
-                        Status status = Status.valueOf(response.substring("STATUS ".length()));
-                        Status[] endStatusList = new Status[] { Status.FAILED, Status.FINISHED, Status.MISSED, Status.REFUSED, Status.BUSY, Status.CANCELLED };
-                        for (Status endStatus : endStatusList) {
-                            if (status == endStatus) {
-                                processedAllMessages();
-                            }
-                        }
-                    }
-                }
-            };
-            Connector.getInstance().execute("CALL " + skypeId, processor);
-            Utils.checkError(error[0]);
-            return call[0];
+            String responseHeader = "CALL ";
+            String response = Connector.getInstance().executeWithId("CALL " + skypeId, responseHeader);
+            Utils.checkError(response);
+            String id = response.substring(responseHeader.length(), response.indexOf(" STATUS "));
+            return new Call(id);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return null;
