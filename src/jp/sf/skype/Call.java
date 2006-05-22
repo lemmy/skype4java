@@ -140,7 +140,7 @@ public final class Call {
     }
 
     public Status getStatus() throws SkypeException {
-        return Status.valueOf(Utils.getPropertyWithCommandId("CALL", getId(), "STATUS"));
+        return Status.valueOf(Utils.getPropertyWithCommandId("CALL", getId(), "STATUS")); // prevent event notification
     }
 
     public int getDuration() throws SkypeException {
