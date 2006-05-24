@@ -16,65 +16,65 @@ import junit.framework.TestCase;
 public class DialogAPITest extends TestCase {
     public void testShowMainWindow() throws Exception {
         Skype.showSkypeWindow();
-        TestUtils.showCheckDialog("Skypeのメインウィンドウが最前面に表示されていますか？");
+        TestUtils.showCheckDialog("Skype main window is showed on the top?");
         Skype.hideSkypeWindow();
-        TestUtils.showCheckDialog("Skypeのメインウィンドウが最小化されていますか？");
+        TestUtils.showCheckDialog("Skype main window is minimized?");
     }
 
     public void testShowAddFriendWindow() throws Exception {
         Skype.showAddFriendWindow();
-        TestUtils.showCheckDialog("コンタクトへ追加ウィンドウが表示されていますか？");
-        TestUtils.showMessageDialog("次へ進む前にコンタクトへ追加ウィンドウを閉じてください");
+        TestUtils.showCheckDialog("'Add a Contact' window is showed?");
+        TestUtils.showMessageDialog("Please, close the window before the next step.");
         Skype.showAddFriendWindow(TestData.getFriendId());
-        TestUtils.showCheckDialog(TestData.getFriendId() + "があらかじめ設定された状態で[コンタクトへ追加]ウィンドウが表示されていますか？");
-        TestUtils.showMessageDialog("次へ進む前に[コンタクトへ追加]ウィンドウを閉じてください");
+        TestUtils.showCheckDialog("'Add a Contact' window' is showed with " + TestData.getFriendId() + "?");
+        TestUtils.showMessageDialog("Please, close the window before the next step.");
     }
 
     public void testShowChatWindow() throws Exception {
         Skype.showChatWindow(TestData.getFriendId());
-        TestUtils.showCheckDialog(TestData.getFriendId() + "とのチャットウィンドウが表示されていますか？");
-        TestUtils.showMessageDialog("次へ進む前にチャットウィンドウを閉じてください");
+        TestUtils.showCheckDialog("Chat window with " + TestData.getFriendId() + " is showed?");
+        TestUtils.showMessageDialog("Please, close the window before the next step.");
         Skype.showChatWindow(TestData.getFriendId(), "Hello, World!");
-        TestUtils.showCheckDialog("Hello, World!があらかじめ入力された状態で" + TestData.getFriendId() + "とのチャットウィンドウが表示されていますか？");
-        TestUtils.showMessageDialog("次へ進む前にチャットウィンドウを閉じてください");
+        TestUtils.showCheckDialog("Chat window with " + TestData.getFriendId() + " which have a message 'Hello World!' is showed?");
+        TestUtils.showMessageDialog("Please, close the window before the next step.");
     }
 
     public void testShowFileTransferWindow() throws Exception {
         Skype.showFileTransferWindow(TestData.getFriendId());
-        TestUtils.showCheckDialog(TestData.getFriendId() + "へ送信するファイルの選択ウィンドウが表示されていますか？");
-        TestUtils.showMessageDialog("次へ進む前に選択ウィンドウを閉じてください");
+        TestUtils.showCheckDialog("'Send file to " + TestData.getFriendId() + "' window is showed?");
+        TestUtils.showMessageDialog("Please, close the window before the next step.");
         Skype.showFileTransferWindow(TestData.getFriendId(), new File("C:\\"));
-        TestUtils.showCheckDialog("C:\\があらかじめ選択された状態で" + TestData.getFriendId() + "へ送信するファイルの選択ウィンドウが表示されていますか？");
-        TestUtils.showMessageDialog("次へ進む前に選択ウィンドウを閉じてください");
+        TestUtils.showCheckDialog("'Send file to " + TestData.getFriendId() + "' window with selecting 'C:\\' is showed?");
+        TestUtils.showMessageDialog("Please, close the window before the next step.");
     }
 
     public void testShowProfileWindow() throws Exception {
         Skype.showProfileWindow();
-        TestUtils.showCheckDialog("プロフィールウィンドウが表示されていますか？");
-        TestUtils.showMessageDialog("次へ進む前にプロフィールウィンドウを閉じてください");
+        TestUtils.showCheckDialog("Profile window is showed?");
+        TestUtils.showMessageDialog("Please, close the window before the next step.");
     }
 
     public void testShowUserInformationWindow() throws Exception {
         Skype.showUserInformationWindow(TestData.getFriendId());
-        TestUtils.showCheckDialog(TestData.getFriendId() + "のプロフィールウィンドウが表示されていますか？");
-        TestUtils.showMessageDialog("次へ進む前にプロフィールウィンドウを閉じてください");
+        TestUtils.showCheckDialog(TestData.getFriendId() + "'s profile window is showed?");
+        TestUtils.showMessageDialog("Please, close the window before the next step.");
     }
 
     public void testShowConferenceWindow() throws Exception {
         Skype.showConferenceWindow();
-        TestUtils.showCheckDialog("ユーザを会議通話に招待ウィンドウが表示されていますか？");
-        TestUtils.showMessageDialog("次へ進む前にユーザを会議通話に招待ウィンドウを閉じてください");
+        TestUtils.showCheckDialog("'Start a Skype Conference Call' window is showed?");
+        TestUtils.showMessageDialog("Please, close the window before the next step.");
     }
 
     public void testShowSearchWindow() throws Exception {
         Skype.showSearchWindow();
-        TestUtils.showCheckDialog("Skypeユーザの検索ウィンドウが表示されていますか？");
-        TestUtils.showMessageDialog("次へ進む前にSkypeユーザの検索ウィンドウを閉じてください");
+        TestUtils.showCheckDialog("'Search for Skype Users' window is showed?");
+        TestUtils.showMessageDialog("Please, close the window before the next step.");
     }
 
     public void testShowOptionsWindow() throws Exception {
         Skype.showOptionsWindow(Skype.OptionsPage.ADVANCED);
-        TestUtils.showCheckDialog("拡張ページがあらかじめ選択された状態で設定ウィンドウが表示されていますか？");
-        TestUtils.showMessageDialog("次へ進む前にユーザを設定ウィンドウを閉じてください");
+        TestUtils.showCheckDialog("Options window with selecting 'Advanced' page is showed?");
+        TestUtils.showMessageDialog("Please, close the window before the next step.");
     }
 }

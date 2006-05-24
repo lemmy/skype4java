@@ -14,8 +14,8 @@ import junit.framework.TestCase;
 
 public class GroupAPITest extends TestCase {
     public void testGetGroup() throws Exception {
-        TestUtils.showMessageDialog("あらかじめ[テスト]グループを作成して[" + TestData.getFriendId() + "]を追加しておいてください。");
-        Group group = Skype.getContactList().getGroup("テスト");
+        TestUtils.showMessageDialog("Please create 'Test' group and add " + TestData.getFriendId() + " to it before closing this dialog.");
+        Group group = Skype.getContactList().getGroup("Test");
         assertNotNull(group);
         assertTrue(group.hasFriend(TestData.getFriend()));
     }
