@@ -47,7 +47,7 @@ public class CallAPITest extends TestCase {
         call.resume();
         Thread.sleep(5000);
         call.finish();
-        TestUtils.showCheckDialog("You have gotton a 5 seconds talking, 5 seconds suspending, and 5 seconds talkingÅH");
+        TestUtils.showCheckDialog("You have gotton a 5 seconds talking, 5 seconds suspending, and 5 seconds talking?");
     }
 
     public void testCallProperty() throws Exception {
