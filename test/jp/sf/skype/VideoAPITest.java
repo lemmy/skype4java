@@ -16,21 +16,20 @@ public class VideoAPITest extends TestCase {
     public void testGetVideoDevice() throws Exception {
         String name = Skype.getVideoDevice();
         if (name == null) {
-            name = "標準ビデオデバイス";
+            name = "Default video device";
         }
-        TestUtils.showCheckDialog("Webカメラは[" + name + "]に設定されていますか？");
-        Skype.setVideoDevice("");
+        TestUtils.showCheckDialog("Webcam is '" + name + "'?");
     }
 
     public void testOpenVideoTestWindow() throws Exception {
         Skype.openVideoTestWindow();
-        TestUtils.showCheckDialog("Webカメラのテストウィンドウが表示されていますか？");
-        TestUtils.showMessageDialog("次へ進む前にWebカメラのテストウィンドウを閉じてください");
+        TestUtils.showCheckDialog("Webcam test window is showed?");
+        TestUtils.showMessageDialog("Please, close the window before the next step.");
     }
 
     public void testOpenVideoOptionsWindow() throws Exception {
         Skype.openVideoOptionsWindow();
-        TestUtils.showCheckDialog("ビデオ設定ページが表示されていますか？");
-        TestUtils.showMessageDialog("次へ進む前にビデオ設定ページのウィンドウを閉じてください");
+        TestUtils.showCheckDialog("Options window with selectiong 'Video' page is showed?");
+        TestUtils.showMessageDialog("Please, close the window before the next step.");
     }
 }

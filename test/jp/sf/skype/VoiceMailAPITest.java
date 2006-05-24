@@ -15,6 +15,6 @@ import junit.framework.TestCase;
 public class VoiceMailAPITest extends TestCase {
     public void testLeaveVoiceMail() throws Exception {
         TestData.getFriend().leaveVoiceMail();
-        TestUtils.showCheckDialog(TestData.getFriend().getId() + "にボイスメールが送信されましたか？");
+        TestUtils.showCheckDialog(TestData.getFriend().getId() + " has received a voicemail?");
     }
 }
