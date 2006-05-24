@@ -1,83 +1,85 @@
 Skype API for Java <http://skype.sourceforge.jp/>
 
-1.はじめに
-2.準備
-3.リンク集
-4.開発履歴
-5.著作権・免責事項
+1.Introduction
+2.Preparation
+3.Links
+4.Development history
+5.Copyright and exemption matters
 
 
-1.はじめに
+1.Introduction
 
-Skypeは使い始めた時には音声の品質の高さにビックリしました。
-今では仕事、プライベート共に欠かせないツールになっています。
-しかもSkype APIが公開されて様々なプラグインが作れるようになった時にはさらにビッ
-クリしました。
+When I started to use Skype, I was very surprised of the high quality of the voicechat. 
+Now, Skype is an indispensable tool to me in work and private. 
+Moreover, I was surprised further because Skype API was opened to the public
+because it came to be able to make various plug-ins. 
 
-ですが、Javaをメインで使っている僕には他の言語での開発は大変です。
-そのため、いろいろなJavaライブラリをネット上で探しました。
+However, developing plug-ins by not Java languages is difficult to me because my
+main programming language is Java. 
+Therefore, I searched for various Java libraries on the net. 
 
-JNIで通信レイヤーを実現したJSA<http://jsa.sourceforge.net/>、COMをラッピングして
-実現したskype2rtc<http://skype2rtc.sourceforge.net/>を見つけましたがActiveSほど
-には機能が充実していません。
+I found same libraries. But, They are not good to me.
+Thus, I decided to make a new library using the winter break of the company oneself. 
 
-ということで自分自身で会社の冬休みを利用して作成することにしました。
+The feature compared with other libraries
+･developed by the SWT library of the eclipse project to which a lot of tests are done. 
+･supports AP2AP APIs(P2P framework). 
+･supoorts Skype 2.0 APIs (group and video chat). 
 
-他のJavaライブラリと比べての特徴は
-・多くのテストが行われているeclipseプロジェクトのSWTライブラリを用いて実装
-・P2PフレームワークのA2Pをサポート
-・Skype 2.0で追加されたグループ、ビデオチャットもサポート
-となっています。
+By this library
+･You can notify a new blog entry to your friends by the mood text. 
+･You can make a auction management with telephone support. 
+･Groupware by using the P2P framework. 
 
-このライブラリにより
-・自分の最新のブログのエントリタイトルをSkypeのムードテキストにして通知
-・電話サポートが行えるオークション管理ソフトを作成
-・P2Pフレームワークを用いてグループウェアを作成
-等々、様々なアプリケーションをJavaを用いて簡単に開発できるようになります。
+You can develop various applications using Java easily. 
 
-いろいろ応用して遊んでみてください♪
-アプリケーションを作成した際にはhisano@gmail.comまでご一報いただけると助かります。
+Please, enjoy this library.
+When you developed an application, please, notify me of it by mail <hisano@gmail.com>.
 
-※Skype社とは一切の関係はございませんので、Skype社にお問い合わせになることはご遠慮ください。
+"There are no relation to Skype Limited, and don't send a question about this library to Skype Limited, please." 
 
 
-2.準備
+2.Preparation
 
-下記の環境を用意してください。
-・JDK5.0(http://java.sun.com/j2se/1.5.0/ja/download.html)
-・eclise3.1(http://www.eclipse.org/downloads/)
+Please prepare the following environment. 
+･JDK5.0(http://java.sun.com/j2se/1.5.0/download.html)
+･eclise3.1(http://www.eclipse.org/downloads/)
 
-その後、eclipseの[ファイル - インポート]メニューから本プロジェクトをインポートし
-てください。
-APIの使い方はJUnitのテストケースをご覧ください。
+Afterwards, please import this project by [File - Import] menu of the eclipse. 
 
-他のアプリケーションに組み込む場合はreleaseフォルダ内の
-・skype.jar
-・swt.jar
-・swt-win32-3139.dll(ネイティブライブラリ)
-をlibフォルダ内にコピーしてご利用ください。
-作成したアプリケーションを実行する場合には以下のようにネイティブライブラリの場所
-を指定しなければいけませんのでご注意ください。
+Please, see the testcases by JUnit about the usage of APIs. 
 
-java -Djava.library.path=lib -classpath bin;lib\skype.jar;lib\swt.jar Main
+You have to distribute these with your application.
+･skype.jar
+･swt.jar
+･swt-win32-3139.dll
 
+Please note that the place in the native library should be specified as follows 
+when the application start. 
 
-3.リンク集
+java -Djava.library.path=lib -classpath bin;lib\skype.jar;lib\swt.jar [your application main class name]
+(when your application's 'lib' directory contains these files)
 
+3.Links
+
+Main Site (Japanese)
 http://skype.sourceforge.jp/index.php?%A5%EA%A5%F3%A5%AF%BD%B8
 
+Forum
+http://forum.skype.com/viewtopic.php?t=44387
 
-4.開発履歴
+Skype API document
+https://developer.skype.com/Docs/ApiDoc/FrontPage
 
-ver0.9 - 2006/01/15(日)
-　ベータ版公開
+4.Development history
+
+ver0.9 - 2006/01/15(Sunday)
+ released Beta version
 
 
-5.著作権・免責事項
+5.Copyright and exemption matters
 
-Skypeは、Skype Limitedの米国、およびその他の国における商標、または登録商標です。
+Skype is a trademark of Skype Limited in the United States and other countries.
 
-Skype API for Javaの著作権は久納孝治が有しています。
-本ライブラリのご利用によって何らかの障害や金銭的なものも含めた損失が生じたとして
-も如何なる理由であれ作者は一切の責任を負いません。
-利用者の自己責任においてご使用して下さい。
+Koji Hisano <hisano@gmail.com> has the copyright of Skype API for Java.
+Please, use this in user's self-responsibility. 
