@@ -15,6 +15,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * 
+ * 20060524; 	bartlamot;	Changed package and classname of the MacOS to OSX
+ *
+ */
 public abstract class Connector {
     public enum Status {
         PENDING_AUTHORIZATION, ATTACHED, REFUSED, NOT_AVAILABLE, API_AVAILABLE, NOT_RUNNING;
@@ -31,7 +36,7 @@ public abstract class Connector {
             } else if (osName.startsWith("Linux") || osName.startsWith("LINUX")) {
                 connectorClassName = "jp.sf.skype.connector.linux.LinuxConnector";
             } else if (osName.startsWith("Mac OS X")) {
-                connectorClassName = "jp.sf.skype.connector.macos.MacOSConnector";
+                connectorClassName = "jp.sf.skype.connector.osx.OSXConnector";
             }
             if (connectorClassName == null) {
                 throw new IllegalStateException("This platform is not supported by Skype API for Java.");
