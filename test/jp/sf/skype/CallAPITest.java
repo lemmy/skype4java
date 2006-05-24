@@ -15,12 +15,12 @@ import junit.framework.TestCase;
 
 public class CallAPITest extends TestCase {
     public void testCallAndFinish() throws Exception {
-        TestUtils.showMessageDialog(TestData.getFriendId() + "に発信が行われて2秒後に切れるかどうか確認してください");
+        TestUtils.showMessageDialog("Please, check " + TestData.getFriendId() + " will receive a call and it will be finished after two seconds?");
         Friend friend = Skype.getContactList().getFriend(TestData.getFriendId());
         Call call = friend.call();
         Thread.sleep(2000);
         call.finish();
-        TestUtils.showCheckDialog(TestData.getFriendId() + "に発信が行われて2秒後に切れましたか？");
+        TestUtils.showCheckDialog(TestData.getFriendId() + " has received a call and it was finished after two seconds?");
     }
 
     public void testFinishEndedCall() throws Exception {
@@ -37,26 +37,26 @@ public class CallAPITest extends TestCase {
     }
 
     public void testHoldAndResume() throws Exception {
-        TestUtils.showMessageDialog(TestData.getFriendId() + "に発信が行われて10秒以内に会話を開始してください");
+        TestUtils.showMessageDialog("Please, start a talking with " + TestData.getFriendId() + " in ten seconds after starting a call.");
         Friend friend = Skype.getContactList().getFriend(TestData.getFriendId());
         Call call = friend.call();
         Thread.sleep(10000);
-        TestUtils.showMessageDialog("5秒間通話が中断された後に5秒間通話が再開されるか確認してください");
+        TestUtils.showMessageDialog("Please, check 5 seconds talking, 5 seconds suspending, and 5 seconds talking.");
         call.hold();
         Thread.sleep(5000);
         call.resume();
         Thread.sleep(5000);
         call.finish();
-        TestUtils.showCheckDialog("5秒間通話が中断された後に5秒間通話が再開されましたか？");
+        TestUtils.showCheckDialog("You have gotton a 5 seconds talking, 5 seconds suspending, and 5 seconds talking？");
     }
 
     public void testCallProperty() throws Exception {
         Date startTime = new Date();
-        TestUtils.showMessageDialog(TestData.getFriendId() + "に発信が行われて10秒以内に会話を開始してください");
+        TestUtils.showMessageDialog("Please, start a talking with " + TestData.getFriendId() + " in ten seconds after starting a call.");
         Friend friend = Skype.getContactList().getFriend(TestData.getFriendId());
         Call call = friend.call();
         Thread.sleep(10000);
-        TestUtils.showMessageDialog("自動切断後に各種プロパティの値がテストされます");
+        TestUtils.showMessageDialog("The tests for call properties will be started.");
         call.finish();
         Date endTime = new Date();
         assertTrue(call.getStartTime().getTime() - startTime.getTime() <= endTime.getTime() - startTime.getTime());
@@ -73,7 +73,7 @@ public class CallAPITest extends TestCase {
                 result[0] = call;
             }
         });
-        TestUtils.showMessageDialog("自分に対して" + TestData.getFriendId() + "に発信を依頼して着信したらダイアログを閉じて切断してください");
+        TestUtils.showMessageDialog("Please, request " + TestData.getFriendId() + " to call me, receive the call, and finish.");
         assertEquals(TestData.getFriendId(), result[0].getPartnerId());
     }
 }
