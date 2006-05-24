@@ -1,0 +1,491 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 39;
+	objects = {
+		00E6828EFEC88D1A11DB9C8B = {
+			buildSettings = {
+			};
+			buildStyles = (
+				130F8B95001BDF0A11CA292A,
+				130F8B96001BDF0A11CA292A,
+			);
+			hasScannedForEncodings = 1;
+			isa = PBXProject;
+			mainGroup = 00E6828FFEC88D1A11DB9C8B;
+			productRefGroup = 0120612AFEC8923411DB9C8B;
+			projectDirPath = "";
+			targets = (
+				6A9FA557024694440CC91562,
+				6A9FA55B024695C00CC91562,
+				6A9FA570024696E90CC91562,
+				6A9FA6030246AD840CC91562,
+			);
+		};
+		00E6828FFEC88D1A11DB9C8B = {
+			children = (
+				CCA0114908B3D87300D3B5AE,
+				CCA0113F08B3D85500D3B5AE,
+				6A52677B022AFE3B0CC91562,
+				363028F90383184400C91562,
+				6A46BB2D022D9DFF0CC91562,
+				6AE2200B0208CA9C0CC91562,
+				0120612AFEC8923411DB9C8B,
+			);
+			isa = PBXGroup;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+//000
+//001
+//002
+//003
+//004
+//010
+//011
+//012
+//013
+//014
+		0120612AFEC8923411DB9C8B = {
+			children = (
+				6A9FA571024696E90CC91562,
+				6A9FA6040246AD840CC91562,
+				329C727F0360BF9A00C91783,
+			);
+			isa = PBXGroup;
+			name = Products;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+//010
+//011
+//012
+//013
+//014
+//130
+//131
+//132
+//133
+//134
+		130F8B95001BDF0A11CA292A = {
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ZERO_LINK = YES;
+			};
+			isa = PBXBuildStyle;
+			name = Development;
+		};
+		130F8B96001BDF0A11CA292A = {
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				ZERO_LINK = NO;
+			};
+			isa = PBXBuildStyle;
+			name = Deployment;
+		};
+//130
+//131
+//132
+//133
+//134
+//320
+//321
+//322
+//323
+//324
+		329C727F0360BF9A00C91783 = {
+			explicitFileType = "compiled.mach-o.dylib";
+			includeInIndex = 0;
+			isa = PBXFileReference;
+			path = SkypeAPIConnector.jar;
+			refType = 3;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+//320
+//321
+//322
+//323
+//324
+//360
+//361
+//362
+//363
+//364
+		363028F90383184400C91562 = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			path = Manifest;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		363028FA0383184400C91562 = {
+			fileRef = 363028F90383184400C91562;
+			isa = PBXBuildFile;
+			settings = {
+				JAVA_ARCHIVE_SUBDIR = "";
+			};
+		};
+		36ABB269061E0EED00C43093 = {
+			containerPortal = 00E6828EFEC88D1A11DB9C8B;
+			isa = PBXContainerItemProxy;
+			proxyType = 1;
+			remoteGlobalIDString = 6A9FA570024696E90CC91562;
+			remoteInfo = JNILib;
+		};
+		36ABB26A061E0EED00C43093 = {
+			containerPortal = 00E6828EFEC88D1A11DB9C8B;
+			isa = PBXContainerItemProxy;
+			proxyType = 1;
+			remoteGlobalIDString = 6A9FA6030246AD840CC91562;
+			remoteInfo = Headers;
+		};
+		36ABB26B061E0EED00C43093 = {
+			containerPortal = 00E6828EFEC88D1A11DB9C8B;
+			isa = PBXContainerItemProxy;
+			proxyType = 1;
+			remoteGlobalIDString = 6A9FA55B024695C00CC91562;
+			remoteInfo = JNIWrapper;
+		};
+//360
+//361
+//362
+//363
+//364
+//6A0
+//6A1
+//6A2
+//6A3
+//6A4
+		6A46BB2D022D9DFF0CC91562 = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.java;
+			path = SkypeAPIConnector.java;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		6A52677B022AFE3B0CC91562 = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
+			path = JSAjnilib.c;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		6A9FA557024694440CC91562 = {
+			buildPhases = (
+			);
+			buildSettings = {
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = JSA;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+			};
+			dependencies = (
+				6A9FA55D024695C10CC91562,
+				6A9FA6060246ADAE0CC91562,
+				6A9FA5910246996C0CC91562,
+			);
+			isa = PBXAggregateTarget;
+			name = JSA;
+			productName = JNIApplication;
+		};
+		6A9FA558024695C00CC91562 = {
+			buildActionMask = 2147483647;
+			files = (
+				6A9FA562024695DC0CC91562,
+			);
+			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6A9FA559024695C00CC91562 = {
+			buildActionMask = 2147483647;
+			files = (
+				363028FA0383184400C91562,
+			);
+			isa = PBXJavaArchiveBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6A9FA55A024695C00CC91562 = {
+			buildActionMask = 2147483647;
+			files = (
+				CCA0114008B3D85500D3B5AE,
+				CCA0114A08B3D87300D3B5AE,
+			);
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6A9FA55B024695C00CC91562 = {
+			buildPhases = (
+				6A9FA558024695C00CC91562,
+				6A9FA559024695C00CC91562,
+				6A9FA55A024695C00CC91562,
+			);
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				JAVA_ARCHIVE_COMPRESSION = NO;
+				JAVA_ARCHIVE_TYPE = JAR;
+				JAVA_COMPILER = /usr/bin/javac;
+				JAVA_MANIFEST_FILE = Manifest;
+				JAVA_SOURCE_SUBDIR = .;
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOL_FLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = SkypeAPIConnector;
+				PURE_JAVA = YES;
+				REZ_EXECUTABLE = YES;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+			};
+			dependencies = (
+			);
+			isa = PBXLibraryTarget;
+			name = JNIWrapper;
+			productInstallPath = /usr/local/lib;
+			productName = JNIWrapper;
+			productReference = 329C727F0360BF9A00C91783;
+		};
+		6A9FA55D024695C10CC91562 = {
+			isa = PBXTargetDependency;
+			target = 6A9FA55B024695C00CC91562;
+			targetProxy = 36ABB26B061E0EED00C43093;
+		};
+		6A9FA562024695DC0CC91562 = {
+			fileRef = 6A46BB2D022D9DFF0CC91562;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		6A9FA56C024696E90CC91562 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXHeadersBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6A9FA56D024696E90CC91562 = {
+			buildActionMask = 2147483647;
+			files = (
+				6A9FA572024696FD0CC91562,
+			);
+			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6A9FA56E024696E90CC91562 = {
+			buildActionMask = 2147483647;
+			files = (
+				6A9FA587024697120CC91562,
+				CCA0114108B3D85500D3B5AE,
+				CCA0114B08B3D87300D3B5AE,
+			);
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6A9FA56F024696E90CC91562 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXRezBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6A9FA570024696E90CC91562 = {
+			buildPhases = (
+				6A9FA56C024696E90CC91562,
+				6A9FA56D024696E90CC91562,
+				6A9FA56E024696E90CC91562,
+				6A9FA56F024696E90CC91562,
+			);
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				HEADER_SEARCH_PATHS = "\"${OBJROOT}/Headers\" \"$(SYSTEM_LIBRARY_DIR)/Frameworks/JavaVM.framework/Headers\"";
+				LIBRARY_STYLE = DYNAMIC;
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOL_FLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = libJSA.jnilib;
+				REZ_EXECUTABLE = YES;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+			};
+			dependencies = (
+			);
+			isa = PBXLibraryTarget;
+			name = JNILib;
+			productName = ExampleJNILib;
+			productReference = 6A9FA571024696E90CC91562;
+		};
+		6A9FA571024696E90CC91562 = {
+			explicitFileType = "compiled.mach-o.dylib";
+			isa = PBXFileReference;
+			path = libJSA.jnilib;
+			refType = 3;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		6A9FA572024696FD0CC91562 = {
+			fileRef = 6A52677B022AFE3B0CC91562;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		6A9FA587024697120CC91562 = {
+			fileRef = 6AE2200B0208CA9C0CC91562;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		6A9FA5910246996C0CC91562 = {
+			isa = PBXTargetDependency;
+			target = 6A9FA570024696E90CC91562;
+			targetProxy = 36ABB269061E0EED00C43093;
+		};
+		6A9FA6000246AD840CC91562 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6A9FA6010246AD840CC91562 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXJavaArchiveBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6A9FA6020246AD840CC91562 = {
+			buildActionMask = 2147483647;
+			files = (
+				CCA0114208B3D85500D3B5AE,
+				CCA0114C08B3D87300D3B5AE,
+			);
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6A9FA6030246AD840CC91562 = {
+			buildPhases = (
+				6A9FA6000246AD840CC91562,
+				6A9FA6050246AD8E0CC91562,
+				6A9FA6010246AD840CC91562,
+				6A9FA6020246AD840CC91562,
+			);
+			buildSettings = {
+				PRODUCT_NAME = Headers/com_skype_jsa_connector_osx_SkypeAPIConnector.h;
+				REZ_EXECUTABLE = YES;
+			};
+			dependencies = (
+			);
+			isa = PBXLibraryTarget;
+			name = Headers;
+			productInstallPath = /usr/local/lib;
+			productName = CreateHeaders;
+			productReference = 6A9FA6040246AD840CC91562;
+		};
+		6A9FA6040246AD840CC91562 = {
+			explicitFileType = "compiled.mach-o.dylib";
+			isa = PBXFileReference;
+			path = Headers/com_skype_jsa_connector_osx_SkypeAPIConnector.h;
+			refType = 3;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		6A9FA6050246AD8E0CC91562 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "javah -classpath \"${BUILD_DIR}/SkypeAPIConnector.jar\" -force -d \"${OBJROOT}/Headers\" \"com.skype.jsa.connector.osx.SkypeAPIConnector\"";
+		};
+		6A9FA6060246ADAE0CC91562 = {
+			isa = PBXTargetDependency;
+			target = 6A9FA6030246AD840CC91562;
+			targetProxy = 36ABB26A061E0EED00C43093;
+		};
+		6AE2200B0208CA9C0CC91562 = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.framework;
+			name = JavaVM.framework;
+			path = /System/Library/Frameworks/JavaVM.framework;
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+//6A0
+//6A1
+//6A2
+//6A3
+//6A4
+//CC0
+//CC1
+//CC2
+//CC3
+//CC4
+		CCA0113F08B3D85500D3B5AE = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.framework;
+			name = CoreFoundation.framework;
+			path = /System/Library/Frameworks/CoreFoundation.framework;
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+		CCA0114008B3D85500D3B5AE = {
+			fileRef = CCA0113F08B3D85500D3B5AE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		CCA0114108B3D85500D3B5AE = {
+			fileRef = CCA0113F08B3D85500D3B5AE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		CCA0114208B3D85500D3B5AE = {
+			fileRef = CCA0113F08B3D85500D3B5AE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		CCA0114908B3D87300D3B5AE = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.framework;
+			name = Skype.framework;
+			path = /System/Library/Frameworks/Skype.framework;
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+		CCA0114A08B3D87300D3B5AE = {
+			fileRef = CCA0114908B3D87300D3B5AE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		CCA0114B08B3D87300D3B5AE = {
+			fileRef = CCA0114908B3D87300D3B5AE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		CCA0114C08B3D87300D3B5AE = {
+			fileRef = CCA0114908B3D87300D3B5AE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+	};
+	rootObject = 00E6828EFEC88D1A11DB9C8B;
+}

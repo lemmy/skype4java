@@ -1,0 +1,6 @@
+rule DefineHeaderDependencies
+{
+}
+
+DefineHeaderDependencies "<Headers/com_skype_jsa_connector_osx_SkypeAPIConnector.h>Headers/com_skype_jsa_connector_osx_SkypeAPIConnector.h" ;
+

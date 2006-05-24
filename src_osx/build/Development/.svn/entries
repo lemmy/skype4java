@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   repos="https://svn.sourceforge.net/svnroot/jsa"
+   revision="1"
+   url="https://svn.sourceforge.net/svnroot/jsa/source/Mac/JSA/build/Development"
+   last-author="xic"
+   committed-date="2006-05-12T18:28:13.892000Z"
+   name=""
+   kind="dir"
+   committed-rev="1"/>
+<entry
+   checksum="8f035f3ee751731bae79396fa6f1a122"
+   last-author="xic"
+   prop-time="2006-05-12T18:27:17.000000Z"
+   text-time="2006-03-30T07:05:22.000000Z"
+   committed-date="2006-05-12T18:28:13.892000Z"
+   name="SkypeAPIConnector"
+   kind="file"
+   committed-rev="1"/>
+<entry
+   checksum="507571c22c7ea8ca08e69a56653beff6"
+   last-author="xic"
+   prop-time="2006-05-12T18:27:17.000000Z"
+   text-time="2006-03-30T07:05:22.000000Z"
+   committed-date="2006-05-12T18:28:13.892000Z"
+   name="SkypeAPIConnector.jar"
+   kind="file"
+   committed-rev="1"/>
+</wc-entries>

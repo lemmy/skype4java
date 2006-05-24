@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   revision="1"
+   repos="https://svn.sourceforge.net/svnroot/jsa"
+   url="https://svn.sourceforge.net/svnroot/jsa/source/Mac/JSA/JSA.xcode"
+   last-author="xic"
+   committed-date="2006-05-12T18:28:13.892000Z"
+   kind="dir"
+   name=""
+   committed-rev="1"/>
+<entry
+   checksum="73a7fabbb3f1654a09ee88131456dd94"
+   last-author="xic"
+   prop-time="2006-05-12T18:27:20.000000Z"
+   text-time="2005-11-18T18:05:34.000000Z"
+   committed-date="2006-05-12T18:28:13.892000Z"
+   kind="file"
+   name="bart.mode1"
+   committed-rev="1"/>
+<entry
+   checksum="e7ed6885af9518d3d9ea165fed4c49cc"
+   last-author="xic"
+   prop-time="2006-05-12T18:27:20.000000Z"
+   text-time="2005-11-18T18:05:34.000000Z"
+   committed-date="2006-05-12T18:28:13.892000Z"
+   name="bart.pbxuser"
+   kind="file"
+   committed-rev="1"/>
+<entry
+   checksum="98cead049a02d4f48bf1b3281be5474b"
+   last-author="xic"
+   prop-time="2006-05-12T18:27:20.000000Z"
+   text-time="2005-08-17T19:58:44.000000Z"
+   committed-date="2006-05-12T18:28:13.892000Z"
+   kind="file"
+   name="default.pbxuser"
+   committed-rev="1"/>
+<entry
+   checksum="9ce84a830fda8138faba5071f1da92fa"
+   last-author="xic"
+   prop-time="2006-05-12T18:27:20.000000Z"
+   text-time="2005-11-18T18:05:34.000000Z"
+   committed-date="2006-05-12T18:28:13.892000Z"
+   name="project.pbxproj"
+   kind="file"
+   committed-rev="1"/>
+</wc-entries>

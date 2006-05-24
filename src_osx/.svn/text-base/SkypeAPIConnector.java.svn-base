@@ -1,0 +1,166 @@
+package com.skype.jsa.connector.osx;
+
+//
+//  JNIWrapper.java
+//
+//  Created by Bart on 17-8-05.
+//  Copyright (c) 2005 __MyCompanyName__. All rights reserved.
+//
+
+import java.util.*;
+
+public class SkypeAPIConnector {
+
+    static {
+        // Ensure native JNI library is loaded
+        System.loadLibrary("JSA");
+    }
+
+    public SkypeAPIConnector() {
+        System.out.println("JNIWrapper instance created");
+    }
+
+    native int native_method(String arg);
+
+    public static void main (String args[]) {
+        // insert code here...
+        System.out.println("Started JNIWrapper");
+        SkypeAPIConnector newjni = new SkypeAPIConnector();
+		newjni.initialize();
+        newjni.waitforresponse();
+		newjni.destroy();
+        System.out.println("Finished");
+    }
+	
+		//Status definitions
+	public static final int attachAPIStatusPendingAuthorisation = 1;
+	public static final int attachAPIStatusRefused = 2;
+	public static final int attachAPIStatusNotAvailable = 3;
+	public static final int attachAPIStatusAPIAvailable = 4;
+	public static final int attachAPIStatusSucces = 5;
+	
+	private static SkypeAPIConnector _instance = null;
+	private static int currentAttachAPIStatus = 0;
+	
+	private static boolean noresponse = true;
+	
+	void waitforresponse() {
+	    System.out.print("Waiting...");
+		for (int i=0; i < 6000 ; i++) {
+		   try {
+		     Thread.yield();
+			 Thread.sleep(10);
+		   } catch (Exception e) {
+		     
+			}
+		   System.out.print(".");
+		}
+		System.out.println("done waiting dude");
+	}
+	
+	/*
+	 * Must be called before images are loaded and instances are created.
+	 **/
+	public boolean initialize()
+	{
+		System.out.println("SkypeAPIConnector.initialize()");
+		_instance = this;
+		//	 Load JNI library
+		try
+		{
+			System.loadLibrary( "JSA" );
+			nativeInit();				
+		}
+		catch( UnsatisfiedLinkError x )
+		{
+			x.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Sends a message to the native API.
+	 * Does not wait for a answer (asynchronious).
+	 * @param message contains the message to be send to the API.
+	 * @return empty String if succesfull null if not succesfull.
+	 */
+	public String sendMessage(String message) {
+		System.out.println("SkypeAPIConnector.sendMessage(" + message + ")");
+		//Check if a connection with the API is made.
+		if (isAPIStatusSucces()) {
+			try {
+				//Weird Windows API behaviour needs and extra space.
+				nativeSendMessage(message.trim()+" ");
+				return "";
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
+		} else {
+			//There is no connection with the API; we cannot send.
+			return null;
+		}
+	}
+	
+	public void destroy() {
+		System.out.println("SkypeAPIConnector.destroy()");
+		try {
+			nativeDestroy();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private synchronized static native int nativeSendMessage( String message ) throws UnsatisfiedLinkError;
+	private synchronized static native int nativeDestroy() throws UnsatisfiedLinkError;
+	private synchronized static native int nativeInit() throws UnsatisfiedLinkError;
+	
+	/**
+	 * This method is called by the dll when a skype message is received.
+	 * @param skypeID the ID of the Skype instance
+	 * @param message the message received
+	 */
+	public static void onCallback(final int skypeID,final String message) {
+		System.out.println("SkypeAPIConnector.onCallback(); Message from Skype("+skypeID+"): "+message);
+		//_instance.onMessageReceived(message);		
+		//noresponse=false;
+	}
+
+	/**
+	 * Called by the dll when a skype instance is found.
+	 *
+	 */
+	public static void onSkypeAPIStatus(int status){
+		System.out.println("SkypeAPIConnector.onSkypeAPIStatus("+status+")");
+		currentAttachAPIStatus = status;
+		//noresponse = false;
+	}
+
+	public int getCurrentAPIAttachStatus(){
+		return currentAttachAPIStatus;
+	}
+	
+
+	public boolean isAPIStatusPendingAuthorisation() {
+		return (currentAttachAPIStatus == attachAPIStatusPendingAuthorisation);
+	}
+	
+	public boolean isAPIStatusRefused() {
+		return (currentAttachAPIStatus == attachAPIStatusRefused);
+	}
+	
+	public boolean isAPIStatusNotAvailable() {
+		return (currentAttachAPIStatus == attachAPIStatusNotAvailable);
+	}
+	
+	public boolean isAPIStatusAPIAvailable() {
+		return (currentAttachAPIStatus == attachAPIStatusAPIAvailable);
+	}
+	
+	public boolean isAPIStatusSucces() {
+		return (currentAttachAPIStatus == attachAPIStatusSucces);
+	}
+	
+
+}
