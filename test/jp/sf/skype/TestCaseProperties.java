@@ -23,7 +23,7 @@ final class TestCaseProperties {
         try {
             properties.load(getClass().getResourceAsStream(getPropertyFileName()));
         } catch (Exception e) {
-            Assert.fail(getPropertyFileName() + ".baseファイルを元に" + getPropertyFileName() + "ファイルを同じディレクトリ内に作成してください");
+            Assert.fail("Please, create '" + getPropertyFileName() + "' file by '" + getPropertyFileName() + ".base' file in the same directory.");
         }
     }
 
@@ -33,7 +33,7 @@ final class TestCaseProperties {
 
     String getProperty(String key) {
         if (!properties.containsKey(key)) {
-            throw new IllegalArgumentException(getPropertyFileName() + "ファイルに" + key + "エントリが含まれていません");
+            throw new IllegalArgumentException("'" + getPropertyFileName() + "' file doesn't have '" + key + "' entry.");
         }
         return properties.getProperty(key);
     }
