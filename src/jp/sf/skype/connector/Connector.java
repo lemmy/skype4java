@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     Koji Hisano - initial API and implementation
+ *     Bart Lamot - changed package and class of the MacOS to OSX
  *******************************************************************************/
 package jp.sf.skype.connector;
 
@@ -15,11 +16,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * 
- * 20060524; 	bartlamot;	Changed package and classname of the MacOS to OSX
- *
- */
 public abstract class Connector {
     public enum Status {
         PENDING_AUTHORIZATION, ATTACHED, REFUSED, NOT_AVAILABLE, API_AVAILABLE, NOT_RUNNING;
