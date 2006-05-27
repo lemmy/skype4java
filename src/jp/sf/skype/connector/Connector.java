@@ -11,7 +11,7 @@
  *******************************************************************************/
 package jp.sf.skype.connector;
 
-import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,10 +53,10 @@ public abstract class Connector {
     /**
      * The debug output stream.
      * <p>
-     * This stream is initialized by {@link System#err}.
+     * This stream is initialized by <code>new PrintWriter(System.err, true)</code>.
      * </p>
      */
-    private PrintStream debugOut = System.err;
+    private PrintWriter debugOut = new PrintWriter(System.err, true);
     private ConnectorMessageReceivedListener debugListener;
     private Object debugFieldMutex = new Object();
     private String applicationName = "Skype API for Java";
@@ -104,7 +104,7 @@ public abstract class Connector {
      * 
      * @see #getDebugOut()
      */
-    public final void setDebugOut(PrintStream debugOut) {
+    public final void setDebugOut(PrintWriter debugOut) {
         Utils.checkNotNull("debugOut", debugOut);
         this.debugOut = debugOut;
     }
@@ -114,9 +114,9 @@ public abstract class Connector {
      * 
      * @return the current debug output stream
      * 
-     * @see #setDebugOut(PrintStream)
+     * @see #setDebugOut(PrintWriter)
      */
-    public final PrintStream getDebugOut() {
+    public final PrintWriter getDebugOut() {
         return debugOut;
     }
 
