@@ -11,6 +11,7 @@
  *******************************************************************************/
 package jp.sf.skype.connector;
 
+import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,6 +50,13 @@ public abstract class Connector {
     }
 
     private boolean debug = false;
+    /**
+     * The debug output stream.
+     * <p>
+     * This stream is initialized by {@link System#err}.
+     * </p>
+     */
+    private PrintStream debugOut = System.err;
     private ConnectorMessageReceivedListener debugListener;
     private Object debugFieldMutex = new Object();
     private String applicationName = "Skype API for Java";
@@ -72,7 +80,7 @@ public abstract class Connector {
             if (debug) {
                 debugListener = new ConnectorMessageReceivedListener() {
                     public void messageReceived(String message) {
-                        System.err.println("<- " + message);
+                        getDebugOut().println("<- " + message);
                     }
                 };
                 addConnectorMessageReceivedListener(debugListener);
@@ -86,7 +94,32 @@ public abstract class Connector {
     private boolean isDebug() {
         return debug;
     }
-    
+
+    /**
+     * Sets the debug output stream.
+     * 
+     * @param debugOut the new debug output stream
+     * 
+     * @throws NullPointerException if <code>debugOut</code> is null.
+     * 
+     * @see #getDebugOut()
+     */
+    public final void setDebugOut(PrintStream debugOut) {
+        Utils.checkNotNull("debugOut", debugOut);
+        this.debugOut = debugOut;
+    }
+
+    /**
+     * Gets the debug output stream.
+     * 
+     * @return the current debug output stream
+     * 
+     * @see #setDebugOut(PrintStream)
+     */
+    public final PrintStream getDebugOut() {
+        return debugOut;
+    }
+
     public final void setApplicationName(String applicationName) {
         Utils.checkNotNull("applicationName", applicationName);
         this.applicationName = applicationName;
@@ -183,7 +216,7 @@ public abstract class Connector {
         processor.init(lock, listener);
         addConnectorMessageReceivedListener(listener, false);
         if (isDebug()) {
-            System.err.println("-> " + command);
+            getDebugOut().println("-> " + command);
         }
         synchronized (lock) {
             try {
@@ -247,7 +280,7 @@ public abstract class Connector {
         };
         addConnectorMessageReceivedListener(listener, false);
         if (isDebug()) {
-            System.err.println("-> " + command);
+            getDebugOut().println("-> " + command);
         }
         synchronized (lock) {
             try {
