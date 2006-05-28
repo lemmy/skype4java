@@ -11,6 +11,7 @@
  *******************************************************************************/
 package jp.sf.skype.connector;
 
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -102,6 +103,7 @@ public abstract class Connector {
      * 
      * @throws NullPointerException if <code>debugOut</code> is null.
      * 
+     * @see #setDebugOut(PrintStream)
      * @see #getDebugOut()
      */
     public final void setDebugOut(PrintWriter debugOut) {
@@ -110,11 +112,27 @@ public abstract class Connector {
     }
 
     /**
+     * Sets the debug output stream.
+     * 
+     * @param debugOut the new debug output stream
+     * 
+     * @throws NullPointerException if <code>debugOut</code> is null.
+     * 
+     * @see #setDebugOut(PrintWriter)
+     * @see #getDebugOut()
+     */
+    public final void setDebugOut(PrintStream debugOut) {
+        Utils.checkNotNull("debugOut", debugOut);
+        setDebugOut(new PrintWriter(debugOut, true));
+    }
+
+    /**
      * Gets the debug output stream.
      * 
      * @return the current debug output stream
      * 
      * @see #setDebugOut(PrintWriter)
+     * @see #setDebugOut(PrintStream)
      */
     public final PrintWriter getDebugOut() {
         return debugOut;
