@@ -26,11 +26,7 @@ public final class Profile {
         UNKNOWN, MALE, FEMALE;
     }
 
-    public enum CallForwardingAction {
-        REJECT, FORWARD, VOICEMAIL
-    }
-
-    public final class CallForwardingRule {
+    public static final class CallForwardingRule {
         private final int startSecond;
         private final int endSecond;
         private final String target;
@@ -38,6 +34,9 @@ public final class Profile {
         public CallForwardingRule(int startSecond, int endSecond, String target) {
             this.startSecond = startSecond;
             this.endSecond = endSecond;
+            if (target.startsWith("+")) {
+                target = target.replaceAll("-", "");
+            }
             this.target = target;
         }
 
@@ -281,12 +280,12 @@ public final class Profile {
         setProfileProperty("CALL_NOANSWER_TIMEOUT", "" + second);
     }
 
-    public CallForwardingAction getCallForwardingAction() throws SkypeException {
-        return CallForwardingAction.valueOf(getProfileProperty("CALL_NOANSWER_ACTION"));
+    public boolean isCallForwarding() throws SkypeException {
+        return Boolean.parseBoolean(getProfileProperty("CALL_APPLY_CF"));
     }
 
-    public void setCallForwardingAction(CallForwardingAction newValue) throws SkypeException {
-        setProfileProperty("CALL_NOANSWER_ACTION", newValue.toString());
+    public void setCallForwarding(boolean on) throws SkypeException {
+        setProfileProperty("CALL_APPLY_CF", ("" + on).toUpperCase());
     }
 
     public CallForwardingRule[] getAllCallForwardingRules() throws SkypeException {
