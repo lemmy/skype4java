@@ -1,2 +1,0 @@
-runas /user:skype_api_for_java "\"C:\Program Files\Java\jdk1.5.0_06\bin\java.exe\" -Djava.library.path=C:\eclipse3.1.1\workspace\skype\lib\swt -classpath C:\eclipse3.1.1\workspace\skype\bin;C:\eclipse3.1.1\workspace\skype\lib\swt\swt.jar;C:\eclipse3.1.1\plugins\org.junit_3.8.1\junit.jar jp.sf.skype.skypetools.meetingtext.MeetingText"
-	
