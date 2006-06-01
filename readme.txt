@@ -81,5 +81,5 @@ ver0.9 - 2006/01/15(Sunday)
 
 Skype is a trademark of Skype Limited in the United States and other countries.
 
-Koji Hisano <hisano@gmail.com> has the copyright of Skype API for Java.
+Koji Hisano <hisano@gmail.com> and UBION Inc. have the copyright of Skype API for Java.
 Please, use this in user's self-responsibility. 

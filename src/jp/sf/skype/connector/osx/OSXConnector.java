@@ -1,6 +1,10 @@
+/*******************************************************************************
+ * Copyright (c) 2006 Bart Lamot
+ *
+ * Contributors:
+ *     Bart Lamot - initial API and implementation
+ *******************************************************************************/
 package jp.sf.skype.connector.osx;
-
-
 
 import jp.sf.skype.connector.Connector;
 import jp.sf.skype.connector.ConnectorException;
