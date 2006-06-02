@@ -36,7 +36,7 @@ You can develop various applications using Java easily.
 Please, enjoy this library.
 When you developed an application, please, notify me of it by mail <hisano@gmail.com>.
 
-"There are no relation to Skype Limited, and don't send a question about this library to Skype Limited, please." 
+"Skype Technologies S.A. supports developing this library, but don't send a question about this library to Skype Technologies S.A., please." 
 
 
 2.Preparation
@@ -81,5 +81,5 @@ ver0.9 - 2006/01/15(Sunday)
 
 Skype is a trademark of Skype Limited in the United States and other countries.
 
-Koji Hisano <hisano@gmail.com> and UBION Inc. have the copyright of Skype API for Java.
+Koji Hisano <hisano@gmail.com>, UBION Inc. and Skype Technologies S.A. have the copyright of Skype API for Java.
 Please, use this in user's self-responsibility. 
