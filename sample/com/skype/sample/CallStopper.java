@@ -22,19 +22,13 @@ public class CallStopper {
         Skype.setDeamon(false);
         Skype.addCallListener(new CallAdapter() {
             @Override
-            public void callMaked(Call makedCall) {
-                try {
-                    makedCall.finish();
-                } catch (SkypeException e) {
-                }
+            public void callMaked(Call makedCall) throws SkypeException {
+                makedCall.finish();
             }
 
             @Override
-            public void callReceived(Call receivedCall) {
-                try {
-                    receivedCall.finish();
-                } catch (SkypeException e) {
-                }
+            public void callReceived(Call receivedCall) throws SkypeException {
+                receivedCall.finish();
             }
         });
     }

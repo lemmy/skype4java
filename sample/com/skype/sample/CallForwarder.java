@@ -15,6 +15,7 @@ package com.skype.sample;
 import com.skype.Call;
 import com.skype.CallAdapter;
 import com.skype.Skype;
+import com.skype.SkypeException;
 import com.skype.Profile.CallForwardingRule;
 
 public class CallForwarder {
@@ -22,15 +23,15 @@ public class CallForwarder {
         Skype.setDeamon(false);
         Skype.addCallListener(new CallAdapter() {
             @Override
-            public void callReceived(Call receivedCall) {
+            public void callReceived(Call receivedCall) throws SkypeException {
+                CallForwardingRule[] oldRules = Skype.getProfile().getAllCallForwardingRules();
+                Skype.getProfile().setAllCallForwardingRules(new CallForwardingRule[] { new CallForwardingRule(0, 30, "echo123") });
+                receivedCall.forward();
                 try {
-                    CallForwardingRule[] oldRules = Skype.getProfile().getAllCallForwardingRules();
-                    Skype.getProfile().setAllCallForwardingRules(new CallForwardingRule[] { new CallForwardingRule(0, 30, "echo123") });
-                    receivedCall.forward();
                     Thread.sleep(10000); // to prevent finishing this call
-                    Skype.getProfile().setAllCallForwardingRules(oldRules);
-                } catch (Exception e) {
+                } catch (InterruptedException e) {
                 }
+                Skype.getProfile().setAllCallForwardingRules(oldRules);
             }
         });
     }

@@ -25,10 +25,10 @@ public final class Ap2ApAPIStressTestServer {
         final Application application = Skype.addApplication(Ap2ApAPIStressTest.APPLICATION_NAME);
         final Object lock = new Object();
         application.addApplicationListener(new ApplicationAdapter() {
-            public void connected(final Stream stream) {
+            public void connected(final Stream stream) throws SkypeException {
                 stream.addStreamListener(new StreamAdapter() {
                     @Override
-                    public void textReceived(String text) {
+                    public void textReceived(String text) throws SkypeException {
                         try {
                             if ("disconnect".equals(text)) {
                                 stream.disconnect();
@@ -47,7 +47,7 @@ public final class Ap2ApAPIStressTestServer {
             }
 
             @Override
-            public void disconnected(Stream stream) {
+            public void disconnected(Stream stream) throws SkypeException {
                 synchronized (lock) {
                     lock.notify();
                 }

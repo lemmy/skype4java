@@ -13,7 +13,17 @@
  ******************************************************************************/
 package com.skype;
 
-public interface ApplicationListener {
-    void connected(Stream stream) throws SkypeException;
-    void disconnected(Stream stream) throws SkypeException;
+/**
+ * Interface to handle an uncaught {@link SkypeException} in the listener's callback method. 
+ * @see Skype#setSkypeExceptionHanlder()
+ */
+public interface SkypeExceptionHandler {
+    /** 
+     * Invoked when the {@link SkypeException} happened in calling the listener's callback method.
+     * <p>
+     * Each failure of calling callback method executes this method.
+     * </p>
+     * @param e the exception occured in the listener's callback method
+     */
+    void uncaughtExceptionHappened(SkypeException e);
 }

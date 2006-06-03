@@ -63,7 +63,7 @@ public final class Ap2ApAPITest extends TestCase {
         final String[] result = new String[1];
         stream.addStreamListener(new StreamAdapter() {
             @Override
-            public void textReceived(String text) {
+            public void textReceived(String text) throws SkypeException {
                 result[0] = text;
                 synchronized (lock) {
                     lock.notify();
@@ -86,7 +86,7 @@ public final class Ap2ApAPITest extends TestCase {
         final String[] result = new String[1];
         stream.addStreamListener(new StreamAdapter() {
             @Override
-            public void datagramReceived(String datagram) {
+            public void datagramReceived(String datagram) throws SkypeException {
                 result[0] = datagram;
                 synchronized (lock) {
                     lock.notify();
@@ -109,7 +109,7 @@ public final class Ap2ApAPITest extends TestCase {
         final boolean[] result = new boolean[1];
         application.addApplicationListener(new ApplicationAdapter() {
             @Override
-            public void disconnected(Stream stream) {
+            public void disconnected(Stream stream) throws SkypeException {
                 result[0] = true;
                 synchronized (lock) {
                     lock.notify();

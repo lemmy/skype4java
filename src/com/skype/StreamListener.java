@@ -13,7 +13,6 @@
 package com.skype;
 
 public interface StreamListener {
-    public void textReceived(String text);
-
-    public void datagramReceived(String datagram);
+    public void textReceived(String receivedText) throws SkypeException;
+    public void datagramReceived(String receivedDatagram) throws SkypeException;
 }

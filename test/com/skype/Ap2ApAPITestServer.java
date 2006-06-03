@@ -25,10 +25,10 @@ public final class Ap2ApAPITestServer {
         final Application application = Skype.addApplication(Ap2ApAPITest.APPLICATION_NAME);
         final Object lock = new Object();
         application.addApplicationListener(new ApplicationAdapter() {
-            public void connected(final Stream stream) {
+            public void connected(final Stream stream) throws SkypeException {
                 stream.addStreamListener(new StreamAdapter() {
                     @Override
-                    public void textReceived(String text) {
+                    public void textReceived(String text) throws SkypeException {
                         try {
                             if ("disconnect".equals(text)) {
                                 stream.disconnect();
@@ -45,7 +45,7 @@ public final class Ap2ApAPITestServer {
                     }
 
                     @Override
-                    public void datagramReceived(String datagram) {
+                    public void datagramReceived(String datagram) throws SkypeException {
                         try {
                             stream.send(datagram);
                         } catch (SkypeException e) {
@@ -60,7 +60,7 @@ public final class Ap2ApAPITestServer {
             }
 
             @Override
-            public void disconnected(Stream stream) {
+            public void disconnected(Stream stream) throws SkypeException {
                 synchronized (lock) {
                     lock.notify();
                 }

@@ -14,5 +14,5 @@
 package com.skype;
 
 public interface CallStatusChangedListener {
-    void statusChanged(Call call);
+    void statusChanged(Call call) throws SkypeException;
 }

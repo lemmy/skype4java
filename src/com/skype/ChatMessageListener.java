@@ -14,7 +14,6 @@
 package com.skype;
 
 public interface ChatMessageListener {
-    void chatMessageReceived(ChatMessage receivedChatMessage);
-
-    void chatMessageSent(ChatMessage sentChatMessage);
+    void chatMessageReceived(ChatMessage receivedChatMessage) throws SkypeException;
+    void chatMessageSent(ChatMessage sentChatMessage) throws SkypeException;
 }

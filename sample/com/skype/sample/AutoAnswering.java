@@ -21,13 +21,9 @@ public class AutoAnswering {
     public static void main(String[] args) throws Exception {
         Skype.setDeamon(false); // to prevent exiting from this program
         Skype.addChatMessageListener(new ChatMessageAdapter() {
-            public void chatMessageReceived(ChatMessage received) {
-                try {
-                    if (received.getType().equals(ChatMessage.Type.SAID)) {
-                        received.getSender().send("I'm working. Please, wait a moment.");
-                    }
-                } catch (SkypeException e) {
-                    e.printStackTrace();
+            public void chatMessageReceived(ChatMessage received) throws SkypeException {
+                if (received.getType().equals(ChatMessage.Type.SAID)) {
+                    received.getSender().send("I'm working. Please, wait a moment.");
                 }
             }
         });

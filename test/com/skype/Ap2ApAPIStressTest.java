@@ -57,7 +57,7 @@ public final class Ap2ApAPIStressTest extends TestCase {
                         final Object lock = new Object();
                         stream.addStreamListener(new StreamAdapter() {
                             @Override
-                            public void textReceived(String text) {
+                            public void textReceived(String text) throws SkypeException {
                                 results[index] = text;
                                 synchronized (lock) {
                                     lock.notify();
@@ -94,7 +94,7 @@ public final class Ap2ApAPIStressTest extends TestCase {
         final boolean[] result = new boolean[1];
         application.addApplicationListener(new ApplicationAdapter() {
             @Override
-            public void disconnected(Stream stream) {
+            public void disconnected(Stream stream) throws SkypeException {
                 result[0] = true;
                 synchronized (lock) {
                     lock.notify();

@@ -43,8 +43,9 @@ public final class Call {
     }
 
     private final String id;
-
     private final List<CallStatusChangedListener> listeners = Collections.synchronizedList(new ArrayList<CallStatusChangedListener>());
+    
+    private SkypeExceptionHandler exceptionHandler;
 
     Call(String id) {
         this.id = id;
@@ -80,7 +81,11 @@ public final class Call {
     void fireStatusChanged(Status status) {
         CallStatusChangedListener[] listeners = this.listeners.toArray(new CallStatusChangedListener[0]); // イベント通知中にリストが変更される可能性があるため
         for (CallStatusChangedListener listener : listeners) {
-            listener.statusChanged(this);
+            try {
+                listener.statusChanged(this);
+            } catch (SkypeException e) {
+                Utils.handleUncaughtException(e, exceptionHandler);
+            }
         }
     }
 

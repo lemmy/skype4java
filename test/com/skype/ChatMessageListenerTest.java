@@ -23,7 +23,7 @@ public class ChatMessageListenerTest extends TestCase {
         final boolean[] sent = new boolean[1];
         Skype.addChatMessageListener(new ChatMessageAdapter() {
             @Override
-            public void chatMessageSent(ChatMessage sentChatMessage) {
+            public void chatMessageSent(ChatMessage sentChatMessage) throws SkypeException {
                 sent[0] = true;
                 Skype.removeChatMessageListener(this);
             }
@@ -34,7 +34,7 @@ public class ChatMessageListenerTest extends TestCase {
         final boolean[] received = new boolean[1];
         Skype.addChatMessageListener(new ChatMessageAdapter() {
             @Override
-            public void chatMessageReceived(ChatMessage receivedChatMessage) {
+            public void chatMessageReceived(ChatMessage receivedChatMessage) throws SkypeException {
                 received[0] = true;
                 Skype.removeChatMessageListener(this);
             }

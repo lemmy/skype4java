@@ -14,9 +14,9 @@
 package com.skype;
 
 public class ChatMessageAdapter implements ChatMessageListener {
-    public void chatMessageReceived(ChatMessage receivedChatMessage) {
+    public void chatMessageReceived(ChatMessage receivedChatMessage) throws SkypeException {
     }
 
-    public void chatMessageSent(ChatMessage sentChatMessage) {
+    public void chatMessageSent(ChatMessage sentChatMessage) throws SkypeException {
     }
 }

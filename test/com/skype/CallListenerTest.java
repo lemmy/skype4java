@@ -24,7 +24,7 @@ public class CallListenerTest extends TestCase {
         final boolean[] maked = new boolean[1];
         Skype.addCallListener(new CallAdapter() {
             @Override
-            public void callMaked(Call makedCall) {
+            public void callMaked(Call makedCall) throws SkypeException {
                 maked[0] = true;
                 Skype.removeCallListener(this);
             }
@@ -35,7 +35,7 @@ public class CallListenerTest extends TestCase {
         final boolean[] received = new boolean[1];
         Skype.addCallListener(new CallAdapter() {
             @Override
-            public void callReceived(Call receivedCall) {
+            public void callReceived(Call receivedCall) throws SkypeException {
                 received[0] = true;
                 Skype.removeCallListener(this);
             }

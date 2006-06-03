@@ -34,6 +34,8 @@ public final class Application {
     private boolean isFinished;
     private Object isFinishedFieldMutex = new Object();
     private Thread shutdownHookForFinish;
+    
+    private SkypeExceptionHandler exceptionHandler;
 
     Application(String name) {
         assert name != null;
@@ -116,7 +118,11 @@ public final class Application {
         assert stream != null;
         ApplicationListener[] listeners = this.listeners.toArray(new ApplicationListener[0]); // イベント通知中にリストが変更される可能性があるため
         for (ApplicationListener listener : listeners) {
-            listener.connected(stream);
+            try {
+                listener.connected(stream);
+            } catch(SkypeException e) {
+                Utils.handleUncaughtException(e, exceptionHandler);
+            }
         }
     }
 
@@ -124,7 +130,11 @@ public final class Application {
         assert stream != null;
         ApplicationListener[] listeners = this.listeners.toArray(new ApplicationListener[0]); // イベント通知中にリストが変更される可能性があるため
         for (ApplicationListener listener : listeners) {
-            listener.disconnected(stream);
+            try {
+                listener.disconnected(stream);
+            } catch (SkypeException e) {
+                Utils.handleUncaughtException(e, exceptionHandler);
+            }
         }
     }
 

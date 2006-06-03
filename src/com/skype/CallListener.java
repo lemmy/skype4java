@@ -14,7 +14,6 @@
 package com.skype;
 
 public interface CallListener {
-    void callReceived(Call receivedCall);
-
-    void callMaked(Call makedCall);
+    void callReceived(Call receivedCall) throws SkypeException;
+    void callMaked(Call makedCall) throws SkypeException;
 }

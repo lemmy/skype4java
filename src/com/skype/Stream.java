@@ -22,12 +22,11 @@ import com.skype.connector.MessageProcessor;
 
 public final class Stream {
     private final Application application;
-
     private final Friend friend;
-
     private final int number;
 
     private List<StreamListener> listeners = new ArrayList<StreamListener>();
+    private SkypeExceptionHandler exceptionHandler;
 
     Stream(Application application, Friend friend, int number) {
         assert application != null;
@@ -111,7 +110,11 @@ public final class Stream {
         assert text != null;
         StreamListener[] listeners = this.listeners.toArray(new StreamListener[0]); // イベント通知中にリストが変更される可能性があるため
         for (StreamListener listener : listeners) {
-            listener.textReceived(text);
+            try {
+                listener.textReceived(text);
+            } catch (SkypeException e) {
+                Utils.handleUncaughtException(e, exceptionHandler);
+            }
         }
     }
 
@@ -119,7 +122,11 @@ public final class Stream {
         assert datagram != null;
         StreamListener[] listeners = this.listeners.toArray(new StreamListener[0]); // イベント通知中にリストが変更される可能性があるため
         for (StreamListener listener : listeners) {
-            listener.datagramReceived(datagram);
+            try {
+                listener.datagramReceived(datagram);
+            } catch (SkypeException e) {
+                Utils.handleUncaughtException(e, exceptionHandler);
+            }
         }
     }
 

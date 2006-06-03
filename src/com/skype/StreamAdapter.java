@@ -14,9 +14,9 @@
 package com.skype;
 
 public class StreamAdapter implements StreamListener {
-    public void textReceived(String text) {
+    public void textReceived(String receivedText) throws SkypeException {
     }
 
-    public void datagramReceived(String datagram) {
+    public void datagramReceived(String receivedDatagram) throws SkypeException {
     }
 }

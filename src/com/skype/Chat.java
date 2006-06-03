@@ -58,7 +58,7 @@ public final class Chat {
     public ChatMessage send(String message) throws SkypeException {
         try {
             String responseHeader = "CHATMESSAGE ";
-            String response = Connector.getInstance().execute("CHATMESSAGE " + getId() + " " + message, responseHeader);
+            String response = Connector.getInstance().executeWithId("CHATMESSAGE " + getId() + " " + message, responseHeader);
             Utils.checkError(response);
             String id = response.substring(responseHeader.length(), response.indexOf(" STATUS "));
             return new ChatMessage(id);

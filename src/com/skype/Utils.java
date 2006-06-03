@@ -157,6 +157,14 @@ final class Utils {
         return calendar.getTime();
     }
 
+    static void handleUncaughtException(SkypeException e, SkypeExceptionHandler exceptionHandler) {
+        if (exceptionHandler != null) {
+            exceptionHandler.uncaughtExceptionHappened(e);
+            return;
+        }
+        Skype.handleUncaughtException(e);
+    }
+
     private Utils() {
     }
 }

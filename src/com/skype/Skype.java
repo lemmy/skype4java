@@ -29,8 +29,8 @@ public final class Skype {
     }
 
     public enum Button {
-        KEY_0, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_A, KEY_B, KEY_C, KEY_D, KEY_E, KEY_F, KEY_G, KEY_H, KEY_I, KEY_J, KEY_K, KEY_L, KEY_M, KEY_N, KEY_O, KEY_P, KEY_Q, KEY_R, KEY_S, KEY_T, KEY_U, KEY_V, KEY_W, KEY_X, KEY_Y, KEY_Z, KEY_SHARP(
-                "#"), KEY_ASTERISK("*"), KEY_PLUS("+"), KEY_UP, KEY_DOWN, KEY_YES, KEY_NO, KEY_PAGEUP, KEY_PAGEDOWN, KEY_SKYPE;
+        KEY_0, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_A, KEY_B, KEY_C, KEY_D, KEY_E, KEY_F, KEY_G, KEY_H, KEY_I, KEY_J, KEY_K, KEY_L, KEY_M, KEY_N, KEY_O, KEY_P, KEY_Q, KEY_R, KEY_S, KEY_T, KEY_U, KEY_V, KEY_W, KEY_X, KEY_Y, KEY_Z, KEY_SHARP(                "#"), KEY_ASTERISK("*"), KEY_PLUS("+"), KEY_UP, KEY_DOWN, KEY_YES, KEY_NO, KEY_PAGEUP, KEY_PAGEDOWN, KEY_SKYPE;
+
         private String key;
 
         private Button() {
@@ -50,24 +50,25 @@ public final class Skype {
     }
 
     private static ContactList contactList;
-
     private static Profile profile;
 
     private static Object chatMessageListenerMutex = new Object();
-
     private static ConnectorMessageReceivedListener chatMessageListener;
-
     private static List<ChatMessageListener> chatMessageListeners = Collections.synchronizedList(new ArrayList<ChatMessageListener>());
 
     private static Object callListenerMutex = new Object();
-
     private static ConnectorMessageReceivedListener callListener;
-
     private static List<CallListener> callListeners = Collections.synchronizedList(new ArrayList<CallListener>());
 
     private static Thread userThread;
-
     private static Object userThreadFieldMutex = new Object();
+
+    private static SkypeExceptionHandler defaultExceptionHandler = new SkypeExceptionHandler() {
+        public void uncaughtExceptionHappened(SkypeException e) {
+            e.printStackTrace();
+        }
+    };
+    private static SkypeExceptionHandler exceptionHandler = defaultExceptionHandler;
 
     public static void setDeamon(boolean on) {
         synchronized (userThreadFieldMutex) {
@@ -265,7 +266,7 @@ public final class Skype {
     public static Chat chat(String skypeId) throws SkypeException {
         try {
             String responseHeader = "CHAT ";
-            String response = Connector.getInstance().execute("CHAT CREATE " + skypeId, responseHeader);
+            String response = Connector.getInstance().executeWithId("CHAT CREATE " + skypeId, responseHeader);
             Utils.checkError(response);
             String id = response.substring(responseHeader.length(), response.indexOf(" STATUS "));
             return new Chat(id);
@@ -430,11 +431,19 @@ public final class Skype {
                                 ChatMessage chatMessage = new ChatMessage(id);
                                 if ("SENT".equals(propertyValue)) {
                                     for (ChatMessageListener listener : listeners) {
-                                        listener.chatMessageSent(chatMessage);
+                                        try {
+                                            listener.chatMessageSent(chatMessage);
+                                        } catch (SkypeException e) {
+                                            handleUncaughtException(e);
+                                        }
                                     }
                                 } else if ("RECEIVED".equals(propertyValue)) {
                                     for (ChatMessageListener listener : listeners) {
-                                        listener.chatMessageReceived(chatMessage);
+                                        try {
+                                            listener.chatMessageReceived(chatMessage);
+                                        } catch (SkypeException e) {
+                                            handleUncaughtException(e);
+                                        }
                                     }
                                 }
                             }
@@ -490,20 +499,26 @@ public final class Skype {
                                                 case OUTGOING_P2P:
                                                 case OUTGOING_PSTN:
                                                     for (CallListener listener : listeners) {
-                                                        listener.callMaked(call);
+                                                        try {
+                                                            listener.callMaked(call);
+                                                        } catch (SkypeException e) {
+                                                            handleUncaughtException(e);
+                                                        }
                                                     }
                                                     break;
                                                 case INCOMING_P2P:
                                                 case INCOMING_PSTN:
                                                     for (CallListener listener : listeners) {
-                                                        listener.callReceived(call);
+                                                        try {
+                                                            listener.callReceived(call);
+                                                        } catch (SkypeException e) {
+                                                            handleUncaughtException(e);
+                                                        }
                                                     }
                                                     break;
                                                 }
                                             } catch (SkypeException e) {
-                                                // TODO add handler for
-                                                // exception
-                                                e.printStackTrace();
+                                                handleUncaughtException(e);
                                             }
                                         }
                                     }
@@ -549,6 +564,17 @@ public final class Skype {
             builder.append(array[i]);
         }
         return builder.toString();
+    }
+
+    public static void setSkypeExceptionHandler(SkypeExceptionHandler handler) {
+        if (handler == null) {
+            handler = defaultExceptionHandler;
+        }
+        exceptionHandler = handler;
+    }
+
+    static void handleUncaughtException(SkypeException e) {
+        exceptionHandler.uncaughtExceptionHappened(e);
     }
 
     private Skype() {

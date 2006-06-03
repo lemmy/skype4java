@@ -14,9 +14,9 @@
 package com.skype;
 
 public class CallAdapter implements CallListener {
-    public void callReceived(Call receivedCall) {
+    public void callReceived(Call receivedCall) throws SkypeException {
     }
 
-    public void callMaked(Call makedCall) {
+    public void callMaked(Call makedCall) throws SkypeException {
     }
 }

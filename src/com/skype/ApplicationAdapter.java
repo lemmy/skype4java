@@ -14,9 +14,9 @@
 package com.skype;
 
 public class ApplicationAdapter implements ApplicationListener {
-    public void connected(Stream stream) {
+    public void connected(Stream stream) throws SkypeException {
     }
 
-    public void disconnected(Stream stream) {
+    public void disconnected(Stream stream) throws SkypeException {
     }
 }
