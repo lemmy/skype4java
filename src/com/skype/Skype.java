@@ -380,14 +380,35 @@ public final class Skype {
         Utils.executeWithErrorCheck("OPEN OPTIONS VIDEO");
     }
 
-    private Skype() {
-    }
-
     public static synchronized Profile getProfile() {
         if (profile == null) {
             profile = new Profile();
         }
         return profile;
+    }
+
+    /**
+     * Gets the recent chats in the locally-cached history.
+     *
+     * @return The recent chats in the locally-cached history
+     *
+     * @throws SkypeException If there is a problem with the connection or state at the Skype client
+     */
+    public static final Chat[] getRecentChats() throws SkypeException {
+        try {
+            String responseHeader = "CHATS ";
+            String response = Connector.getInstance().execute("SEARCH RECENTCHATS", responseHeader);
+            String data = response.substring(responseHeader.length());
+            String[] ids = Utils.convertToArray(data);
+            Chat[] chats = new Chat[ids.length];
+            for (int i = 0; i < ids.length; ++i) {
+                chats[i] = new Chat(ids[i]);
+            }
+            return chats;
+        } catch (ConnectorException ex) {
+            Utils.convertToSkypeException(ex);
+            return null;
+        }
     }
 
     public static void addChatMessageListener(ChatMessageListener listener) throws SkypeException {
@@ -528,5 +549,8 @@ public final class Skype {
             builder.append(array[i]);
         }
         return builder.toString();
+    }
+
+    private Skype() {
     }
 }

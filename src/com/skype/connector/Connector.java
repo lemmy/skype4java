@@ -8,8 +8,9 @@
  * terms of the Common Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation Bart Lamot -
- * changed package and class of the MacOS to OSX
+ * Contributors:
+ * Koji Hisano - initial API and implementation
+ * Bart Lamot - changed package and class of the MacOS to OSX
  ******************************************************************************/
 package com.skype.connector;
 
