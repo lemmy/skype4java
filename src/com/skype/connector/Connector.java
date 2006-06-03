@@ -32,9 +32,9 @@ public abstract class Connector {
             String osName = System.getProperty("os.name");
             String connectorClassName = null;
             if (osName.startsWith("Windows")) {
-                connectorClassName = "jp.sf.skype.connector.windows.WindowsConnector";
+                connectorClassName = "com.skype.connector.windows.WindowsConnector";
             } else if (osName.startsWith("Linux") || osName.startsWith("LINUX")) {
-                connectorClassName = "jp.sf.skype.connector.linux.LinuxConnector";
+                connectorClassName = "com.skype.connector.linux.LinuxConnector";
             } else if (osName.startsWith("Mac OS X")) {
                 connectorClassName = "jp.sf.skype.connector.osx.OSXConnector";
             }
