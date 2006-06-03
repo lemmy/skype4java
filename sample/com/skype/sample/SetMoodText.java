@@ -17,7 +17,7 @@ import com.skype.Skype;
 public class SetMoodText {
     public static void main(String[] args) throws Exception {
         if (args.length != 1) {
-            System.out.println("Usage: java jp.sf.skype.sample.SetMoodText 'mood_text'");
+            System.out.println("Usage: java com.skype.sample.SetMoodText 'mood_text'");
             return;
         }
         Skype.getProfile().setMoodMessage(args[0]);
