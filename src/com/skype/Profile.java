@@ -21,6 +21,12 @@ import java.util.List;
 
 /**
  * The <code>Profile</code> class contains the current user's information.
+ * <p>
+ * For example, you can get the mood message of the current user by this code:
+ * <pre>String moodMessage = Skype.getProfile().getMoodMessage();</pre>
+ * And you can change it by the following code:
+ * <pre>Skype.getProfile().setMoodMessage("Happy!");</pre>
+ * </p>
  */
 public final class Profile {
     /**
@@ -185,7 +191,7 @@ public final class Profile {
     }
 
     /**
-     * Sets the online status of the current user.
+     * Sets the online status of the current user by the {@link Status} enum.
      * @param newStatus the new online status of the current user.
      * @throws SkypeException
      * @see #getStatus()
@@ -309,7 +315,7 @@ public final class Profile {
     }
 
     /**
-     * Sets the sex of the current user.
+     * Sets the sex of the current user by the {@link Sex} enum.
      * @param newValue the new sex of the current user.
      * @throws SkypeException
      * @see #getSex()
