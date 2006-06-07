@@ -55,6 +55,81 @@ public final class Chat {
         }
     }
 
+    public void addUser(User addedUser) throws SkypeException {
+        Utils.checkNotNull("addedUser", addedUser);
+        addUsers(new User[] {addedUser});
+    }
+
+    public void addUsers(User[] addedUsers) throws SkypeException {
+        Utils.checkNotNull("addedUsers", addedUsers);
+        try {
+            String command = "ALTER CHAT " + id + " ADDMEMBERS " + toCommaSeparatedString(addedUsers);
+            String responseHeader = "ALTER CHAT ADDMEMBERS";
+            String response = Connector.getInstance().execute(command, responseHeader);
+            Utils.checkError(response);
+        } catch (ConnectorException e) {
+            Utils.convertToSkypeException(e);
+        }
+    }
+
+    private static String toCommaSeparatedString(User[] users) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < users.length; i++) {
+            if (i != 0) {
+                builder.append(", ");
+            }
+            builder.append(users[i].getId());
+        }
+        return builder.toString();
+    }
+
+    public void leave() throws SkypeException {
+        try {
+            String command = "ALTER CHAT " + id + " LEAVE";
+            String responseHeader = "ALTER CHAT LEAVE";
+            String response = Connector.getInstance().execute(command, responseHeader);
+            Utils.checkError(response);
+        } catch (ConnectorException e) {
+            Utils.convertToSkypeException(e);
+        }
+    }
+
+    public ChatMessage[] getAllChatMessages() throws SkypeException {
+        try {
+            String command = "GET CHAT " + id + " CHATMESSAGES";
+            String responseHeader = "CHAT " + id + " CHATMESSAGES ";
+            String response = Connector.getInstance().execute(command, responseHeader);
+            String data = response.substring(responseHeader.length());
+            String[] ids = Utils.convertToArray(data);
+            ChatMessage[] chatMessages = new ChatMessage[ids.length];
+            for (int i = 0; i < ids.length; ++i) {
+                chatMessages[i] = new ChatMessage(ids[i]);
+            }
+            return chatMessages;
+        } catch (ConnectorException ex) {
+            Utils.convertToSkypeException(ex);
+            return null;
+        }
+    }
+
+    public ChatMessage[] getRecentChatMessages() throws SkypeException {
+        try {
+            String command = "GET CHAT " + id + " RECENTCHATMESSAGES";
+            String responseHeader = "CHAT " + id + " RECENTCHATMESSAGES ";
+            String response = Connector.getInstance().execute(command, responseHeader);
+            String data = response.substring(responseHeader.length());
+            String[] ids = Utils.convertToArray(data);
+            ChatMessage[] chatMessages = new ChatMessage[ids.length];
+            for (int i = 0; i < ids.length; ++i) {
+                chatMessages[i] = new ChatMessage(ids[i]);
+            }
+            return chatMessages;
+        } catch (ConnectorException ex) {
+            Utils.convertToSkypeException(ex);
+            return null;
+        }
+    }
+
     public ChatMessage send(String message) throws SkypeException {
         try {
             String responseHeader = "CHATMESSAGE ";

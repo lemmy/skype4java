@@ -23,6 +23,10 @@ final class TestData {
         return Skype.getContactList().getFriend(data.getProperty("id"));
     }
 
+    static Friend getFriend2() throws SkypeException {
+        return Skype.getContactList().getFriend(data.getProperty("id2"));
+    }
+
     static String getFriendId() throws SkypeException {
         return getFriend().getId();
     }
