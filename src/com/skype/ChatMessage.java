@@ -100,12 +100,10 @@ public final class ChatMessage {
         return users;
     }
 
-    /*
-     * public boolean isSeen() throws SkypeException { return
-     * Boolean.parseBoolean(getProperty("SEEN")); }
-     */
-
     private String getProperty(String name) throws SkypeException {
         return Utils.getProperty("CHATMESSAGE", getId(), name);
     }
+
+    // TODO void setSeen()
+    // TODO boolean isSeen()
 }
