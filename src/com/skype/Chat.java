@@ -13,29 +13,33 @@
  ******************************************************************************/
 package com.skype;
 
+import java.util.Date;
+
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
 
 public final class Chat {
     public enum Status {
-        DIALOG, MULTI_SUBSCRIBED;
+        // TODO examine when LEGACY_DIALOG is used
+        DIALOG, LEGACY_DIALOG, MULTI_SUBSCRIBED, UNSUBSCRIBED;
     }
 
     private final String id;
 
     Chat(String id) {
+        assert id != null;
         this.id = id;
     }
 
     @Override
     public int hashCode() {
-        return id.hashCode();
+        return getId().hashCode();
     }
 
     @Override
     public boolean equals(Object compared) {
         if (compared instanceof Chat) {
-            return id.equals(((Chat) compared).id);
+            return getId().equals(((Chat) compared).getId());
         }
         return false;
     }
@@ -46,7 +50,7 @@ public final class Chat {
 
     public void setTopic(String newValue) throws SkypeException {
         try {
-            String command = "ALTER CHAT " + id + " SETTOPIC " + newValue;
+            String command = "ALTER CHAT " + getId() + " SETTOPIC " + newValue;
             String responseHeader = "ALTER CHAT SETTOPIC";
             String response = Connector.getInstance().execute(command, responseHeader);
             Utils.checkError(response);
@@ -63,7 +67,7 @@ public final class Chat {
     public void addUsers(User[] addedUsers) throws SkypeException {
         Utils.checkNotNull("addedUsers", addedUsers);
         try {
-            String command = "ALTER CHAT " + id + " ADDMEMBERS " + toCommaSeparatedString(addedUsers);
+            String command = "ALTER CHAT " + getId() + " ADDMEMBERS " + toCommaSeparatedString(addedUsers);
             String responseHeader = "ALTER CHAT ADDMEMBERS";
             String response = Connector.getInstance().execute(command, responseHeader);
             Utils.checkError(response);
@@ -85,7 +89,7 @@ public final class Chat {
 
     public void leave() throws SkypeException {
         try {
-            String command = "ALTER CHAT " + id + " LEAVE";
+            String command = "ALTER CHAT " + getId() + " LEAVE";
             String responseHeader = "ALTER CHAT LEAVE";
             String response = Connector.getInstance().execute(command, responseHeader);
             Utils.checkError(response);
@@ -96,8 +100,8 @@ public final class Chat {
 
     public ChatMessage[] getAllChatMessages() throws SkypeException {
         try {
-            String command = "GET CHAT " + id + " CHATMESSAGES";
-            String responseHeader = "CHAT " + id + " CHATMESSAGES ";
+            String command = "GET CHAT " + getId() + " CHATMESSAGES";
+            String responseHeader = "CHAT " + getId() + " CHATMESSAGES ";
             String response = Connector.getInstance().execute(command, responseHeader);
             String data = response.substring(responseHeader.length());
             String[] ids = Utils.convertToArray(data);
@@ -114,8 +118,8 @@ public final class Chat {
 
     public ChatMessage[] getRecentChatMessages() throws SkypeException {
         try {
-            String command = "GET CHAT " + id + " RECENTCHATMESSAGES";
-            String responseHeader = "CHAT " + id + " RECENTCHATMESSAGES ";
+            String command = "GET CHAT " + getId() + " RECENTCHATMESSAGES";
+            String responseHeader = "CHAT " + getId() + " RECENTCHATMESSAGES ";
             String response = Connector.getInstance().execute(command, responseHeader);
             String data = response.substring(responseHeader.length());
             String[] ids = Utils.convertToArray(data);
@@ -141,5 +145,64 @@ public final class Chat {
             Utils.convertToSkypeException(e);
             return null;
         }
+    }
+
+    public Date getTime() throws SkypeException {
+        return Utils.parseUnixTime(getProperty("TIMESTAMP"));
+    }
+
+    public User getAdder() throws SkypeException {
+        String adder = getProperty("ADDER");
+        if ("".equals(adder)) {
+            return null;
+        } else {
+            return new User(adder);
+        }
+    }
+
+    public Status getStatus() throws SkypeException {
+        return Status.valueOf(Utils.getPropertyWithCommandId("CHAT", getId(), "STATUS"));
+    }
+
+    public String getWindowTitle() throws SkypeException {
+        return getProperty("FRIENDLYNAME");
+    }
+
+    public User[] getAllPosters() throws SkypeException {
+        return getUsersProperty("POSTERS");
+    }
+
+    public User[] getAllMembers() throws SkypeException {
+        return getUsersProperty("MEMBERS");
+    }
+
+    // TODO examine what are active members
+    public User[] getAllActiveMembers() throws SkypeException {
+        return getUsersProperty("ACTIVEMEMBERS");
+    }
+
+    private User[] getUsersProperty(String name) throws SkypeException {
+        try {
+            String command = "GET CHAT " + getId() + " " + name;
+            String responseHeader = "CHAT " + id + " " + name + " ";
+            String response = Connector.getInstance().execute(command, responseHeader);
+            String data = response.substring(responseHeader.length());
+            if ("".equals(data)) {
+                return new User[0];
+            }
+            String[] ids = data.split(" ");
+            User[] users = new User[ids.length];
+            for (int i = 0; i < ids.length; ++i) {
+                users[i] = new User(ids[i]);
+            }
+            return users;
+        } catch (ConnectorException ex) {
+            Utils.convertToSkypeException(ex);
+            return null;
+        }
+    }
+
+    private String getProperty(String name) throws SkypeException {
+        return Utils.getProperty("CHAT", getId(), name);
     }
 }
