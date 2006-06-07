@@ -68,15 +68,15 @@ public final class Call {
         return id;
     }
 
-    public void addCallStatusChangedListener(CallStatusChangedListener listener) {
-        Utils.checkNotNull("listener", listener);
-        listeners.add(listener);
-    }
-
-    public void removeCallStatusChangedListener(CallStatusChangedListener listener) {
-        Utils.checkNotNull("listener", listener);
-        listeners.remove(listener);
-    }
+//    public void addCallStatusChangedListener(CallStatusChangedListener listener) {
+//        Utils.checkNotNull("listener", listener);
+//        listeners.add(listener);
+//    }
+//
+//    public void removeCallStatusChangedListener(CallStatusChangedListener listener) {
+//        Utils.checkNotNull("listener", listener);
+//        listeners.remove(listener);
+//    }
 
     void fireStatusChanged(Status status) {
         CallStatusChangedListener[] listeners = this.listeners.toArray(new CallStatusChangedListener[0]); // イベント通知中にリストが変更される可能性があるため
