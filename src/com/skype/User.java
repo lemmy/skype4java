@@ -22,13 +22,70 @@ import java.util.List;
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
 
+/**
+ * The <code>User</code> class contains the skype user's information.
+ * <p>
+ * For example, you can show the full name of the 'echo123' user by this code:
+ * <pre>System.out.println(new User("echo123").getFullName());</pre>
+ * </p>
+ */
 public class User {
+    /**
+     * The <code>Status</code> enum contains the online status constants of the skype user.
+     * @see User#getOnlineStatus()
+     */
     public enum Status {
-        UNKNOWN, OFFLINE, ONLINE, AWAY, NA, DND, SKYPEOUT, SKYPEME;
+        /**
+         * The <code>UNKNOWN</code> constant indicates the skype user status is unknown.
+         */
+        UNKNOWN,
+        /**
+         * The <code>OFFLINE</code> constant indicates the skype user is offline.
+         */
+        OFFLINE,
+        /**
+         * The <code>ONLINE</code> constant indicates the skype user is online.
+         */
+        ONLINE,
+        /**
+         * The <code>AWAY</code> constant indicates the skype user is away.
+         */
+        AWAY,
+        /**
+         * The <code>NA</code> constant indicates the skype user is not available.
+         */
+        NA,
+        /**
+         * The <code>DND</code> constant indicates the skype user is in do not disturb mode.
+         */
+        DND,
+        /**
+         * The <code>SKYPEOUT</code> constant indicates the skype user is in SkypeOut mode.
+         */
+        SKYPEOUT,
+        /**
+         * The <code>SKYPEME</code> constant indicates the skype user is in SkypeMe mode.
+         */
+        SKYPEME,
     }
 
+    /**
+     * The <code>Sex</code> enum contains the sex constants of the skype user.
+     * @see User#getSex()
+     */
     public enum Sex {
-        UNKNOWN, MALE, FEMALE;
+        /**
+         * The <code>UNKNOWN</code> constant indicates the sex of the skype user is unknown.
+         */
+        UNKNOWN,
+        /**
+         * The <code>MALE</code> constant indicates the skype user is male.
+         */
+        MALE,
+        /**
+         * The <code>FEMALE</code> constant indicates the skype user is female.
+         */
+        FEMALE;
     }
 
     private String id;
