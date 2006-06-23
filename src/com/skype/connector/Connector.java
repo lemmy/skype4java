@@ -26,14 +26,26 @@ public abstract class Connector {
         PENDING_AUTHORIZATION, ATTACHED, REFUSED, NOT_AVAILABLE, API_AVAILABLE, NOT_RUNNING;
     }
 
+    private static boolean useJNIConnector;
     private static Connector instance;
+
+    public static synchronized void useJNIConnector(boolean on) {
+        if (instance != null) {
+            throw new IllegalStateException("You should call this method before calling Connector#getInstance().");
+        }
+        useJNIConnector = on;
+    }
 
     public static synchronized Connector getInstance() {
         if (instance == null) {
             String osName = System.getProperty("os.name");
             String connectorClassName = null;
             if (osName.startsWith("Windows")) {
-                connectorClassName = "com.skype.connector.windows.WindowsConnector";
+                if (useJNIConnector) {
+                    connectorClassName = "com.skype.connector.win32.Win32Connector";
+                } else {
+                    connectorClassName = "com.skype.connector.windows.WindowsConnector";
+                }
             } else if (osName.startsWith("Linux") || osName.startsWith("LINUX")) {
                 connectorClassName = "com.skype.connector.linux.LinuxConnector";
             } else if (osName.startsWith("Mac OS X")) {
