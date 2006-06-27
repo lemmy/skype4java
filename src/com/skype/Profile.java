@@ -9,7 +9,8 @@
  * this distribution, and is available at
  * http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
  ******************************************************************************/
 package com.skype;
 
@@ -237,7 +238,7 @@ public final class Profile {
      * @throws SkypeException
      */
     public int getPSTNBalance() throws SkypeException {
-        return Integer.parseInt(getProfileProperty("PSTN_BALANCE"));
+        return Integer.parseInt(getProperty("PSTN_BALANCE"));
     }
 
     /**
@@ -246,7 +247,7 @@ public final class Profile {
      * @throws SkypeException
      */
     public String getPSTNBalanceCurrencyUnit() throws SkypeException {
-        return getProfileProperty("PSTN_BALANCE_CURRENCY");
+        return getProperty("PSTN_BALANCE_CURRENCY");
     }
 
     /**
@@ -256,7 +257,7 @@ public final class Profile {
      * @see #setFullName(String)
      */
     public String getFullName() throws SkypeException {
-        return getProfileProperty("FULLNAME");
+        return getProperty("FULLNAME");
     }
 
     /**
@@ -266,7 +267,7 @@ public final class Profile {
      * @see #getFullName()
      */
     public void setFullName(String newValue) throws SkypeException {
-        setProfileProperty("FULLNAME", newValue);
+        setProperty("FULLNAME", newValue);
     }
 
     /**
@@ -276,7 +277,7 @@ public final class Profile {
      * @see #setBirthDay(Date)
      */
     public Date getBirthDay() throws SkypeException {
-        String value = getProfileProperty("BIRTHDAY");
+        String value = getProperty("BIRTHDAY");
         if ("0".equals(value)) {
             return null;
         } else {
@@ -301,7 +302,7 @@ public final class Profile {
         } else {
             newValueString = new SimpleDateFormat("yyyyMMdd").format(newValue);
         }
-        setProfileProperty("BIRTHDAY", newValueString);
+        setProperty("BIRTHDAY", newValueString);
     }
 
     /**
@@ -311,7 +312,7 @@ public final class Profile {
      * @see #setSex(Sex)
      */
     public Sex getSex() throws SkypeException {
-        return Sex.valueOf((getProfileProperty("SEX")));
+        return Sex.valueOf((getProperty("SEX")));
     }
 
     /**
@@ -321,7 +322,7 @@ public final class Profile {
      * @see #getSex()
      */
     public void setSex(Sex newValue) throws SkypeException {
-        setProfileProperty("SEX", newValue.toString());
+        setProperty("SEX", newValue.toString());
     }
 
     /**
@@ -331,7 +332,7 @@ public final class Profile {
      * @see #setAllLanguages(String[])
      */
     public String[] getAllLauguages() throws SkypeException {
-        return getProfileProperty("LANGUAGES").split(" ");
+        return getProperty("LANGUAGES").split(" ");
     }
 
     /**
@@ -344,7 +345,7 @@ public final class Profile {
         if (newValues == null) {
             newValues = new String[0];
         }
-        setProfileProperty("LANGUAGES", toSpaceSeparatedString(newValues));
+        setProperty("LANGUAGES", toSpaceSeparatedString(newValues));
     }
 
     private String toSpaceSeparatedString(Object[] newValues) {
@@ -363,7 +364,7 @@ public final class Profile {
      * @see <a href="http://en.wikipedia.org/wiki/ISO_3166-1">ISO 3166-1</a>
      */
     public String getCountryByISOCode() throws SkypeException {
-        String value = getProfileProperty("COUNTRY");
+        String value = getProperty("COUNTRY");
         return value.substring(0, value.indexOf(' '));
     }
 
@@ -378,7 +379,7 @@ public final class Profile {
         if (newValue == null) {
             newValue = "";
         }
-        setProfileProperty("COUNTRY", newValue + " " + getCountry());
+        setProperty("COUNTRY", newValue + " " + getCountry());
     }
 
     /**
@@ -388,7 +389,7 @@ public final class Profile {
      * @see #setCountry(String)
      */
     public String getCountry() throws SkypeException {
-        String value = getProfileProperty("COUNTRY");
+        String value = getProperty("COUNTRY");
         return value.substring(value.indexOf(' ') + 1);
     }
 
@@ -402,7 +403,7 @@ public final class Profile {
         if (newValue == null) {
             newValue = "";
         }
-        setProfileProperty("COUNTRY", getCountryByISOCode() + " " + newValue);
+        setProperty("COUNTRY", getCountryByISOCode() + " " + newValue);
     }
 
     /**
@@ -412,7 +413,7 @@ public final class Profile {
      * @see #setProvince(String)
      */
     public String getProvince() throws SkypeException {
-        return getProfileProperty("PROVINCE");
+        return getProperty("PROVINCE");
     }
 
     /**
@@ -422,7 +423,7 @@ public final class Profile {
      * @see #getProvince()
      */
     public void setProvince(String newValue) throws SkypeException {
-        setProfileProperty("PROVINCE", newValue);
+        setProperty("PROVINCE", newValue);
     }
 
     /**
@@ -432,7 +433,7 @@ public final class Profile {
      * @see #setCity(String)
      */
     public String getCity() throws SkypeException {
-        return getProfileProperty("CITY");
+        return getProperty("CITY");
     }
 
     /**
@@ -442,7 +443,7 @@ public final class Profile {
      * @see #getCity()
      */
     public void setCity(String newValue) throws SkypeException {
-        setProfileProperty("CITY", newValue);
+        setProperty("CITY", newValue);
     }
 
     /**
@@ -452,7 +453,7 @@ public final class Profile {
      * @see #setHomePhoneNumber(String)
      */
     public String getHomePhoneNumber() throws SkypeException {
-        return getProfileProperty("PHONE_HOME");
+        return getProperty("PHONE_HOME");
     }
 
     /**
@@ -462,7 +463,7 @@ public final class Profile {
      * @see #getHomePhoneNumber()
      */
     public void setHomePhoneNumber(String newValue) throws SkypeException {
-        setProfileProperty("PHONE_HOME", newValue);
+        setProperty("PHONE_HOME", newValue);
     }
 
     /**
@@ -472,7 +473,7 @@ public final class Profile {
      * @see #setOfficePhoneNumber(String)
      */
     public String getOfficePhoneNumber() throws SkypeException {
-        return getProfileProperty("PHONE_OFFICE");
+        return getProperty("PHONE_OFFICE");
     }
 
     /**
@@ -482,7 +483,7 @@ public final class Profile {
      * @see #getOfficePhoneNumber()
      */
     public void setOfficePhoneNumber(String newValue) throws SkypeException {
-        setProfileProperty("PHONE_OFFICE", newValue);
+        setProperty("PHONE_OFFICE", newValue);
     }
 
     /**
@@ -492,7 +493,7 @@ public final class Profile {
      * @see #setMobilePhoneNumber(String)
      */
     public String getMobilePhoneNumber() throws SkypeException {
-        return getProfileProperty("PHONE_MOBILE");
+        return getProperty("PHONE_MOBILE");
     }
 
     /**
@@ -502,7 +503,7 @@ public final class Profile {
      * @see #getMobilePhoneNumber()
      */
     public void setMobilePhoneNumber(String newValue) throws SkypeException {
-        setProfileProperty("PHONE_MOBILE", newValue);
+        setProperty("PHONE_MOBILE", newValue);
     }
 
     /**
@@ -512,7 +513,7 @@ public final class Profile {
      * @see #setHomePageAddress(String)
      */
     public String getHomePageAddress() throws SkypeException {
-        return getProfileProperty("HOMEPAGE");
+        return getProperty("HOMEPAGE");
     }
 
     /**
@@ -522,7 +523,7 @@ public final class Profile {
      * @see #getHomePageAddress()
      */
     public void setHomePageAddress(String newValue) throws SkypeException {
-        setProfileProperty("HOMEPAGE", newValue);
+        setProperty("HOMEPAGE", newValue);
     }
 
     /**
@@ -532,7 +533,7 @@ public final class Profile {
      * @see #setIntroduction(String)
      */
     public String getIntroduction() throws SkypeException {
-        return getProfileProperty("ABOUT");
+        return getProperty("ABOUT");
     }
 
     /**
@@ -542,7 +543,7 @@ public final class Profile {
      * @see #getIntroduction()
      */
     public void setIntroduction(String newValue) throws SkypeException {
-        setProfileProperty("ABOUT", newValue);
+        setProperty("ABOUT", newValue);
     }
 
     /**
@@ -552,7 +553,7 @@ public final class Profile {
      * @see #setMoodMessage(String)
      */
     public String getMoodMessage() throws SkypeException {
-        return getProfileProperty("MOOD_TEXT");
+        return getProperty("MOOD_TEXT");
     }
 
     /**
@@ -562,7 +563,7 @@ public final class Profile {
      * @see #getMoodMessage()
      */
     public void setMoodMessage(String newValue) throws SkypeException {
-        setProfileProperty("MOOD_TEXT", newValue);
+        setProperty("MOOD_TEXT", newValue);
     }
 
     /**
@@ -572,7 +573,7 @@ public final class Profile {
      * @see #setTimeZone(int)
      */
     public int getTimeZone() throws SkypeException {
-        return Integer.parseInt(getProfileProperty("TIMEZONE"));
+        return Integer.parseInt(getProperty("TIMEZONE"));
     }
 
     /**
@@ -582,7 +583,7 @@ public final class Profile {
      * @see #getTimeZone()
      */
     public void setTimeZone(int newValue) throws SkypeException {
-        setProfileProperty("TIMEZONE", "" + newValue);
+        setProperty("TIMEZONE", "" + newValue);
     }
 
     /**
@@ -591,7 +592,7 @@ public final class Profile {
      * @throws SkypeException
      */
     public boolean isVideoCapable() throws SkypeException {
-        return Boolean.parseBoolean(getProfileProperty("IS_VIDEO_CAPABLE"));
+        return Boolean.parseBoolean(getProperty("IS_VIDEO_CAPABLE"));
     }
 
     /**
@@ -601,7 +602,7 @@ public final class Profile {
      * @see #setWaitTimeBeforeCallForwarding(int)
      */
     public int getWaitTimeBeforeCallForwarding() throws SkypeException {
-        return Integer.parseInt(getProfileProperty("CALL_NOANSWER_TIMEOUT"));
+        return Integer.parseInt(getProperty("CALL_NOANSWER_TIMEOUT"));
     }
 
     /**
@@ -611,7 +612,7 @@ public final class Profile {
      * @see #getWaitTimeBeforeCallForwarding()
      */
     public void setWaitTimeBeforeCallForwarding(int newValue) throws SkypeException {
-        setProfileProperty("CALL_NOANSWER_TIMEOUT", "" + newValue);
+        setProperty("CALL_NOANSWER_TIMEOUT", "" + newValue);
     }
 
     /**
@@ -621,7 +622,7 @@ public final class Profile {
      * @see #setCallForwarding(boolean)
      */
     public boolean isCallForwarding() throws SkypeException {
-        return Boolean.parseBoolean(getProfileProperty("CALL_APPLY_CF"));
+        return Boolean.parseBoolean(getProperty("CALL_APPLY_CF"));
     }
 
     /**
@@ -631,7 +632,7 @@ public final class Profile {
      * @see #isCallForwarding()
      */
     public void setCallForwarding(boolean on) throws SkypeException {
-        setProfileProperty("CALL_APPLY_CF", ("" + on).toUpperCase());
+        setProperty("CALL_APPLY_CF", ("" + on).toUpperCase());
     }
 
     /**
@@ -642,7 +643,7 @@ public final class Profile {
      */
     public CallForwardingRule[] getAllCallForwardingRules() throws SkypeException {
         List<CallForwardingRule> rules = new ArrayList<CallForwardingRule>();
-        for (String rule : getProfileProperty("CALL_FORWARD_RULES").split(" ")) {
+        for (String rule : getProperty("CALL_FORWARD_RULES").split(" ")) {
             String[] elements = rule.split(",");
             rules.add(new CallForwardingRule(Integer.parseInt(elements[0]), Integer.parseInt(elements[1]), elements[2]));
         }
@@ -656,14 +657,18 @@ public final class Profile {
      * @see #getAllCallForwardingRules()
      */
     public void setAllCallForwardingRules(CallForwardingRule[] newValues) throws SkypeException {
-        setProfileProperty("CALL_FORWARD_RULES", toSpaceSeparatedString(newValues));
+        setProperty("CALL_FORWARD_RULES", toSpaceSeparatedString(newValues));
     }
 
-    private String getProfileProperty(String name) throws SkypeException {
+    String[] getAllValidSMSNumbers() throws SkypeException {
+        return Utils.convertToArray(getProperty("SMS_VALIDATED_NUMBERS"));
+    }
+
+    private String getProperty(String name) throws SkypeException {
         return Utils.getProperty("PROFILE", name);
     }
 
-    private void setProfileProperty(String name, String value) throws SkypeException {
+    private void setProperty(String name, String value) throws SkypeException {
         Utils.setProperty("PROFILE", name, value);
     }
 }

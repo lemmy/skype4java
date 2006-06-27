@@ -8,7 +8,8 @@
  * terms of the Common Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
  ******************************************************************************/
 package com.skype;
 
@@ -148,6 +149,17 @@ final class Utils {
             array[i] = array[i].trim();
         }
         return array;
+    }
+
+    static String convertToCommaSeparatedString(String[] array) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < array.length; i++) {
+            if (i != 0) {
+                builder.append(", ");
+            }
+            builder.append(array[i]);
+        }
+        return builder.toString();
     }
 
     static Date parseUnixTime(String time) {

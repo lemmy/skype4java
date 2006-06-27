@@ -8,7 +8,8 @@
  * terms of the Common Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
  ******************************************************************************/
 package com.skype;
 
@@ -33,6 +34,10 @@ final class TestData {
 
     static String getFriendDisplayName() throws SkypeException {
         return getFriend().getDisplayName();
+    }
+
+    static String getSMSNumber() throws SkypeException {
+        return data.getProperty("smsNumber");
     }
 
     private TestData() {

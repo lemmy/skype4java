@@ -9,7 +9,8 @@
  * this distribution, and is available at
  * http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
  ******************************************************************************/
 package com.skype;
 
@@ -162,13 +163,13 @@ public final class Skype {
 
     public static void showFileTransferWindow(String[] skypeIds) throws SkypeException {
         Utils.checkNotNull("skypeIds", skypeIds);
-        Utils.executeWithErrorCheck("OPEN FILETRANSFER " + Skype.toCommaSeparatedString(skypeIds));
+        Utils.executeWithErrorCheck("OPEN FILETRANSFER " + Utils.convertToCommaSeparatedString(skypeIds));
     }
 
     public static void showFileTransferWindow(String[] skypeIds, File folder) throws SkypeException {
         Utils.checkNotNull("skypeIds", skypeIds);
         Utils.checkNotNull("folder", folder);
-        Utils.executeWithErrorCheck("OPEN FILETRANSFER " + Skype.toCommaSeparatedString(skypeIds) + " IN " + folder);
+        Utils.executeWithErrorCheck("OPEN FILETRANSFER " + Utils.convertToCommaSeparatedString(skypeIds) + " IN " + folder);
     }
 
     public static void showProfileWindow() throws SkypeException {
@@ -241,7 +242,7 @@ public final class Skype {
 
     public static Call call(String[] skypeIds) throws SkypeException {
         Utils.checkNotNull("skypeIds", skypeIds);
-        return call(Skype.toCommaSeparatedString(skypeIds));
+        return call(Utils.convertToCommaSeparatedString(skypeIds));
     }
 
     public static Call call(String skypeId) throws SkypeException {
@@ -260,7 +261,7 @@ public final class Skype {
 
     public static Chat chat(String[] skypeIds) throws SkypeException {
         Utils.checkNotNull("skypeIds", skypeIds);
-        return chat(Skype.toCommaSeparatedString(skypeIds));
+        return chat(Utils.convertToCommaSeparatedString(skypeIds));
     }
 
     public static Chat chat(String skypeId) throws SkypeException {
@@ -270,6 +271,85 @@ public final class Skype {
             Utils.checkError(response);
             String id = response.substring(responseHeader.length(), response.indexOf(" STATUS "));
             return new Chat(id);
+        } catch (ConnectorException e) {
+            Utils.convertToSkypeException(e);
+            return null;
+        }
+    }
+
+    public static SMS submitConfirmationCode(String[] numbers) throws SkypeException {
+        Utils.checkNotNull("numbers", numbers);
+        return submitConfirmationCode(Utils.convertToCommaSeparatedString(numbers));
+    }
+
+    public static SMS submitConfirmationCode(String number) throws SkypeException {
+        SMS message = createSMS(number, SMS.Type.CONFIRMATION_CODE_REQUEST);
+        message.send();
+        return message;
+    }
+
+    public static SMS submitConfirmationCode(String[] numbers, String code) throws SkypeException {
+        Utils.checkNotNull("numbers", numbers);
+        Utils.checkNotNull("code", code);
+        return submitConfirmationCode(Utils.convertToCommaSeparatedString(numbers), code);
+    }
+
+    public static SMS submitConfirmationCode(String number, String code) throws SkypeException {
+        Utils.checkNotNull("number", number);
+        Utils.checkNotNull("code", code);
+        SMS message = createSMS(number, SMS.Type.CONFIRMATION_CODE_REQUEST);
+        message.setContent(code);
+        message.send();
+        return message;
+    }
+
+    public static SMS sendSMS(String[] numbers, String content) throws SkypeException {
+        Utils.checkNotNull("numbers", numbers);
+        return sendSMS(Utils.convertToCommaSeparatedString(numbers), content);
+    }
+
+    public static SMS sendSMS(String number, String content) throws SkypeException {
+        Utils.checkNotNull("number", number);
+        Utils.checkNotNull("content", content);
+        SMS message = createSMS(number, SMS.Type.OUTGOING);
+        message.setContent(content);
+        message.send();
+        return message;
+    }
+
+    private static SMS createSMS(String number, SMS.Type type) throws SkypeException {
+        try {
+            String responseHeader = "SMS ";
+            String response = Connector.getInstance().executeWithId("CREATE SMS " + type + " " + number, responseHeader);
+            Utils.checkError(response);
+            String id = response.substring(responseHeader.length(), response.indexOf(" STATUS "));
+            return new SMS(id);
+        } catch (ConnectorException e) {
+            Utils.convertToSkypeException(e);
+            return null;
+        }
+    }
+
+    public SMS[] getAllSMSs() throws SkypeException {
+        return getAllSMSs("SMSS");
+    }
+
+    public SMS[] getAllMissedSMSs() throws SkypeException {
+        return getAllSMSs("MISSEDSMSS");
+    }
+
+    private SMS[] getAllSMSs(String type) throws SkypeException {
+        try {
+            String command = "SEARCH " + type;
+            String responseHeader = type + " ";
+            String response = Connector.getInstance().execute(command, responseHeader);
+            String data = response.substring(responseHeader.length());
+            String[] ids = Utils.convertToArray(data);
+            SMS[] smss = new SMS[ids.length];
+            for (int i = 0; i < ids.length; ++i) {
+                smss[i] = new SMS(ids[i]);
+            }
+            return smss;
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return null;
@@ -553,17 +633,6 @@ public final class Skype {
                 callListener = null;
             }
         }
-    }
-
-    private static String toCommaSeparatedString(String[] array) {
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < array.length; i++) {
-            if (i != 0) {
-                builder.append(", ");
-            }
-            builder.append(array[i]);
-        }
-        return builder.toString();
     }
 
     public static void setSkypeExceptionHandler(SkypeExceptionHandler handler) {
