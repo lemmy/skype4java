@@ -52,7 +52,7 @@ public final class ContactList {
         return getAllGroups("HARDWIRED");
     }
 
-    public Group getSysteGroup(Group.Type type) throws SkypeException {
+    public Group getSystemGroup(Group.Type type) throws SkypeException {
         if (type == Group.Type.CUSTOM_GROUP) {
             throw new IllegalArgumentException("custom type is not supported (use getAllGroups method to resolve)");
         }
