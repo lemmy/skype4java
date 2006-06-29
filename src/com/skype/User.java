@@ -105,11 +105,9 @@ public class User {
 
     @Override
     public boolean equals(Object compared) {
-        if (this == compared) {
-            return true;
-        }
         if (compared instanceof User) {
-            return getId().equals(((User) compared).getId());
+            User comparedUser = (User)compared;
+            return getId().equals(comparedUser.getId());
         }
         return false;
     }
