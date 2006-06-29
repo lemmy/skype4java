@@ -66,7 +66,6 @@ public abstract class Connector {
     }
 
     private boolean debug = false;
-
     /**
      * The debug output stream.
      * <p>
@@ -75,23 +74,18 @@ public abstract class Connector {
      * </p>
      */
     private PrintWriter debugOut = new PrintWriter(System.err, true);
-
     private ConnectorMessageReceivedListener debugListener;
-
     private Object debugFieldMutex = new Object();
 
     private String applicationName = "Skype API for Java";
 
     private Status status = Status.NOT_RUNNING;
-
     private boolean isInitialized;
 
     private int connectTimeout = 10000;
-
     private int commandTimeout = 10000;
 
     private List<ConnectorMessageReceivedListener> messageReceivedListeners = Collections.synchronizedList(new ArrayList<ConnectorMessageReceivedListener>());
-
     private List<ConnectorStatusChangedListener> statusChangedListeners = Collections.synchronizedList(new ArrayList<ConnectorStatusChangedListener>());
 
     private int commandCount;
