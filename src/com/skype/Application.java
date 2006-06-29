@@ -169,23 +169,25 @@ public final class Application {
         }
     }
 
-    private void fireStreamEvents(String streamIds) {
+    private void fireStreamEvents(String newStreamIdList) {
         synchronized(streams) {
-            for (String streamId: streamIds.split(" ")) {
+            String[] newStreamIds = "".equals(newStreamIdList) ? new String[0]: newStreamIdList.split(" ");
+            for (String streamId: newStreamIds) {
                 if (!streams.containsKey(streamId)) {
                     Stream stream = new Stream(this, streamId);
-                    fireConnected(stream);
                     streams.put(streamId, stream);
+                    fireConnected(stream);
                 }
             }
-            NEXT: for (String checkedStreamId: streams.keySet()) {
-                for (String streamId: streamIds.split(" ")) {
-                    if (checkedStreamId.equals(streamId)) {
+            String[] oldStreamIds = streams.keySet().toArray(new String[0]);
+            NEXT: for (String oldStreamId: oldStreamIds) {
+                for (String newStreamId: newStreamIds) {
+                    if (oldStreamId.equals(newStreamId)) {
                         continue NEXT;
                     }
                 }
-                fireDisconnected(streams.get(checkedStreamId));
-                streams.remove(checkedStreamId);
+                Stream stream = streams.remove(oldStreamId);
+                fireDisconnected(stream);
             }
         }
     }
@@ -202,7 +204,7 @@ public final class Application {
         }
     }
 
-    void fireDisconnected(Stream stream) {
+    private void fireDisconnected(Stream stream) {
         assert stream != null;
         ApplicationListener[] listeners = this.listeners.toArray(new ApplicationListener[0]); // to prevent ConcurrentModificationException
         for (ApplicationListener listener : listeners) {
