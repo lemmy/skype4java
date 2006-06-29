@@ -148,7 +148,6 @@ public final class Stream {
         try {
             String response = Connector.getInstance().execute("ALTER APPLICATION " + application.getName() + " DISCONNECT " + getId());
             Utils.checkError(response);
-            application.fireDisconnected(this);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
         }
