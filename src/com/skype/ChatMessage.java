@@ -36,13 +36,14 @@ public final class ChatMessage {
 
     @Override
     public int hashCode() {
-        return id.hashCode();
+        return getId().hashCode();
     }
 
     @Override
     public boolean equals(Object compared) {
         if (compared instanceof ChatMessage) {
-            return id.equals(((ChatMessage) compared).id);
+            ChatMessage comparedChatMessage = (ChatMessage)compared;
+            return getId().equals(comparedChatMessage.getId());
         }
         return false;
     }
