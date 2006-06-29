@@ -9,7 +9,8 @@
  * this distribution, and is available at
  * http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
  ******************************************************************************/
 package com.skype;
 
@@ -19,5 +20,9 @@ public class SkypeException extends Exception {
 
     SkypeException(String message) {
         super(message);
+    }
+
+    SkypeException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

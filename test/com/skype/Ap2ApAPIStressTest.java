@@ -30,7 +30,9 @@ public final class Ap2ApAPIStressTest extends TestCase {
         Application application = Skype.addApplication(APPLICATION_NAME);
         Friend friend = TestData.getFriend();
         try {
-            Stream stream = application.connect(friend);
+            Stream[] streams = application.connect(friend);
+            assertEquals(1, streams.length);
+            Stream stream = streams[0];
             checkConnectedFriends(application, friend);
             checkWriteOnMultiThread(stream);
             checkDisconnect(application, stream);

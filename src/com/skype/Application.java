@@ -9,7 +9,8 @@
  * this distribution, and is available at
  * http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
  ******************************************************************************/
 package com.skype;
 
@@ -22,17 +23,18 @@ import java.util.Map;
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
 import com.skype.connector.ConnectorMessageReceivedListener;
-import com.skype.connector.MessageProcessor;
-
 
 public final class Application {
     private final String name;
-    private List<ApplicationListener> listeners = Collections.synchronizedList(new ArrayList<ApplicationListener>());
-    private Map<String, Stream> streams = new HashMap<String, Stream>();
-    private ConnectorMessageReceivedListener dataListener = new DataListener();
+
+    private final Object connectMutex = new Object();
+
+    private final List<ApplicationListener> listeners = Collections.synchronizedList(new ArrayList<ApplicationListener>());
+    private final Map<String, Stream> streams = new HashMap<String, Stream>();
+    private final ConnectorMessageReceivedListener dataListener = new DataListener();
 
     private boolean isFinished;
-    private Object isFinishedFieldMutex = new Object();
+    private final Object isFinishedFieldMutex = new Object();
     private Thread shutdownHookForFinish;
     
     private SkypeExceptionHandler exceptionHandler;
@@ -42,17 +44,15 @@ public final class Application {
         this.name = name;
     }
 
+    @Override
+    public String toString() {
+        return getName();
+    };
+
     void initialize() throws SkypeException {
         try {
-            String createResponse = Connector.getInstance().execute("CREATE APPLICATION " + name);
-            try {
-                Utils.checkError(createResponse);
-            } catch (SkypeException e) {
-                String deleteResponse = Connector.getInstance().execute("DELETE APPLICATION " + getName());
-                Utils.checkError(deleteResponse);
-                String retryResponse = Connector.getInstance().execute("CREATE APPLICATION " + name);
-                Utils.checkError(retryResponse);
-            }
+            String response = Connector.getInstance().execute("CREATE APPLICATION " + name);
+            Utils.checkError(response);
             Connector.getInstance().addConnectorMessageReceivedListener(dataListener);
             shutdownHookForFinish = new Thread() {
                 @Override
@@ -72,51 +72,127 @@ public final class Application {
     public void finish() throws SkypeException {
         synchronized (isFinishedFieldMutex) {
             if (!isFinished) {
+                Connector.getInstance().removeConnectorMessageReceivedListener(dataListener);
+                Runtime.getRuntime().removeShutdownHook(shutdownHookForFinish);
+                isFinished = true;
                 try {
                     String response = Connector.getInstance().execute("DELETE APPLICATION " + getName());
                     Utils.checkError(response);
                 } catch (ConnectorException e) {
                     Utils.convertToSkypeException(e);
                 }
-                Connector.getInstance().removeConnectorMessageReceivedListener(dataListener);
-                Runtime.getRuntime().removeShutdownHook(shutdownHookForFinish);
-                isFinished = true;
             }
         }
     }
 
-    private void handleData(String dataResponse) {
-        try {
-            if (isReceivedText(dataResponse)) {
-                String data = dataResponse.substring("RECEIVED ".length());
-                String streamId = data.substring(0, data.indexOf('='));
-                String dataHeader = "ALTER APPLICATION " + getName() + " READ " + streamId;
-                String response = Connector.getInstance().executeWithId(dataHeader, dataHeader);
-                Utils.checkError(response);
-                String text = response.substring(dataHeader.length() + 1);
-                streams.get(streamId).fireTextReceived(text);
-            } else if (isReceivedDatagram(dataResponse)) {
-                String data = dataResponse.substring("DATAGRAM ".length());
-                String streamId = data.substring(0, data.indexOf(' '));
-                String datagram = data.substring(data.indexOf(' ') + 1);
-                streams.get(streamId).fireDatagramReceived(datagram);
+    public String getName() {
+        return name;
+    }
+
+    public Stream[] connectToAll() throws SkypeException {
+        return connect(getAllConnectableFriends());
+    }
+
+    public Stream[] connect(Friend... friends) throws SkypeException {
+        Utils.checkNotNull("friends", friends);
+        synchronized(connectMutex) {
+            try {
+                final Object wait = new Object();
+                ConnectorMessageReceivedListener connectorListener = new ConnectorMessageReceivedListener() {
+                    public void messageReceived(String receivedMessage) {
+                        if (receivedMessage.equals("APPLICATION " + getName() + " CONNECTING ")) {
+                            synchronized(wait) {
+                                wait.notify();
+                            }
+                        }
+                    }
+                };
+                try {
+                    Connector.getInstance().addConnectorMessageReceivedListener(connectorListener);
+                    synchronized(wait) {
+                        for (Friend friend: friends) {
+                            String result = Connector.getInstance().execute("ALTER APPLICATION " + getName() + " CONNECT " + friend.getId());
+                            Utils.checkError(result);
+                        }
+                        try {
+                            wait.wait();
+                        } catch(InterruptedException e) {
+                            throw new SkypeException("The connecting was interrupted.", e);
+                        }
+                    }
+                    return getAllStreams(friends);
+                } catch (ConnectorException e) {
+                    Utils.convertToSkypeException(e);
+                    return null;
+                } finally {
+                    Connector.getInstance().removeConnectorMessageReceivedListener(connectorListener);
+                }
+            } catch (SkypeException e) {
+                for (Stream stream: getAllStreams(friends)) {
+                    try {
+                        stream.disconnect();
+                    } catch(SkypeException e2) {
+                        // do nothing
+                    }
+                }
+                throw e;
             }
-        } catch (Exception e) {
-            throw new IllegalStateException("can't handle data", e);
         }
     }
 
-    private boolean isReceivedText(String dataResponse) {
-        return dataResponse.startsWith("RECEIVED ") && ("RECEIVED ".length() < dataResponse.length());
+    public Stream[] getAllStreams(Friend... friends) throws SkypeException {
+        List<Stream> results = new ArrayList<Stream>();
+        for (Stream stream: getAllStreams()) {
+            Friend friend = stream.getFriend();
+            for (Friend comparedFriend: friends) {
+                if (friend.equals(comparedFriend)) {
+                    results.add(stream);
+                }
+            }
+        }
+        return results.toArray(new Stream[0]);
     }
 
-    private boolean isReceivedDatagram(String dataResponse) {
-        return dataResponse.startsWith("DATAGRAM ");
+    public Stream[] getAllStreams() throws SkypeException {
+        String streamIds = Utils.getPropertyWithCommandId("APPLICATION", getName(), "STREAMS");
+        synchronized(streams) {
+            fireStreamEvents(streamIds);
+            if ("".equals(streamIds)) {
+                return new Stream[0];
+            }
+            String[] ids = streamIds.split(" ");
+            Stream[] results = new Stream[ids.length];
+            for (int i = 0; i < ids.length; i++) {
+                results[i] = streams.get(ids[i]);
+            }
+            return results;
+        }
+    }
+
+    private void fireStreamEvents(String streamIds) {
+        synchronized(streams) {
+            for (String streamId: streamIds.split(" ")) {
+                if (!streams.containsKey(streamId)) {
+                    Stream stream = new Stream(this, streamId);
+                    fireConnected(stream);
+                    streams.put(streamId, stream);
+                }
+            }
+            NEXT: for (String checkedStreamId: streams.keySet()) {
+                for (String streamId: streamIds.split(" ")) {
+                    if (checkedStreamId.equals(streamId)) {
+                        continue NEXT;
+                    }
+                }
+                fireDisconnected(streams.get(checkedStreamId));
+                streams.remove(checkedStreamId);
+            }
+        }
     }
 
     private void fireConnected(Stream stream) {
         assert stream != null;
-        ApplicationListener[] listeners = this.listeners.toArray(new ApplicationListener[0]); // イベント通知中にリストが変更される可能性があるため
+        ApplicationListener[] listeners = this.listeners.toArray(new ApplicationListener[0]); // to prevent ConcurrentModificationException
         for (ApplicationListener listener : listeners) {
             try {
                 listener.connected(stream);
@@ -128,44 +204,13 @@ public final class Application {
 
     void fireDisconnected(Stream stream) {
         assert stream != null;
-        ApplicationListener[] listeners = this.listeners.toArray(new ApplicationListener[0]); // イベント通知中にリストが変更される可能性があるため
+        ApplicationListener[] listeners = this.listeners.toArray(new ApplicationListener[0]); // to prevent ConcurrentModificationException
         for (ApplicationListener listener : listeners) {
             try {
                 listener.disconnected(stream);
             } catch (SkypeException e) {
                 Utils.handleUncaughtException(e, exceptionHandler);
             }
-        }
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Stream connect(final Friend friend) throws SkypeException {
-        Utils.checkNotNull("friend", friend);
-        try {
-            final String[] id = new String[1];
-            final String[] error = new String[1];
-            MessageProcessor processor = new MessageProcessor() {
-                public void messageReceived(String message) {
-                    if (message.equals("APPLICATION " + getName() + " CONNECTING " + friend.getId())) {
-                    } else if (message.equals("APPLICATION " + getName() + " CONNECTING ")) {
-                    } else if (message.startsWith("APPLICATION " + getName() + " STREAMS ")) {
-                        id[0] = message.substring(("APPLICATION " + getName() + " STREAMS ").length());
-                        releaseLock();
-                    } else if (message.startsWith("ERROR ")) {
-                        error[0] = message.substring("ERROR ".length());
-                        releaseLock();
-                    }
-                }
-            };
-            Connector.getInstance().execute("ALTER APPLICATION " + getName() + " CONNECT " + friend.getId(), processor);
-            Utils.checkError(error[0]);
-            return streams.get(id[0]);
-        } catch (ConnectorException e) {
-            Utils.convertToSkypeException(e);
-            return null;
         }
     }
 
@@ -181,47 +226,52 @@ public final class Application {
 
     private class DataListener implements ConnectorMessageReceivedListener {
         public void messageReceived(final String message) {
-            final String dataHeader = "APPLICATION " + getName() + " ";
-            if (isStreamMessage(message)) {
-                String streamIds = message.substring(("APPLICATION " + getName() + " STREAMS ").length());
-                if (!"".equals(streamIds)) {
-                    for (String streamId: streamIds.split(" ")) {
-                        if (streams.containsKey(streamId)) {
-                            continue;
-                        }
-                        int delimiterIndex = streamId.indexOf(':');
-                        String friendId = streamId.substring(0, delimiterIndex);
-                        Friend friend;
-                        try {
-                            friend = Skype.getContactList().getFriend(friendId);
-                        } catch (SkypeException e) {
-                            throw new IllegalStateException("can't get friend: friendId = " + friendId);
-                        }
-                        int number = Integer.parseInt(streamId.substring(delimiterIndex + 1));
-                        Stream stream = new Stream(Application.this, friend, number);
-                        streams.put(streamId, stream);
-                        fireConnected(stream);
-                    }
-                }
-                NEXT: for (String existedStreamId: streams.keySet()) {
-                    if (!"".equals(streamIds)) {
-                        for (String streamId: streamIds.split(" ")) {
-                            if (existedStreamId.equals(streamId)) {
-                                continue NEXT;
-                            }
-                        }
-                    }
-                    fireDisconnected(streams.get(existedStreamId));
-                }
+            String streamsHeader = "APPLICATION " + getName() + " STREAMS ";
+            if (message.startsWith(streamsHeader)) {
+                String streamIds = message.substring(streamsHeader.length());
+                fireStreamEvents(streamIds);
             }
+            final String dataHeader = "APPLICATION " + getName() + " ";
             if (message.startsWith(dataHeader)) {
                 handleData(message.substring(dataHeader.length()));
             }
         }
 
-        private boolean isStreamMessage(final String message) {
-            String header = "APPLICATION " + getName() + " STREAMS ";
-            return message.startsWith(header);
+        private void handleData(String dataResponse) {
+            try {
+                if (isReceivedText(dataResponse)) {
+                    String data = dataResponse.substring("RECEIVED ".length());
+                    String streamId = data.substring(0, data.indexOf('='));
+                    String dataHeader = "ALTER APPLICATION " + getName() + " READ " + streamId;
+                    String response = Connector.getInstance().executeWithId(dataHeader, dataHeader);
+                    Utils.checkError(response);
+                    String text = response.substring(dataHeader.length() + 1);
+                    synchronized(streams) {
+                        if (streams.containsKey(streamId)) {
+                            streams.get(streamId).fireTextReceived(text);
+                        }
+                    }
+                } else if (isReceivedDatagram(dataResponse)) {
+                    String data = dataResponse.substring("DATAGRAM ".length());
+                    String streamId = data.substring(0, data.indexOf(' '));
+                    String datagram = data.substring(data.indexOf(' ') + 1);
+                    synchronized(streams) {
+                        if (streams.containsKey(streamId)) {
+                            streams.get(streamId).fireDatagramReceived(datagram);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                throw new IllegalStateException("can't handle data", e);
+            }
+        }
+
+        private boolean isReceivedText(String dataResponse) {
+            return dataResponse.startsWith("RECEIVED ") && ("RECEIVED ".length() < dataResponse.length());
+        }
+
+        private boolean isReceivedDatagram(String dataResponse) {
+            return dataResponse.startsWith("DATAGRAM ");
         }
     }
 
@@ -229,10 +279,9 @@ public final class Application {
         return getAllFriends("CONNECTABLE");
     }
 
-    // connect(Friend)でつながるまで待機するため必要なし
-// public Friend[] getAllConnectingFriends() throws SkypeException {
-// return getAllFriends("CONNECTING");
-// }
+    public Friend[] getAllConnectingFriends() throws SkypeException {
+        return getAllFriends("CONNECTING");
+    }
 
     public Friend[] getAllConnectedFriends() throws SkypeException {
         return getAllFriends("STREAMS");

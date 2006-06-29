@@ -9,7 +9,8 @@
  * this distribution, and is available at
  * http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
  ******************************************************************************/
 package com.skype;
 
@@ -22,34 +23,47 @@ import com.skype.connector.MessageProcessor;
 
 public final class Stream {
     private final Application application;
-    private final Friend friend;
-    private final int number;
+    private final String id;
 
     private List<StreamListener> listeners = new ArrayList<StreamListener>();
     private SkypeExceptionHandler exceptionHandler;
-
-    Stream(Application application, Friend friend, int number) {
+    
+    Stream(Application application, String id) {
         assert application != null;
-        assert friend != null;
+        assert id != null;
         this.application = application;
-        this.friend = friend;
-        this.number = number;
+        this.id = id;
+    }
+
+    @Override
+    public int hashCode() {
+        return getId().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object compared) {
+        if (compared instanceof Stream) {
+            Stream comparedStream = (Stream)compared;
+            return getId().equals(comparedStream.getId());
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return getId();
     }
 
     public Application getApplication() {
         return application;
     }
 
-    public Friend getFriend() {
-        return friend;
-    }
-
-    public int getNumber() {
-        return number;
-    }
-
     public String getId() {
-        return getFriend().getId() + ":" + getNumber();
+        return id;
+    }
+
+    public Friend getFriend() {
+        return new Friend(getId().substring(0, getId().indexOf(':')));
     }
 
     public void write(String text) throws SkypeException {
@@ -132,7 +146,7 @@ public final class Stream {
 
     public void disconnect() throws SkypeException {
         try {
-            String response = Connector.getInstance().execute("ALTER APPLICATION " + application.getName() + " DISCONNECT " + friend.getId() + ":1");
+            String response = Connector.getInstance().execute("ALTER APPLICATION " + application.getName() + " DISCONNECT " + getId());
             Utils.checkError(response);
             application.fireDisconnected(this);
         } catch (ConnectorException e) {

@@ -8,17 +8,10 @@
  * terms of the Common Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
  ******************************************************************************/
 package com.skype;
-
-import com.skype.Application;
-import com.skype.ApplicationAdapter;
-import com.skype.Friend;
-import com.skype.Skype;
-import com.skype.SkypeException;
-import com.skype.Stream;
-import com.skype.StreamAdapter;
 
 import junit.framework.TestCase;
 
@@ -31,7 +24,9 @@ public final class Ap2ApAPITest extends TestCase {
         Friend friend = TestData.getFriend();
         checkConnectableFriendsBeforeConnecting(application);
         try {
-            Stream stream = application.connect(friend);
+            Stream[] streams = application.connect(friend);
+            assertEquals(1, streams.length);
+            Stream stream = streams[0];
             checkConnectableFriendsAfterConnecting(application);
             checkConnectedFriends(application, friend);
             checkWrite(stream);
