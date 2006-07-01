@@ -17,7 +17,6 @@ package com.skype;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 import com.skype.connector.Connector;
@@ -65,7 +64,7 @@ public final class Skype {
     private static Object userThreadFieldMutex = new Object();
 
     private static SkypeExceptionHandler defaultExceptionHandler = new SkypeExceptionHandler() {
-        public void uncaughtExceptionHappened(SkypeException e) {
+        public void uncaughtExceptionHappened(Throwable e) {
             e.printStackTrace();
         }
     };
@@ -252,7 +251,7 @@ public final class Skype {
             String response = Connector.getInstance().executeWithId("CALL " + skypeId, responseHeader);
             Utils.checkError(response);
             String id = response.substring(responseHeader.length(), response.indexOf(" STATUS "));
-            return new Call(id);
+            return Call.getCall(id);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return null;
@@ -513,7 +512,7 @@ public final class Skype {
                                     for (ChatMessageListener listener : listeners) {
                                         try {
                                             listener.chatMessageSent(chatMessage);
-                                        } catch (SkypeException e) {
+                                        } catch (Throwable e) {
                                             handleUncaughtException(e);
                                         }
                                     }
@@ -521,7 +520,7 @@ public final class Skype {
                                     for (ChatMessageListener listener : listeners) {
                                         try {
                                             listener.chatMessageReceived(chatMessage);
-                                        } catch (SkypeException e) {
+                                        } catch (Throwable e) {
                                             handleUncaughtException(e);
                                         }
                                     }
@@ -550,14 +549,14 @@ public final class Skype {
         }
     }
 
+    private static final String CALL_LISTENER_EVENT_FIERED_FLAG_NAME = Skype.class.getName() + ".callListenerEventFired";
+
     public static void addCallListener(CallListener listener) throws SkypeException {
         Utils.checkNotNull("listener", listener);
         synchronized (callListenerMutex) {
             callListeners.add(listener);
             if (callListener == null) {
                 callListener = new ConnectorMessageReceivedListener() {
-                    private List<String> deliveredCalls = new LinkedList<String>();
-
                     public void messageReceived(String receivedMessage) {
                         if (receivedMessage.startsWith("CALL ")) {
                             String data = receivedMessage.substring("CALL ".length());
@@ -567,21 +566,22 @@ public final class Skype {
                             if ("STATUS".equals(propertyName)) {
                                 String propertyValue = propertyNameAndValue.substring(propertyNameAndValue.indexOf(' ') + 1);
                                 Call.Status status = Call.Status.valueOf(propertyValue);
-                                switch (status) {
-                                case RINGING:
-                                    synchronized (deliveredCalls) {
-                                        if (!deliveredCalls.contains(id)) {
-                                            deliveredCalls.add(id);
-                                            Call call = new Call(id);
-                                            CallListener[] listeners = callListeners.toArray(new CallListener[0]);
-                                            try {
-                                                switch (call.getType()) {
+                                Call call = Call.getCall(id);
+                                EXIT: if (status == Call.Status.RINGING) {
+                                    synchronized(call) {
+                                        if (Utils.getBooleanData(call, CALL_LISTENER_EVENT_FIERED_FLAG_NAME)) {
+                                            break EXIT;
+                                        }
+                                        Utils.setBooleanData(call, CALL_LISTENER_EVENT_FIERED_FLAG_NAME, true);
+                                        CallListener[] listeners = callListeners.toArray(new CallListener[0]);
+                                        try {
+                                            switch (call.getType()) {
                                                 case OUTGOING_P2P:
                                                 case OUTGOING_PSTN:
                                                     for (CallListener listener : listeners) {
                                                         try {
                                                             listener.callMaked(call);
-                                                        } catch (SkypeException e) {
+                                                        } catch (Throwable e) {
                                                             handleUncaughtException(e);
                                                         }
                                                     }
@@ -591,26 +591,18 @@ public final class Skype {
                                                     for (CallListener listener : listeners) {
                                                         try {
                                                             listener.callReceived(call);
-                                                        } catch (SkypeException e) {
+                                                        } catch (Throwable e) {
                                                             handleUncaughtException(e);
                                                         }
                                                     }
                                                     break;
-                                                }
-                                            } catch (SkypeException e) {
-                                                handleUncaughtException(e);
                                             }
+                                        } catch (Throwable e) {
+                                            handleUncaughtException(e);
                                         }
                                     }
-                                    break;
-                                case FINISHED:
-                                case MISSED:
-                                case REFUSED:
-                                case CANCELLED:
-                                    synchronized (deliveredCalls) {
-                                        deliveredCalls.remove(id);
-                                    }
                                 }
+                                call.fireStatusChanged(status);
                             }
                         }
                     }
@@ -642,7 +634,7 @@ public final class Skype {
         exceptionHandler = handler;
     }
 
-    static void handleUncaughtException(SkypeException e) {
+    static void handleUncaughtException(Throwable e) {
         exceptionHandler.uncaughtExceptionHappened(e);
     }
 

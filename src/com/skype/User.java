@@ -229,7 +229,7 @@ public class User {
         String[] ids = getHistory("CALLS");
         Call[] calls = new Call[ids.length];
         for (int i = 0; i < ids.length; i++) {
-            calls[i] = new Call(ids[i]);
+            calls[i] = Call.getCall(ids[i]);
         }
         return calls;
     }

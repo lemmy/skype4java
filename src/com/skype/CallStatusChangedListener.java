@@ -9,10 +9,11 @@
  * this distribution, and is available at
  * http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
  ******************************************************************************/
 package com.skype;
 
 public interface CallStatusChangedListener {
-    void statusChanged(Call call) throws SkypeException;
+    void statusChanged(Call.Status status) throws SkypeException;
 }

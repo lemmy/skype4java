@@ -198,7 +198,7 @@ public final class Application {
         for (ApplicationListener listener : listeners) {
             try {
                 listener.connected(stream);
-            } catch(SkypeException e) {
+            } catch(Throwable e) {
                 Utils.handleUncaughtException(e, exceptionHandler);
             }
         }
@@ -210,7 +210,7 @@ public final class Application {
         for (ApplicationListener listener : listeners) {
             try {
                 listener.disconnected(stream);
-            } catch (SkypeException e) {
+            } catch (Throwable e) {
                 Utils.handleUncaughtException(e, exceptionHandler);
             }
         }

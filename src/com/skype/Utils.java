@@ -169,12 +169,24 @@ final class Utils {
         return calendar.getTime();
     }
 
-    static void handleUncaughtException(SkypeException e, SkypeExceptionHandler exceptionHandler) {
+    static void handleUncaughtException(Throwable e, SkypeExceptionHandler exceptionHandler) {
         if (exceptionHandler != null) {
             exceptionHandler.uncaughtExceptionHappened(e);
             return;
         }
         Skype.handleUncaughtException(e);
+    }
+
+    static boolean getBooleanData(SkypeObject object, String name) {
+        Object data = object.getData(name);
+        if (data instanceof Boolean) {
+            return ((Boolean)data).booleanValue();
+        }
+        return false;
+    }
+
+    static void setBooleanData(SkypeObject object, String name, boolean value) {
+        object.setData(name, new Boolean(value));
     }
 
     private Utils() {

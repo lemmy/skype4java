@@ -9,23 +9,22 @@
  * this distribution, and is available at
  * http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
  ******************************************************************************/
 package com.skype;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
 
-public final class Call {
-    /*
-     * 発信の状態 ROUTING (経路探索) > RINGING (呼び出し中) > INPROGRESS (会話開始) > FINISHED
-     * (会話終了) > MISSED (発信側がキャンセル) > REFUSED (受信側がキャンセル)
-     */
+public final class Call implements SkypeObject {
     public enum Status {
         UNPLACED, ROUTING, EARLYMEDIA, FAILED, RINGING, INPROGRESS, ONHOLD, FINISHED, MISSED, REFUSED, BUSY, CANCELLED, VM_BUFFERING_GREETING, VM_PLAYING_GREETING, VM_RECORDING, VM_UPLOADING, VM_SENT, VM_CANCELLED, VM_FAILED
     }
@@ -41,13 +40,26 @@ public final class Call {
     private enum VideoEnabled {
         VIDEO_NONE, VIDEO_SEND_ENABLED, VIDEO_RECV_ENABLED, VIDEO_BOTH_ENABLED;
     }
+    
+    private static final Map<String, Call> calls = new HashMap<String, Call>();
+    
+    static Call getCall(String id) {
+        synchronized(calls) {
+            if (!calls.containsKey(id)) {
+                calls.put(id, new Call(id));
+            }
+            return calls.get(id);
+        }
+    }
 
     private final String id;
     private final List<CallStatusChangedListener> listeners = Collections.synchronizedList(new ArrayList<CallStatusChangedListener>());
+    private final Map<String, Object> data = Collections.synchronizedMap(new HashMap<String, Object>());
     
+    private Status oldStatus;
     private SkypeExceptionHandler exceptionHandler;
 
-    Call(String id) {
+    private Call(String id) {
         this.id = id;
     }
 
@@ -64,26 +76,38 @@ public final class Call {
         return false;
     }
 
+    public Object getData(String name) {
+        return data.get(name);
+    }
+    
+    public void setData(String name, Object value) {
+        data.put(name, value);
+    }
+
     public String getId() {
         return id;
     }
 
-//    public void addCallStatusChangedListener(CallStatusChangedListener listener) {
-//        Utils.checkNotNull("listener", listener);
-//        listeners.add(listener);
-//    }
-//
-//    public void removeCallStatusChangedListener(CallStatusChangedListener listener) {
-//        Utils.checkNotNull("listener", listener);
-//        listeners.remove(listener);
-//    }
+    public void addCallStatusChangedListener(CallStatusChangedListener listener) {
+        Utils.checkNotNull("listener", listener);
+        listeners.add(listener);
+    }
+
+    public void removeCallStatusChangedListener(CallStatusChangedListener listener) {
+        Utils.checkNotNull("listener", listener);
+        listeners.remove(listener);
+    }
 
     void fireStatusChanged(Status status) {
         CallStatusChangedListener[] listeners = this.listeners.toArray(new CallStatusChangedListener[0]); // イベント通知中にリストが変更される可能性があるため
+        if (status == oldStatus) {
+            return;
+        }
+        oldStatus = status;
         for (CallStatusChangedListener listener : listeners) {
             try {
-                listener.statusChanged(this);
-            } catch (SkypeException e) {
+                listener.statusChanged(status);
+            } catch (Throwable e) {
                 Utils.handleUncaughtException(e, exceptionHandler);
             }
         }
@@ -149,9 +173,8 @@ public final class Call {
     }
 
     public Status getStatus() throws SkypeException {
-        return Status.valueOf(Utils.getPropertyWithCommandId("CALL", getId(), "STATUS")); // prevent
-                                                                                            // event
-                                                                                            // notification
+        // call Utils#getPropertyWithCommandId(String, String, String) to prevent new event notification
+        return Status.valueOf(Utils.getPropertyWithCommandId("CALL", getId(), "STATUS"));
     }
 
     public int getDuration() throws SkypeException {

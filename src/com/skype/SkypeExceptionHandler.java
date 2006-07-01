@@ -9,21 +9,22 @@
  * this distribution, and is available at
  * http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
  ******************************************************************************/
 package com.skype;
 
 /**
- * Interface to handle an uncaught {@link SkypeException} in the listener's callback method. 
+ * Interface to handle an uncaught {@link Throwable} in the listener's callback method. 
  * @see Skype#setSkypeExceptionHanlder()
  */
 public interface SkypeExceptionHandler {
     /** 
-     * Invoked when the {@link SkypeException} happened in calling the listener's callback method.
+     * Invoked when a {@link Throwable} happened in calling the listener's callback method.
      * <p>
      * Each failure of calling callback method executes this method.
      * </p>
-     * @param e the exception occured in the listener's callback method
+     * @param e the throwable occured in the listener's callback method
      */
-    void uncaughtExceptionHappened(SkypeException e);
+    void uncaughtExceptionHappened(Throwable e);
 }

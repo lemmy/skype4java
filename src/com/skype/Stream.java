@@ -126,7 +126,7 @@ public final class Stream {
         for (StreamListener listener : listeners) {
             try {
                 listener.textReceived(text);
-            } catch (SkypeException e) {
+            } catch (Throwable e) {
                 Utils.handleUncaughtException(e, exceptionHandler);
             }
         }
@@ -138,7 +138,7 @@ public final class Stream {
         for (StreamListener listener : listeners) {
             try {
                 listener.datagramReceived(datagram);
-            } catch (SkypeException e) {
+            } catch (Throwable e) {
                 Utils.handleUncaughtException(e, exceptionHandler);
             }
         }
