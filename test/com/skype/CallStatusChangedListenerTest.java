@@ -22,7 +22,6 @@ import junit.framework.TestCase;
 
 public class CallStatusChangedListenerTest extends TestCase {
     public void testBasic() throws Exception {
-        Skype.setDebug(true);
         final StringBuffer statuses = new StringBuffer();
         Skype.addCallListener(new CallAdapter() {
             @Override
