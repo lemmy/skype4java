@@ -8,7 +8,8 @@
  * terms of the Common Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
  ******************************************************************************/
 package com.skype;
 
@@ -24,15 +25,15 @@ public final class SkypeExceptionHandlerTest extends TestCase {
         final Object wait = new Object();
         final boolean[] result = new boolean[1];
         Skype.setSkypeExceptionHandler(new SkypeExceptionHandler() {
-            public void uncaughtExceptionHappened(SkypeException e) {
+            public void uncaughtExceptionHappened(Throwable e) {
                 result[0] = true;
                 synchronized (wait) {
                     wait.notify();
                 }
             }
         });
-        fireHanlderWithSkypeException();
         synchronized (wait) {
+            fireHanlderWithSkypeException();
             try {
                 wait.wait();
             } catch (InterruptedException e) {
@@ -60,8 +61,8 @@ public final class SkypeExceptionHandlerTest extends TestCase {
             }
         };
         Skype.addChatMessageListener(listener);
-        TestData.getFriend().send("a message for a method test");
         synchronized (wait) {
+            TestData.getFriend().send("a message for a method test");
             try {
                 wait.wait();
             } catch (InterruptedException e) {
