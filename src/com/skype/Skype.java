@@ -549,8 +549,6 @@ public final class Skype {
         }
     }
 
-    private static final String CALL_LISTENER_EVENT_FIERED_FLAG_NAME = Skype.class.getName() + ".callListenerEventFired";
-
     public static void addCallListener(CallListener listener) throws SkypeException {
         Utils.checkNotNull("listener", listener);
         synchronized (callListenerMutex) {
@@ -569,10 +567,10 @@ public final class Skype {
                                 Call call = Call.getCall(id);
                                 EXIT: if (status == Call.Status.RINGING) {
                                     synchronized(call) {
-                                        if (Utils.getBooleanData(call, CALL_LISTENER_EVENT_FIERED_FLAG_NAME)) {
+                                        if (call.isCallListenerEventFired()) {
                                             break EXIT;
                                         }
-                                        Utils.setBooleanData(call, CALL_LISTENER_EVENT_FIERED_FLAG_NAME, true);
+                                        call.setCallListenerEventFired(true);
                                         CallListener[] listeners = callListeners.toArray(new CallListener[0]);
                                         try {
                                             switch (call.getType()) {

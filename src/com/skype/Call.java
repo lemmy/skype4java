@@ -24,7 +24,7 @@ import java.util.Map;
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
 
-public final class Call implements SkypeObject {
+public final class Call {
     public enum Status {
         UNPLACED, ROUTING, EARLYMEDIA, FAILED, RINGING, INPROGRESS, ONHOLD, FINISHED, MISSED, REFUSED, BUSY, CANCELLED, VM_BUFFERING_GREETING, VM_PLAYING_GREETING, VM_RECORDING, VM_UPLOADING, VM_SENT, VM_CANCELLED, VM_FAILED
     }
@@ -58,6 +58,8 @@ public final class Call implements SkypeObject {
     
     private Status oldStatus;
     private SkypeExceptionHandler exceptionHandler;
+    
+    private boolean isCallListenerEventFired;
 
     private Call(String id) {
         this.id = id;
@@ -243,5 +245,13 @@ public final class Call implements SkypeObject {
 
     private String getProperty(String name) throws SkypeException {
         return Utils.getProperty("CALL", getId(), name);
+    }
+    
+    boolean isCallListenerEventFired() {
+        return isCallListenerEventFired;
+    }
+
+    void setCallListenerEventFired(boolean fired) {
+        isCallListenerEventFired = fired;
     }
 }

@@ -177,18 +177,6 @@ final class Utils {
         Skype.handleUncaughtException(e);
     }
 
-    static boolean getBooleanData(SkypeObject object, String name) {
-        Object data = object.getData(name);
-        if (data instanceof Boolean) {
-            return ((Boolean)data).booleanValue();
-        }
-        return false;
-    }
-
-    static void setBooleanData(SkypeObject object, String name, boolean value) {
-        object.setData(name, new Boolean(value));
-    }
-
     private Utils() {
     }
 }
