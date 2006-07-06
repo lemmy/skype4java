@@ -212,7 +212,14 @@ public abstract class Connector {
         Status status = connectImpl(timeout);
         if (status == Status.ATTACHED) {
             try {
-                execute("NAME " + getApplicationName(), new String[] { "NAME " + getApplicationName() }, false);
+            	// Bart 6-Jul 2006
+            	// Linux Skype client answers the NAME command with OK not with NAME.
+            	String osName = System.getProperty("os.name");
+            	if (osName.startsWith("Linux") || osName.startsWith("LINUX")) {
+            		execute("NAME " + getApplicationName(), new String[] { "OK"  }, false);
+            	} else {
+            		execute("NAME " + getApplicationName(), new String[] { "NAME " + getApplicationName() }, false);
+            	}
                 execute("PROTOCOL 9999", new String[] { "PROTOCOL " }, false);
             } catch (TimeOutException e) {
                 status = Status.NOT_RUNNING;
