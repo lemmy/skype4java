@@ -212,8 +212,8 @@ public abstract class Connector {
         Status status = connectImpl(timeout);
         if (status == Status.ATTACHED) {
             try {
-                execute("PROTOCOL 9999", new String[] { "PROTOCOL " }, false);
                 execute("NAME " + getApplicationName(), new String[] { "NAME " + getApplicationName() }, false);
+                execute("PROTOCOL 9999", new String[] { "PROTOCOL " }, false);
             } catch (TimeOutException e) {
                 status = Status.NOT_RUNNING;
             }
