@@ -77,7 +77,7 @@ public abstract class Connector {
     private ConnectorMessageReceivedListener debugListener;
     private Object debugFieldMutex = new Object();
 
-    private String applicationName = "Skype API for Java";
+    private String applicationName = "SkypeAPI4Java";
 
     private Status status = Status.NOT_RUNNING;
     private boolean isInitialized;
