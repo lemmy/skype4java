@@ -49,7 +49,7 @@ public abstract class Connector {
             } else if (osName.startsWith("Linux") || osName.startsWith("LINUX")) {
                 connectorClassName = "com.skype.connector.linux.LinuxConnector";
             } else if (osName.startsWith("Mac OS X")) {
-                connectorClassName = "jp.sf.skype.connector.osx.OSXConnector";
+                connectorClassName = "com.skype.connector.osx.OSXConnector";
             }
             if (connectorClassName == null) {
                 throw new IllegalStateException("This platform is not supported by Skype API for Java.");
