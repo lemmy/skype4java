@@ -14,7 +14,23 @@
  ******************************************************************************/
 package com.skype;
 
+/**
+ * Listener interface for the CALL object.
+ * @author Koji Hisano.
+ *
+ */
 public interface CallListener {
-    void callReceived(Call receivedCall) throws SkypeException;
+    /**
+     * Called when a CALL is received.
+     * @param receivedCall the received CALL.
+     * @throws SkypeException when a connection is gone bad.
+     */
+	void callReceived(Call receivedCall) throws SkypeException;
+	
+	/**
+	 * Called when a new CALL is started.
+	 * @param makedCall the new CALL made.
+	 * @throws SkypeException when the connection is goen bad.
+	 */
     void callMaked(Call makedCall) throws SkypeException;
 }

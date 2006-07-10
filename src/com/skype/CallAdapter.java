@@ -14,10 +14,25 @@
  ******************************************************************************/
 package com.skype;
 
+/**
+ * Empty implementation of CallListener to overide and use as a listener.
+ * @author Koji Hisano
+ *
+ */
 public class CallAdapter implements CallListener {
+	/**
+	 * This method will be triggered when a CALL is received.
+	 * @param receivedCall the CALL received.
+	 * @throws SkypeException when connection is gone bad.
+	 */
     public void callReceived(Call receivedCall) throws SkypeException {
     }
 
+    /**
+     * This method is called when a new CALL is started.
+     * @param makedCall the new CALL made.
+     * @throws SkypeException when the connection is goen bad.
+     */
     public void callMaked(Call makedCall) throws SkypeException {
     }
 }

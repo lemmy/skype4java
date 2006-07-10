@@ -14,6 +14,16 @@
  ******************************************************************************/
 package com.skype;
 
+/**
+ * Listener interface for CALL objects status changed events.
+ * @author Koji Hisano.
+ *
+ */
 public interface CallStatusChangedListener {
-    void statusChanged(Call.Status status) throws SkypeException;
+    /**
+     * Called when the status of a CALL object changes.
+     * @param status the new status.
+     * @throws SkypeException when a connection is gone bad.
+     */
+	void statusChanged(Call.Status status) throws SkypeException;
 }
