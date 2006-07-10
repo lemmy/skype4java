@@ -24,310 +24,541 @@ import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
 import com.skype.connector.ConnectorMessageReceivedListener;
 
+/**
+ * Implements the AP2AP API.
+ * 
+ * @see https://developer.skype.com/Docs/ApiDoc/Application_to_application_commands
+ * @author Koji Hisano
+ * 
+ */
 public final class Application {
+    /**
+         * Application name, used to register with the Skype client.
+         */
     private final String name;
 
+    /**
+         * Used for synchronisation.
+         */
     private final Object connectMutex = new Object();
 
-    private final List<ApplicationListener> listeners = Collections.synchronizedList(new ArrayList<ApplicationListener>());
+    /**
+         * List of listeners.
+         */
+    private final List<ApplicationListener> listeners = Collections
+	    .synchronizedList(new ArrayList<ApplicationListener>());
+
+    /**
+         * Table of streams.
+         */
     private final Map<String, Stream> streams = new HashMap<String, Stream>();
+
+    /**
+         * Listener for messages received through Skype.
+         */
     private final ConnectorMessageReceivedListener dataListener = new DataListener();
 
+    /**
+         * Boolean to check the application state.
+         */
     private boolean isFinished;
+
+    /**
+         * Ending synchronisation helper field.
+         */
     private final Object isFinishedFieldMutex = new Object();
+
+    /**
+         * Shutdownhook thread for cleaning up all instances.
+         */
     private Thread shutdownHookForFinish;
-    
+
+    /**
+         * Application exception handler.
+         */
     private SkypeExceptionHandler exceptionHandler;
 
-    Application(String name) {
-        assert name != null;
-        this.name = name;
+    /**
+         * Constructor.
+         * 
+         * @param newName
+         *                An arbitrary name to identify the application that
+         *                will be exchanging data.
+         */
+    Application(final String newName) {
+	assert newName != null;
+	this.name = newName;
     }
 
-    @Override
+    /**
+         * Enable nice printing of Object, by returning the app name.
+         * 
+         * @return AP2AP application name.
+         */
     public String toString() {
-        return getName();
+	return getName();
     };
 
+    /**
+         * Initializes the AP2AP.
+         * 
+         * @throws SkypeException
+         *                 if connection could not be established.
+         */
     void initialize() throws SkypeException {
-        try {
-            String response = Connector.getInstance().execute("CREATE APPLICATION " + name);
-            Utils.checkError(response);
-            Connector.getInstance().addConnectorMessageReceivedListener(dataListener);
-            shutdownHookForFinish = new Thread() {
-                @Override
-                public void run() {
-                    try {
-                        Connector.getInstance().execute("DELETE APPLICATION " + Application.this.getName());
-                    } catch (ConnectorException e) {
-                    }
-                }
-            };
-            Runtime.getRuntime().addShutdownHook(shutdownHookForFinish);
-        } catch (ConnectorException e) {
-            Utils.convertToSkypeException(e);
-        }
+	try {
+	    String response = Connector.getInstance().execute(
+		    "CREATE APPLICATION " + name);
+	    Utils.checkError(response);
+	    Connector.getInstance().addConnectorMessageReceivedListener(
+		    dataListener);
+	    shutdownHookForFinish = new Thread() {
+		@Override
+		public void run() {
+		    try {
+			Connector.getInstance().execute(
+				"DELETE APPLICATION "
+					+ Application.this.getName());
+		    } catch (ConnectorException e) {
+		    }
+		}
+	    };
+	    Runtime.getRuntime().addShutdownHook(shutdownHookForFinish);
+	} catch (ConnectorException e) {
+	    Utils.convertToSkypeException(e);
+	}
     }
 
+    /**
+         * End the AP2AP data connection.
+         * 
+         * @throws SkypeException
+         */
     public void finish() throws SkypeException {
-        synchronized (isFinishedFieldMutex) {
-            if (!isFinished) {
-                Connector.getInstance().removeConnectorMessageReceivedListener(dataListener);
-                Runtime.getRuntime().removeShutdownHook(shutdownHookForFinish);
-                isFinished = true;
-                try {
-                    String response = Connector.getInstance().execute("DELETE APPLICATION " + getName());
-                    Utils.checkError(response);
-                } catch (ConnectorException e) {
-                    Utils.convertToSkypeException(e);
-                }
-            }
-        }
+	synchronized (isFinishedFieldMutex) {
+	    if (!isFinished) {
+		Connector.getInstance().removeConnectorMessageReceivedListener(
+			dataListener);
+		Runtime.getRuntime().removeShutdownHook(shutdownHookForFinish);
+		isFinished = true;
+		try {
+		    String response = Connector.getInstance().execute(
+			    "DELETE APPLICATION " + getName());
+		    Utils.checkError(response);
+		} catch (ConnectorException e) {
+		    Utils.convertToSkypeException(e);
+		}
+	    }
+	}
     }
 
+    /**
+         * Return the application name.
+         * 
+         * @return the application name.
+         */
     public String getName() {
-        return name;
+	return name;
     }
 
+    /**
+         * Find connetable users. Connections are only allowed to connectable
+         * users, online parties who are in the user's contact list or have
+         * active ongoing communication with the user.
+         * 
+         * @return Stream of users.
+         * @throws SkypeException
+         */
     public Stream[] connectToAll() throws SkypeException {
-        return connect(getAllConnectableFriends());
+	return connect(getAllConnectableFriends());
     }
 
+    /**
+         * Setup an AP2AP connection with a Friend.
+         * 
+         * @param friends
+         *                The ppl to start a AP2AP with.
+         * @return The connected streams.
+         * @throws SkypeException
+         */
     public Stream[] connect(Friend... friends) throws SkypeException {
-        Utils.checkNotNull("friends", friends);
-        synchronized(connectMutex) {
-            try {
-                final Object wait = new Object();
-                ConnectorMessageReceivedListener connectorListener = new ConnectorMessageReceivedListener() {
-                    public void messageReceived(String receivedMessage) {
-                        if (receivedMessage.equals("APPLICATION " + getName() + " CONNECTING ")) {
-                            synchronized(wait) {
-                                wait.notify();
-                            }
-                        }
-                    }
-                };
-                try {
-                    Connector.getInstance().addConnectorMessageReceivedListener(connectorListener);
-                    synchronized(wait) {
-                        for (Friend friend: friends) {
-                            String result = Connector.getInstance().execute("ALTER APPLICATION " + getName() + " CONNECT " + friend.getId());
-                            Utils.checkError(result);
-                        }
-                        try {
-                            wait.wait();
-                        } catch(InterruptedException e) {
-                            throw new SkypeException("The connecting was interrupted.", e);
-                        }
-                    }
-                    return getAllStreams(friends);
-                } catch (ConnectorException e) {
-                    Utils.convertToSkypeException(e);
-                    return null;
-                } finally {
-                    Connector.getInstance().removeConnectorMessageReceivedListener(connectorListener);
-                }
-            } catch (SkypeException e) {
-                for (Stream stream: getAllStreams(friends)) {
-                    try {
-                        stream.disconnect();
-                    } catch(SkypeException e2) {
-                        // do nothing
-                    }
-                }
-                throw e;
-            }
-        }
+	Utils.checkNotNull("friends", friends);
+	synchronized (connectMutex) {
+	    try {
+		final Object wait = new Object();
+		ConnectorMessageReceivedListener connectorListener = new ConnectorMessageReceivedListener() {
+		    public void messageReceived(String receivedMessage) {
+			if (receivedMessage.equals("APPLICATION " + getName()
+				+ " CONNECTING ")) {
+			    synchronized (wait) {
+				wait.notify();
+			    }
+			}
+		    }
+		};
+		try {
+		    Connector.getInstance()
+			    .addConnectorMessageReceivedListener(
+				    connectorListener);
+		    synchronized (wait) {
+			for (Friend friend : friends) {
+			    String result = Connector.getInstance().execute(
+				    "ALTER APPLICATION " + getName()
+					    + " CONNECT " + friend.getId());
+			    Utils.checkError(result);
+			}
+			try {
+			    wait.wait();
+			} catch (InterruptedException e) {
+			    throw new SkypeException(
+				    "The connecting was interrupted.", e);
+			}
+		    }
+		    return getAllStreams(friends);
+		} catch (ConnectorException e) {
+		    Utils.convertToSkypeException(e);
+		    return null;
+		} finally {
+		    Connector.getInstance()
+			    .removeConnectorMessageReceivedListener(
+				    connectorListener);
+		}
+	    } catch (SkypeException e) {
+		for (Stream stream : getAllStreams(friends)) {
+		    try {
+			stream.disconnect();
+		    } catch (SkypeException e2) {
+			// do nothing
+		    }
+		}
+		throw e;
+	    }
+	}
     }
 
+    /**
+         * Find a connected AP2AP stream with a connectable user.
+         * 
+         * @param friends
+         *                to search streams for.
+         * @return the found streams.
+         * @throws SkypeException
+         */
     public Stream[] getAllStreams(Friend... friends) throws SkypeException {
-        List<Stream> results = new ArrayList<Stream>();
-        for (Stream stream: getAllStreams()) {
-            Friend friend = stream.getFriend();
-            for (Friend comparedFriend: friends) {
-                if (friend.equals(comparedFriend)) {
-                    results.add(stream);
-                }
-            }
-        }
-        return results.toArray(new Stream[0]);
+	List<Stream> results = new ArrayList<Stream>();
+	for (Stream stream : getAllStreams()) {
+	    Friend friend = stream.getFriend();
+	    for (Friend comparedFriend : friends) {
+		if (friend.equals(comparedFriend)) {
+		    results.add(stream);
+		}
+	    }
+	}
+	return results.toArray(new Stream[0]);
     }
 
+    /**
+         * Find all AP2AP streams started.
+         * 
+         * @return all started streams.
+         * @throws SkypeException
+         */
     public Stream[] getAllStreams() throws SkypeException {
-        String streamIds = Utils.getPropertyWithCommandId("APPLICATION", getName(), "STREAMS");
-        synchronized(streams) {
-            fireStreamEvents(streamIds);
-            if ("".equals(streamIds)) {
-                return new Stream[0];
-            }
-            String[] ids = streamIds.split(" ");
-            Stream[] results = new Stream[ids.length];
-            for (int i = 0; i < ids.length; i++) {
-                results[i] = streams.get(ids[i]);
-            }
-            return results;
-        }
+	String streamIds = Utils.getPropertyWithCommandId("APPLICATION",
+		getName(), "STREAMS");
+	synchronized (streams) {
+	    fireStreamEvents(streamIds);
+	    if ("".equals(streamIds)) {
+		return new Stream[0];
+	    }
+	    String[] ids = streamIds.split(" ");
+	    Stream[] results = new Stream[ids.length];
+	    for (int i = 0; i < ids.length; i++) {
+		results[i] = streams.get(ids[i]);
+	    }
+	    return results;
+	}
     }
 
+    /**
+         * @TODO Fill in this javadoc.
+         * @param newStreamIdList
+         */
     private void fireStreamEvents(String newStreamIdList) {
-        synchronized(streams) {
-            String[] newStreamIds = "".equals(newStreamIdList) ? new String[0]: newStreamIdList.split(" ");
-            for (String streamId: newStreamIds) {
-                if (!streams.containsKey(streamId)) {
-                    Stream stream = new Stream(this, streamId);
-                    streams.put(streamId, stream);
-                    fireConnected(stream);
-                }
-            }
-            String[] oldStreamIds = streams.keySet().toArray(new String[0]);
-            NEXT: for (String oldStreamId: oldStreamIds) {
-                for (String newStreamId: newStreamIds) {
-                    if (oldStreamId.equals(newStreamId)) {
-                        continue NEXT;
-                    }
-                }
-                Stream stream = streams.remove(oldStreamId);
-                fireDisconnected(stream);
-            }
-        }
+	synchronized (streams) {
+	    String[] newStreamIds = "".equals(newStreamIdList) ? new String[0]
+		    : newStreamIdList.split(" ");
+	    for (String streamId : newStreamIds) {
+		if (!streams.containsKey(streamId)) {
+		    Stream stream = new Stream(this, streamId);
+		    streams.put(streamId, stream);
+		    fireConnected(stream);
+		}
+	    }
+	    String[] oldStreamIds = streams.keySet().toArray(new String[0]);
+	    NEXT: for (String oldStreamId : oldStreamIds) {
+		for (String newStreamId : newStreamIds) {
+		    if (oldStreamId.equals(newStreamId)) {
+			continue NEXT;
+		    }
+		}
+		Stream stream = streams.remove(oldStreamId);
+		fireDisconnected(stream);
+	    }
+	}
     }
 
+    /**
+         * Fire an event if a AP2AP connection is connected.
+         * 
+         * @param stream
+         *                The connected stream.
+         */
     private void fireConnected(Stream stream) {
-        assert stream != null;
-        ApplicationListener[] listeners = this.listeners.toArray(new ApplicationListener[0]); // to prevent ConcurrentModificationException
-        for (ApplicationListener listener : listeners) {
-            try {
-                listener.connected(stream);
-            } catch(Throwable e) {
-                Utils.handleUncaughtException(e, exceptionHandler);
-            }
-        }
+	assert stream != null;
+	ApplicationListener[] listeners = this.listeners
+		.toArray(new ApplicationListener[0]); // to prevent
+	// ConcurrentModificationException
+	for (ApplicationListener listener : listeners) {
+	    try {
+		listener.connected(stream);
+	    } catch (Throwable e) {
+		Utils.handleUncaughtException(e, exceptionHandler);
+	    }
+	}
     }
 
+    /**
+         * Fire an event if an AP2AP connection is closed.
+         * 
+         * @param stream
+         *                the closed AP2AP stream.
+         */
     private void fireDisconnected(Stream stream) {
-        assert stream != null;
-        ApplicationListener[] listeners = this.listeners.toArray(new ApplicationListener[0]); // to prevent ConcurrentModificationException
-        for (ApplicationListener listener : listeners) {
-            try {
-                listener.disconnected(stream);
-            } catch (Throwable e) {
-                Utils.handleUncaughtException(e, exceptionHandler);
-            }
-        }
+	assert stream != null;
+	ApplicationListener[] listeners = this.listeners
+		.toArray(new ApplicationListener[0]); // to prevent
+	// ConcurrentModificationException
+	for (ApplicationListener listener : listeners) {
+	    try {
+		listener.disconnected(stream);
+	    } catch (Throwable e) {
+		Utils.handleUncaughtException(e, exceptionHandler);
+	    }
+	}
     }
 
+    /**
+         * Add a listener for events to this AP2AP implementation.
+         * 
+         * @param listener
+         *                the listener which will be triggered.
+         */
     public void addApplicationListener(ApplicationListener listener) {
-        Utils.checkNotNull("listener", listener);
-        listeners.add(listener);
+	Utils.checkNotNull("listener", listener);
+	listeners.add(listener);
     }
 
+    /**
+         * Remove a listener for this AP2AP implementation. If listener is
+         * already removed nothing happens.
+         * 
+         * @param listener
+         *                The listener that has to be removed.
+         */
     public void removeApplicationListener(ApplicationListener listener) {
-        Utils.checkNotNull("listener", listener);
-        listeners.remove(listener);
+	Utils.checkNotNull("listener", listener);
+	listeners.remove(listener);
     }
 
+    /**
+         * This class implements a listener for data packets.
+         * 
+         * @author Koji Hisano
+         * 
+         */
     private class DataListener implements ConnectorMessageReceivedListener {
-        public void messageReceived(final String message) {
-            String streamsHeader = "APPLICATION " + getName() + " STREAMS ";
-            if (message.startsWith(streamsHeader)) {
-                String streamIds = message.substring(streamsHeader.length());
-                fireStreamEvents(streamIds);
-            }
-            final String dataHeader = "APPLICATION " + getName() + " ";
-            if (message.startsWith(dataHeader)) {
-                handleData(message.substring(dataHeader.length()));
-            }
-        }
 
-        private void handleData(String dataResponse) {
-            try {
-                if (isReceivedText(dataResponse)) {
-                    String data = dataResponse.substring("RECEIVED ".length());
-                    String streamId = data.substring(0, data.indexOf('='));
-                    String dataHeader = "ALTER APPLICATION " + getName() + " READ " + streamId;
-                    String response = Connector.getInstance().executeWithId(dataHeader, dataHeader);
-                    Utils.checkError(response);
-                    String text = response.substring(dataHeader.length() + 1);
-                    synchronized(streams) {
-                        if (streams.containsKey(streamId)) {
-                            streams.get(streamId).fireTextReceived(text);
-                        }
-                    }
-                } else if (isReceivedDatagram(dataResponse)) {
-                    String data = dataResponse.substring("DATAGRAM ".length());
-                    String streamId = data.substring(0, data.indexOf(' '));
-                    String datagram = data.substring(data.indexOf(' ') + 1);
-                    synchronized(streams) {
-                        if (streams.containsKey(streamId)) {
-                            streams.get(streamId).fireDatagramReceived(datagram);
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                throw new IllegalStateException("can't handle data", e);
-            }
-        }
+	/**
+         * Message received event method. It checks the name of the AP2AP
+         * application name and strips the SKYPE protocol data from the message.
+         * Then it will call handleData(String) to process the inner data.
+         */
+	public void messageReceived(final String message) {
+	    String streamsHeader = "APPLICATION " + getName() + " STREAMS ";
+	    if (message.startsWith(streamsHeader)) {
+		String streamIds = message.substring(streamsHeader.length());
+		fireStreamEvents(streamIds);
+	    }
+	    final String dataHeader = "APPLICATION " + getName() + " ";
+	    if (message.startsWith(dataHeader)) {
+		handleData(message.substring(dataHeader.length()));
+	    }
+	}
 
-        private boolean isReceivedText(String dataResponse) {
-            return dataResponse.startsWith("RECEIVED ") && ("RECEIVED ".length() < dataResponse.length());
-        }
+	/**
+         * This method will process the inner data of a data message.
+         * 
+         * @param dataResponse
+         *                the received data.
+         */
+	private void handleData(String dataResponse) {
+	    try {
+		if (isReceivedText(dataResponse)) {
+		    String data = dataResponse.substring("RECEIVED ".length());
+		    String streamId = data.substring(0, data.indexOf('='));
+		    String dataHeader = "ALTER APPLICATION " + getName()
+			    + " READ " + streamId;
+		    String response = Connector.getInstance().executeWithId(
+			    dataHeader, dataHeader);
+		    Utils.checkError(response);
+		    String text = response.substring(dataHeader.length() + 1);
+		    synchronized (streams) {
+			if (streams.containsKey(streamId)) {
+			    streams.get(streamId).fireTextReceived(text);
+			}
+		    }
+		} else if (isReceivedDatagram(dataResponse)) {
+		    String data = dataResponse.substring("DATAGRAM ".length());
+		    String streamId = data.substring(0, data.indexOf(' '));
+		    String datagram = data.substring(data.indexOf(' ') + 1);
+		    synchronized (streams) {
+			if (streams.containsKey(streamId)) {
+			    streams.get(streamId)
+				    .fireDatagramReceived(datagram);
+			}
+		    }
+		}
+	    } catch (Exception e) {
+		throw new IllegalStateException("can't handle data", e);
+	    }
+	}
 
-        private boolean isReceivedDatagram(String dataResponse) {
-            return dataResponse.startsWith("DATAGRAM ");
-        }
+	/**
+         * Check if received data is text instead of DATAGRAM.
+         * 
+         * @param dataResponse
+         *                the data to check.
+         * @return true if the data is text.
+         */
+	private boolean isReceivedText(String dataResponse) {
+	    return dataResponse.startsWith("RECEIVED ")
+		    && ("RECEIVED ".length() < dataResponse.length());
+	}
+
+	/**
+         * Check if received data is DATAGRAM instead of text.
+         * 
+         * @param dataResponse
+         *                the data to check.
+         * @return true if the data is DATAGRAM.
+         */
+	private boolean isReceivedDatagram(String dataResponse) {
+	    return dataResponse.startsWith("DATAGRAM ");
+	}
     }
 
+    /**
+         * Find user to whom Skype can connect using AP2AP.
+         * 
+         * @return Array of connectable users.
+         * @throws SkypeException
+         */
     public Friend[] getAllConnectableFriends() throws SkypeException {
-        return getAllFriends("CONNECTABLE");
+	return getAllFriends("CONNECTABLE");
     }
 
+    /**
+         * Find all users to whom SKype is connecting a AP2AP connection.
+         * 
+         * @return Array of user to whom a connecting AP2AP is in progress.
+         * @throws SkypeException
+         */
     public Friend[] getAllConnectingFriends() throws SkypeException {
-        return getAllFriends("CONNECTING");
+	return getAllFriends("CONNECTING");
     }
 
+    /**
+         * Find all user with whom we have a established AP2AP connection.
+         * 
+         * @return all AP2AP connected users.
+         * @throws SkypeException
+         */
     public Friend[] getAllConnectedFriends() throws SkypeException {
-        return getAllFriends("STREAMS");
+	return getAllFriends("STREAMS");
     }
 
+    /**
+         * Find all user to whom we are sending data using a AP2AP connection.
+         * 
+         * @return an array of users that we are sending to.
+         * @throws SkypeException
+         */
     public Friend[] getAllSendingFriends() throws SkypeException {
-        return getAllFriends("SENDING");
+	return getAllFriends("SENDING");
     }
 
+    /**
+         * Find all users which we have received data from using an AP2AP
+         * connection.
+         * 
+         * @return array of found users.
+         * @throws SkypeException
+         */
     public Friend[] getAllReceivedFriends() throws SkypeException {
-        return getAllFriends("RECEIVED");
+	return getAllFriends("RECEIVED");
     }
 
+    /**
+         * Search method to find friend with a parameter.
+         * 
+         * @param type
+         *                The searchstring.
+         * @return array of found friends.
+         * @throws SkypeException
+         */
     private Friend[] getAllFriends(String type) throws SkypeException {
-        try {
-            String responseHeader = "APPLICATION " + getName() + " " + type + " ";
-            String response = Connector.getInstance().executeWithId("GET APPLICATION " + getName() + " " + type, responseHeader);
-            Utils.checkError(response);
-            return extractFriends(response.substring(responseHeader.length()));
-        } catch (ConnectorException e) {
-            Utils.convertToSkypeException(e);
-            return null;
-        }
+	try {
+	    String responseHeader = "APPLICATION " + getName() + " " + type
+		    + " ";
+	    String response = Connector.getInstance()
+		    .executeWithId("GET APPLICATION " + getName() + " " + type,
+			    responseHeader);
+	    Utils.checkError(response);
+	    return extractFriends(response.substring(responseHeader.length()));
+	} catch (ConnectorException e) {
+	    Utils.convertToSkypeException(e);
+	    return null;
+	}
     }
 
+    /**
+         * Parse the results of a search action for names.
+         * 
+         * @param list
+         *                with search results.
+         * @return array of parsed users.
+         * @throws SkypeException
+         */
     private Friend[] extractFriends(String list) throws SkypeException {
-        assert list != null;
-        if ("".equals(list)) {
-            return new Friend[0];
-        }
-        String[] ids = list.split(" ");
-        for (int i = 0; i < ids.length; i++) {
-            String id = ids[i];
-            if (id.contains(":")) {
-                ids[i] = id.substring(0, id.indexOf(':'));
-            }
-        }
-        List<Friend> friends = new ArrayList<Friend>();
-        for (String id : ids) {
-            Friend friend = Skype.getContactList().getFriend(id);
-            if (!friends.contains(friend)) {
-                friends.add(friend);
-            }
-        }
-        return friends.toArray(new Friend[0]);
+	assert list != null;
+	if ("".equals(list)) {
+	    return new Friend[0];
+	}
+	String[] ids = list.split(" ");
+	for (int i = 0; i < ids.length; i++) {
+	    String id = ids[i];
+	    if (id.contains(":")) {
+		ids[i] = id.substring(0, id.indexOf(':'));
+	    }
+	}
+	List<Friend> friends = new ArrayList<Friend>();
+	for (String id : ids) {
+	    Friend friend = Skype.getContactList().getFriend(id);
+	    if (!friends.contains(friend)) {
+		friends.add(friend);
+	    }
+	}
+	return friends.toArray(new Friend[0]);
     }
 }
