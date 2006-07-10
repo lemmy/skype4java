@@ -13,7 +13,22 @@
  ******************************************************************************/
 package com.skype;
 
+/**
+ * Exception which is thrown when the connection the SKYPE Client isn't in place.
+ * 
+ * @author Koji Hisano
+ *
+ */
 public class NotAttachedException extends SkypeException {
-    NotAttachedException() {
+    /**
+	 * Serial UID needed for all serialisation objects. 
+	 */
+	private static final long serialVersionUID = -4191519326969230719L;
+
+	/**
+	 * Constructor.
+	 *
+	 */
+	NotAttachedException() {
     }
 }
