@@ -13,11 +13,32 @@
  ******************************************************************************/
 package com.skype;
 
+/**
+ * This exception is used for commands that get a ERROR reply.
+ * @author Koji Hisano
+ *
+ */
 public final class CommandFailedException extends SkypeException {
-    private int code;
+    /**
+	 * serialVersionUID needed for all serialisation objects.
+	 */
+	private static final long serialVersionUID = 5247715297475793607L;
 
+	/**
+	 * ERROR code refrence.
+	 * @see https://developer.skype.com/Docs/ApiDoc/Error_codes
+	 */
+	private int code;
+
+	/**
+	 * The error message.
+	 */
     private String message;
 
+    /**
+     * Constructor with parsing.
+     * @param response the complete ERROR string.
+     */
     CommandFailedException(String response) {
         super(response);
         if (response.startsWith("ERROR ")) {
@@ -28,10 +49,18 @@ public final class CommandFailedException extends SkypeException {
         message = response.substring(spaceIndex + 1);
     }
 
+    /**
+     * returns the error code.
+     * @return error code.
+     */
     public int getCode() {
         return code;
     }
 
+    /**
+     * Returns the humanreadible error message.
+     * @return message.
+     */
     public String getMessage() {
         return message;
     }
