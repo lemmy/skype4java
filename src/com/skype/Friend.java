@@ -13,8 +13,19 @@
  ******************************************************************************/
 package com.skype;
 
+/**
+ * Implementation of a special USER, one that is authorized and on the contactlist.
+ * @see User
+ * @author Koji Hisano
+ *
+ */
 public final class Friend extends User {
-    Friend(String id) {
+    
+	/**
+	 * Constuctor.
+	 * @param id ID of this User.
+	 */
+	Friend(String id) {
         super(id);
     }
 }
