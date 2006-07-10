@@ -13,10 +13,28 @@
  ******************************************************************************/
 package com.skype;
 
+/**
+ * Implementation of the ChatMessageListener.
+ * Overide the methods to use for event trigger.
+ * @see ChatMessageListener
+ * @author Koji Hisano
+ *
+ */
 public class ChatMessageAdapter implements ChatMessageListener {
-    public void chatMessageReceived(ChatMessage receivedChatMessage) throws SkypeException {
+    
+	/**
+	 * This method is called when a chatmessage is received.
+	 * @param receivedChatMessage the actual message.
+	 * @throws SkypeException when the connection has gone bad.
+	 */
+	public void chatMessageReceived(ChatMessage receivedChatMessage) throws SkypeException {
     }
 
+	/**
+	 * This method is called when a chatmessage us sent.
+	 * @param sentChatMessage the chatmessage that has been sent.
+	 * @throws SkypeException when the connection has gone bad.
+	 */
     public void chatMessageSent(ChatMessage sentChatMessage) throws SkypeException {
     }
 }

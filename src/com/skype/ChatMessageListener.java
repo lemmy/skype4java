@@ -13,7 +13,25 @@
  ******************************************************************************/
 package com.skype;
 
+/**
+ * This is the listener for the ChatMessage object.
+ * @see ChatMessage
+ * @author Koji Hisano
+ *
+ */
 public interface ChatMessageListener {
-    void chatMessageReceived(ChatMessage receivedChatMessage) throws SkypeException;
+    
+	/**
+	 * This method is called when a ChatMessage is received.
+	 * @param receivedChatMessage the received message.
+	 * @throws SkypeException when a connection has gone bad.
+	 */
+	void chatMessageReceived(ChatMessage receivedChatMessage) throws SkypeException;
+	
+	/**
+	 * This method is called when a chat message is sent.
+	 * @param sentChatMessage the sent message.
+	 * @throws SkypeException when a connection has gone bad.
+	 */
     void chatMessageSent(ChatMessage sentChatMessage) throws SkypeException;
 }

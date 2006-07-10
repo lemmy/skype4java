@@ -15,31 +15,86 @@ package com.skype;
 
 import java.util.Date;
 
+/**
+ * This class implements Skype CHATMESSAGE object.
+ * @see https://developer.skype.com/Docs/ApiDoc/CHATMESSAGE_object
+ * Protocol 3. Supersedes the MESSAGE object.
+ * 
+ * @author Koji Hisano
+ */
 public final class ChatMessage {
-    public enum Type {
+    /**
+     * Enumeration for type.
+     *
+     */
+	public enum Type {
+		/**
+		 * SETTOPIC - change of chat topic.
+		 * SAID - IM.
+		 * ADDEDMEMBERS - invited someone to chat.
+		 * SAWMEMBERS - chat participant has seen other members.
+		 * CREATEDCHATWITH - chat to multiple people is created.
+		 * LEFT - someone left chat; can also be a notification if somebody cannot be added to chat.
+		 * UNKNOWN - other.
+		 */
         SETTOPIC, SAID, ADDEDMEMBERS, SAWMEMBERS, CREATEDCHATWITH, LEFT, UNKNOWN;
     }
 
+	/**
+	 * Enumeration for STATUS of CHATMESSAGE.
+	 */
     public enum Status {
+    	/**
+    	 * SENDING - message is being sent.
+    	 * SENT - message was sent.
+    	 * RECEIVED - message has been received.
+    	 * READ - message has been read.
+    	 */
         SENDING, SENT, RECEIVED, READ;
     }
 
+    /**
+     * Enumeration for LeaveReason.
+     */
     public enum LeaveReason {
+    	/**
+    	 * USER_NOT_FOUND - user was not found.
+    	 * USER_INCAPABLE - user has an older Skype version and cannot join multichat.
+    	 * ADDER_MUST_BE_FRIEND - recipient accepts messages from contacts only and sender is not in his/her contact list.
+    	 * ADDED_MUST_BE_AUTHORIZED - recipient accepts messages from authorized users only and sender is not authorized.
+    	 * UNSUBSCRIBE - participant left chat.
+    	 */
         USER_NOT_FOUND, USER_INCAPABLE, ADDER_MUST_BE_FRIEND, ADDED_MUST_BE_AUTHORIZED, UNSUBSCRIBE;
     }
 
+    /**
+     * ID of this CHATMESSAGE.
+     */
     private final String id;
 
-    ChatMessage(String id) {
-        this.id = id;
+    /**
+     * Constructor.
+     * @param newId The ID of this CHATMESSAGE.
+     */
+    ChatMessage(String newId) {
+        this.id = newId;
     }
 
-    @Override
+    
+    /**
+     * Returns the hashcode for this object.
+     * In this case it's ID.
+     * @return ID.
+     */
     public int hashCode() {
         return getId().hashCode();
     }
 
-    @Override
+    /**
+     * Compare two object to check equalness.
+     * @param compared the object to check against.
+     * @return true if object ID's are equal.
+     */
     public boolean equals(Object compared) {
         if (compared instanceof ChatMessage) {
             ChatMessage comparedChatMessage = (ChatMessage)compared;
@@ -48,46 +103,104 @@ public final class ChatMessage {
         return false;
     }
 
+    /**
+     * Return CHATMESSAGE ID.
+     * @return ID of this chatmessage.
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Return time when message was sent (UNIX timestamp).
+     * @return Date of this chatmessage.
+     * @throws SkypeException when connection has gone bad.
+     */
     public Date getTime() throws SkypeException {
         return Utils.parseUnixTime(getProperty("TIMESTAMP"));
     }
 
+    /**
+     * Return the User who sended this CHATMESSAGE.
+     * @return User object of sender.
+     * @throws SkypeException when connection has gone bad.
+     */
     public User getSender() throws SkypeException {
         return new User(getSenderId());
     }
 
+    /**
+     * Return the handle of the user who has sent this CHATMESSAGE.
+     * @return a String with the handle.
+     * @throws SkypeException when the connection has gone bad.
+     */
     public String getSenderId() throws SkypeException {
         return getProperty("FROM_HANDLE");
     }
 
+    /**
+     * Return the displayname of the sender of this CHATMESSAGE.
+     * @return a String with the displayname of the sender.
+     * @throws SkypeException when the connection has gone bad.
+     */
     public String getSenderDisplayName() throws SkypeException {
         return getProperty("FROM_DISPNAME");
     }
 
+    /**
+     * Get the type of this CHATMESSAGE.
+     * @see Type
+     * @return Type of this chatmessage.
+     * @throws SkypeException when the connection has gone bad.
+     */
     public Type getType() throws SkypeException {
         return Type.valueOf(getProperty("TYPE"));
     }
 
+    /**
+     * Get the status of this CHATMESSAGE.
+     * @see Status
+     * @return Status of this chatmessage.
+     * @throws SkypeException when the connection has gone bad.
+     */
     public Status getStatus() throws SkypeException {
         return Status.valueOf(Utils.getPropertyWithCommandId("CHATMESSAGE", getId(), "STATUS"));
     }
 
+    /**
+     * Get the leave reason.
+     * @see LeaveReason
+     * @return get the leave reason.
+     * @throws SkypeException when the connection has gone bad.
+     */
     public LeaveReason getLeaveReason() throws SkypeException {
         return LeaveReason.valueOf(getProperty("LEAVEREASON"));
     }
 
+    /**
+     * Get the content of this CHATMESSAGE.
+     * @return the content of this chatmessage.
+     * @throws SkypeException when the connection has gone bad.
+     */
     public String getContent() throws SkypeException {
         return getProperty("BODY");
     }
 
+    /**
+     * Get the parent CHAT object for this CHATMESSAGE.
+     * @see Chat
+     * @return parent CHAT object.
+     * @throws SkypeException when the connection has gone bad.
+     */
     public Chat getChat() throws SkypeException {
         return new Chat(getProperty("CHATNAME"));
     }
 
+    /**
+     * Return all users added to CHAT.
+     * @return Array of users.
+     * @throws SkypeException when connection has gone bad.
+     */
     public User[] getAllUsers() throws SkypeException {
         String value = getProperty("USERS");
         if ("".equals(value)) {
@@ -101,6 +214,12 @@ public final class ChatMessage {
         return users;
     }
 
+    /**
+     * Get CHATMESSAGE property.
+     * @param name of the property.
+     * @return value of the property.
+     * @throws SkypeException when connection has gone bad or property not found.
+     */
     private String getProperty(String name) throws SkypeException {
         return Utils.getProperty("CHATMESSAGE", getId(), name);
     }
