@@ -24,16 +24,16 @@ public class ApplicationAdapter implements ApplicationListener {
     /**
     * Implement this method to get triggered on AP2AP connected events.
     * @param stream the stream that triggered the event.
-    * @throws SkypeException
+    * @throws SkypeException when connection is gone bad.
     */
-    public void connected(Stream stream) throws SkypeException {
+    public void connected(final Stream stream) throws SkypeException {
     }
 
     /**
      * Implement this method to get triggered on AP2AP disconnected events.
      * @param stream the stream that triggered the event.
-     * @throws SkypeException
+     * @throws SkypeException when connection is gone bad.
      */
-    public void disconnected(Stream stream) throws SkypeException {
+    public void disconnected(final Stream stream) throws SkypeException {
     }
 }
