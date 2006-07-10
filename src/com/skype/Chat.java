@@ -18,25 +18,55 @@ import java.util.Date;
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
 
+/**
+ * object representing Skype CHAT object.
+ * @see https://developer.skype.com/Docs/ApiDoc/CHAT_object 
+ * @author Koji Hisano.
+ *
+ */
 public final class Chat {
+	/**
+	 * Enumeration of the status of CHAT object.
+	 */
     public enum Status {
         // TODO examine when LEGACY_DIALOG is used
+    	/**
+    	 * LEGACY_DIALOG - old style IM
+    	 * DIALOG - 1:1 chat.
+    	 * MULTI_SUBSCRIBED - participant in chat
+    	 * UNSUBSCRIBED - left chat 
+    	 */
         DIALOG, LEGACY_DIALOG, MULTI_SUBSCRIBED, UNSUBSCRIBED;
     }
 
+    /**
+     * ID of this CHAT object.
+     */
     private final String id;
 
-    Chat(String id) {
-        assert id != null;
-        this.id = id;
+    /**
+     * Constructor, please use getChat() instead.
+     * @param newId ID of this CHAT.
+     */
+    Chat(String newId) {
+        assert newId != null;
+        this.id = newId;
     }
 
-    @Override
+    
+    /**
+     * Return the hashcode of this CHAT object.
+     * @return ID.
+     */
     public int hashCode() {
         return getId().hashCode();
     }
 
-    @Override
+    /**
+     * Implement a equals check for CHAT objects based on their ID's.
+     * @param compared The object to compare to.
+     * @return true when objects are equal.
+     */
     public boolean equals(Object compared) {
         if (compared instanceof Chat) {
             return getId().equals(((Chat) compared).getId());
@@ -44,10 +74,19 @@ public final class Chat {
         return false;
     }
 
+    /**
+     * Return the ID of this CHAT object.
+     * @return the ID.
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Set the topic of this CHAT.
+     * @param newValue The new topic.
+     * @throws SkypeException when the connection has gone bad.
+     */
     public void setTopic(String newValue) throws SkypeException {
         try {
             String command = "ALTER CHAT " + getId() + " SETTOPIC " + newValue;
@@ -59,11 +98,21 @@ public final class Chat {
         }
     }
 
+    /**
+     * Add a User to this CHAT.
+     * @param addedUser the user to add.
+     * @throws SkypeException when connection has gone bad.
+     */
     public void addUser(User addedUser) throws SkypeException {
         Utils.checkNotNull("addedUser", addedUser);
         addUsers(new User[] {addedUser});
     }
 
+    /**
+     * Add several users to this CHAT.
+     * @param addedUsers Users to add.
+     * @throws SkypeException when the connection has gone bad.
+     */
     public void addUsers(User[] addedUsers) throws SkypeException {
         Utils.checkNotNull("addedUsers", addedUsers);
         try {
@@ -76,6 +125,11 @@ public final class Chat {
         }
     }
 
+    /**
+     * Return a comma seperated String of Usernames.
+     * @param users The users to put into the String.
+     * @return The comma seperated string.
+     */
     private static String toCommaSeparatedString(User[] users) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < users.length; i++) {
@@ -87,6 +141,10 @@ public final class Chat {
         return builder.toString();
     }
 
+    /**
+     * Leave this CHAT.
+     * @throws SkypeException when the connection has gone bad.
+     */
     public void leave() throws SkypeException {
         try {
             String command = "ALTER CHAT " + getId() + " LEAVE";
@@ -98,6 +156,11 @@ public final class Chat {
         }
     }
 
+    /**
+     * Return all messages posted in this CHAT.
+     * @return array of messages.
+     * @throws SkypeException when connection has gone bad.
+     */
     public ChatMessage[] getAllChatMessages() throws SkypeException {
         try {
             String command = "GET CHAT " + getId() + " CHATMESSAGES";
@@ -116,6 +179,11 @@ public final class Chat {
         }
     }
 
+    /**
+     * Get the most recent chatmessages for this CHAT.
+     * @return array of recent chatmessages.
+     * @throws SkypeException when conenction is gone bad.
+     */
     public ChatMessage[] getRecentChatMessages() throws SkypeException {
         try {
             String command = "GET CHAT " + getId() + " RECENTCHATMESSAGES";
@@ -134,23 +202,39 @@ public final class Chat {
         }
     }
 
+    /**
+     * Send a message to this CHAT.
+     * @param message the message to send.
+     * @return the newly created message which has been sent.
+     * @throws SkypeException when the connection has gone bad.
+     */
     public ChatMessage send(String message) throws SkypeException {
         try {
             String responseHeader = "CHATMESSAGE ";
             String response = Connector.getInstance().executeWithId("CHATMESSAGE " + getId() + " " + message, responseHeader);
             Utils.checkError(response);
-            String id = response.substring(responseHeader.length(), response.indexOf(" STATUS "));
-            return new ChatMessage(id);
+            String msgId = response.substring(responseHeader.length(), response.indexOf(" STATUS "));
+            return new ChatMessage(msgId);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return null;
         }
     }
 
+    /**
+     * Return the timestamp of this CHAT.
+     * @return date of this CHAT.
+     * @throws SkypeException when the connection has gone bad.
+     */
     public Date getTime() throws SkypeException {
         return Utils.parseUnixTime(getProperty("TIMESTAMP"));
     }
 
+    /**
+     * Return user who added the current user to chat.
+     * @return User who added us.
+     * @throws SkypeException when connection has gone bad.
+     */
     public User getAdder() throws SkypeException {
         String adder = getProperty("ADDER");
         if ("".equals(adder)) {
@@ -160,27 +244,58 @@ public final class Chat {
         }
     }
 
+    /**
+     * Return the status of this CHAT.
+     * @return chat status.
+     * @throws SkypeException when the connection has gone bad.
+     */
     public Status getStatus() throws SkypeException {
         return Status.valueOf(Utils.getPropertyWithCommandId("CHAT", getId(), "STATUS"));
     }
 
+    /**
+     * Get the friendly name of this chat.
+     * @return friendly name of this chat.
+     * @throws SkypeException when the connection has gone bad.
+     */
     public String getWindowTitle() throws SkypeException {
         return getProperty("FRIENDLYNAME");
     }
 
+    /** 
+     * Return all chatting members on this CHAT.
+     * @return array of chatting users.
+     * @throws SkypeException when connection has gone bad.
+     */
     public User[] getAllPosters() throws SkypeException {
         return getUsersProperty("POSTERS");
     }
 
+    /**
+     * Return all users in this CHAT.
+     * @return array of members.
+     * @throws SkypeException when connection has gone bad.
+     */
     public User[] getAllMembers() throws SkypeException {
         return getUsersProperty("MEMBERS");
     }
 
     // TODO examine what are active members
+    /**
+     * Return all active members of CHAT.
+     * @return array of active Users.
+     * @throws SkypeException when connection has gone bad.
+     */
     public User[] getAllActiveMembers() throws SkypeException {
         return getUsersProperty("ACTIVEMEMBERS");
     }
 
+    /**
+     * Get a property of a User who is member in this chat.
+     * @param name Username.
+     * @return Array of user.
+     * @throws SkypeException when connection has gone bad.
+     */
     private User[] getUsersProperty(String name) throws SkypeException {
         try {
             String command = "GET CHAT " + getId() + " " + name;
@@ -202,6 +317,12 @@ public final class Chat {
         }
     }
 
+    /**
+     * Return a property of this CHAT.
+     * @param name propertyname.
+     * @return value of the property.
+     * @throws SkypeException when the connection has gone bad or property ain't found.
+     */
     private String getProperty(String name) throws SkypeException {
         return Utils.getProperty("CHAT", getId(), name);
     }
