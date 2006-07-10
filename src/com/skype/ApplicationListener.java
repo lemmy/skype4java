@@ -14,7 +14,24 @@
  ******************************************************************************/
 package com.skype;
 
+/**
+ * Listener used for the Application class.
+ * Listener gets triggerd by AP2AP events.
+ * @author Koji Hisano
+ *
+ */
 public interface ApplicationListener {
-    void connected(Stream stream) throws SkypeException;
+    /**
+     * Called when a AP2AP stream is connected.
+     * @param stream the connected stream.
+     * @throws SkypeException
+     */
+	void connected(Stream stream) throws SkypeException;
+	
+	/**
+	 * Called when a AP2AP stream gets disconnected.
+	 * @param stream the disconnected stream.
+	 * @throws SkypeException
+	 */
     void disconnected(Stream stream) throws SkypeException;
 }

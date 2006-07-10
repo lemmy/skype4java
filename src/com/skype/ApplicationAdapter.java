@@ -14,10 +14,26 @@
  ******************************************************************************/
 package com.skype;
 
+/**
+ * Use this class to implement event triggers for AP2AP connections.
+ * @author Koji Hisano
+ *
+ */
 public class ApplicationAdapter implements ApplicationListener {
+   
+    /**
+    * Implement this method to get triggered on AP2AP connected events.
+    * @param stream the stream that triggered the event.
+    * @throws SkypeException
+    */
     public void connected(Stream stream) throws SkypeException {
     }
 
+    /**
+     * Implement this method to get triggered on AP2AP disconnected events.
+     * @param stream the stream that triggered the event.
+     * @throws SkypeException
+     */
     public void disconnected(Stream stream) throws SkypeException {
     }
 }
