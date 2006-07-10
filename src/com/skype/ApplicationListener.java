@@ -24,14 +24,14 @@ public interface ApplicationListener {
     /**
      * Called when a AP2AP stream is connected.
      * @param stream the connected stream.
-     * @throws SkypeException
+     * @throws SkypeException when connection is gone bad.
      */
 	void connected(Stream stream) throws SkypeException;
 	
 	/**
 	 * Called when a AP2AP stream gets disconnected.
 	 * @param stream the disconnected stream.
-	 * @throws SkypeException
+	 * @throws SkypeException when connection is gone bad.
 	 */
     void disconnected(Stream stream) throws SkypeException;
 }

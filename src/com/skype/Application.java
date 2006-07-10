@@ -102,7 +102,7 @@ public final class Application {
 	/**
 	 * Initializes the AP2AP.
 	 * 
-	 * @throws SkypeException
+	 @throws SkypeException when connection is gone bad.
 	 *             if connection could not be established.
 	 */
 	void initialize() throws SkypeException {
@@ -120,6 +120,7 @@ public final class Application {
 								"DELETE APPLICATION "
 										+ Application.this.getName());
 					} catch (ConnectorException e) {
+						//because we are already stopping the app ignore the errors.
 					}
 				}
 			};
@@ -132,7 +133,7 @@ public final class Application {
 	/**
 	 * End the AP2AP data connection.
 	 * 
-	 * @throws SkypeException
+	 @throws SkypeException when connection is gone bad.
 	 */
 	public void finish() throws SkypeException {
 		synchronized (isFinishedFieldMutex) {
@@ -167,7 +168,7 @@ public final class Application {
 	 * communication with the user.
 	 * 
 	 * @return Stream of users.
-	 * @throws SkypeException
+	 @throws SkypeException when connection is gone bad.
 	 */
 	public Stream[] connectToAll() throws SkypeException {
 		return connect(getAllConnectableFriends());
@@ -179,15 +180,15 @@ public final class Application {
 	 * @param friends
 	 *            The ppl to start a AP2AP with.
 	 * @return The connected streams.
-	 * @throws SkypeException
+	 @throws SkypeException when connection is gone bad.
 	 */
-	public Stream[] connect(Friend... friends) throws SkypeException {
+	public Stream[] connect(final Friend... friends) throws SkypeException {
 		Utils.checkNotNull("friends", friends);
 		synchronized (connectMutex) {
 			try {
 				final Object wait = new Object();
 				ConnectorMessageReceivedListener connectorListener = new ConnectorMessageReceivedListener() {
-					public void messageReceived(String receivedMessage) {
+					public void messageReceived(final String receivedMessage) {
 						if (receivedMessage.equals("APPLICATION " + getName()
 								+ " CONNECTING ")) {
 							synchronized (wait) {
@@ -242,9 +243,9 @@ public final class Application {
 	 * @param friends
 	 *            to search streams for.
 	 * @return the found streams.
-	 * @throws SkypeException
+	 @throws SkypeException when connection is gone bad.
 	 */
-	public Stream[] getAllStreams(Friend... friends) throws SkypeException {
+	public Stream[] getAllStreams(final Friend... friends) throws SkypeException {
 		List<Stream> results = new ArrayList<Stream>();
 		for (Stream stream : getAllStreams()) {
 			Friend friend = stream.getFriend();
@@ -261,7 +262,7 @@ public final class Application {
 	 * Find all AP2AP streams started.
 	 * 
 	 * @return all started streams.
-	 * @throws SkypeException
+	 @throws SkypeException when connection is gone bad.
 	 */
 	public Stream[] getAllStreams() throws SkypeException {
 		String streamIds = Utils.getPropertyWithCommandId("APPLICATION",
@@ -282,9 +283,9 @@ public final class Application {
 
 	/**
 	 * @TODO Fill in this javadoc.
-	 * @param newStreamIdList
+	 * @param newStreamIdList idunno.
 	 */
-	private void fireStreamEvents(String newStreamIdList) {
+	private void fireStreamEvents(final String newStreamIdList) {
 		synchronized (streams) {
 			String[] newStreamIds = "".equals(newStreamIdList)
 					? new String[0]
@@ -315,12 +316,12 @@ public final class Application {
 	 * @param stream
 	 *            The connected stream.
 	 */
-	private void fireConnected(Stream stream) {
+	private void fireConnected(final Stream stream) {
 		assert stream != null;
-		ApplicationListener[] listeners = this.listeners
+		ApplicationListener[] myListeners = this.listeners
 				.toArray(new ApplicationListener[0]); // to prevent
 		// ConcurrentModificationException
-		for (ApplicationListener listener : listeners) {
+		for (ApplicationListener listener : myListeners) {
 			try {
 				listener.connected(stream);
 			} catch (Throwable e) {
@@ -335,12 +336,12 @@ public final class Application {
 	 * @param stream
 	 *            the closed AP2AP stream.
 	 */
-	private void fireDisconnected(Stream stream) {
+	private void fireDisconnected(final Stream stream) {
 		assert stream != null;
-		ApplicationListener[] listeners = this.listeners
+		ApplicationListener[] myListeners = this.listeners
 				.toArray(new ApplicationListener[0]); // to prevent
 		// ConcurrentModificationException
-		for (ApplicationListener listener : listeners) {
+		for (ApplicationListener listener : myListeners) {
 			try {
 				listener.disconnected(stream);
 			} catch (Throwable e) {
@@ -355,7 +356,7 @@ public final class Application {
 	 * @param listener
 	 *            the listener which will be triggered.
 	 */
-	public void addApplicationListener(ApplicationListener listener) {
+	public void addApplicationListener(final ApplicationListener listener) {
 		Utils.checkNotNull("listener", listener);
 		listeners.add(listener);
 	}
@@ -367,7 +368,7 @@ public final class Application {
 	 * @param listener
 	 *            The listener that has to be removed.
 	 */
-	public void removeApplicationListener(ApplicationListener listener) {
+	public void removeApplicationListener(final ApplicationListener listener) {
 		Utils.checkNotNull("listener", listener);
 		listeners.remove(listener);
 	}
@@ -384,6 +385,7 @@ public final class Application {
 		 * Message received event method. It checks the name of the AP2AP
 		 * application name and strips the SKYPE protocol data from the message.
 		 * Then it will call handleData(String) to process the inner data.
+		 * @param message the message received.
 		 */
 		public void messageReceived(final String message) {
 			String streamsHeader = "APPLICATION " + getName() + " STREAMS ";
@@ -403,7 +405,7 @@ public final class Application {
 		 * @param dataResponse
 		 *            the received data.
 		 */
-		private void handleData(String dataResponse) {
+		private void handleData(final String dataResponse) {
 			try {
 				if (isReceivedText(dataResponse)) {
 					String data = dataResponse.substring("RECEIVED ".length());
@@ -442,7 +444,7 @@ public final class Application {
 		 *            the data to check.
 		 * @return true if the data is text.
 		 */
-		private boolean isReceivedText(String dataResponse) {
+		private boolean isReceivedText(final String dataResponse) {
 			return dataResponse.startsWith("RECEIVED ")
 					&& ("RECEIVED ".length() < dataResponse.length());
 		}
@@ -454,7 +456,7 @@ public final class Application {
 		 *            the data to check.
 		 * @return true if the data is DATAGRAM.
 		 */
-		private boolean isReceivedDatagram(String dataResponse) {
+		private boolean isReceivedDatagram(final String dataResponse) {
 			return dataResponse.startsWith("DATAGRAM ");
 		}
 	}
@@ -463,7 +465,7 @@ public final class Application {
 	 * Find user to whom Skype can connect using AP2AP.
 	 * 
 	 * @return Array of connectable users.
-	 * @throws SkypeException
+	 @throws SkypeException when connection is gone bad.
 	 */
 	public Friend[] getAllConnectableFriends() throws SkypeException {
 		return getAllFriends("CONNECTABLE");
@@ -473,7 +475,7 @@ public final class Application {
 	 * Find all users to whom SKype is connecting a AP2AP connection.
 	 * 
 	 * @return Array of user to whom a connecting AP2AP is in progress.
-	 * @throws SkypeException
+	 @throws SkypeException when connection is gone bad.
 	 */
 	public Friend[] getAllConnectingFriends() throws SkypeException {
 		return getAllFriends("CONNECTING");
@@ -483,7 +485,7 @@ public final class Application {
 	 * Find all user with whom we have a established AP2AP connection.
 	 * 
 	 * @return all AP2AP connected users.
-	 * @throws SkypeException
+	 @throws SkypeException when connection is gone bad.
 	 */
 	public Friend[] getAllConnectedFriends() throws SkypeException {
 		return getAllFriends("STREAMS");
@@ -493,7 +495,7 @@ public final class Application {
 	 * Find all user to whom we are sending data using a AP2AP connection.
 	 * 
 	 * @return an array of users that we are sending to.
-	 * @throws SkypeException
+	 @throws SkypeException when connection is gone bad.
 	 */
 	public Friend[] getAllSendingFriends() throws SkypeException {
 		return getAllFriends("SENDING");
@@ -504,7 +506,7 @@ public final class Application {
 	 * connection.
 	 * 
 	 * @return array of found users.
-	 * @throws SkypeException
+	 @throws SkypeException when connection is gone bad.
 	 */
 	public Friend[] getAllReceivedFriends() throws SkypeException {
 		return getAllFriends("RECEIVED");
@@ -516,9 +518,9 @@ public final class Application {
 	 * @param type
 	 *            The searchstring.
 	 * @return array of found friends.
-	 * @throws SkypeException
+	 @throws SkypeException when connection is gone bad.
 	 */
-	private Friend[] getAllFriends(String type) throws SkypeException {
+	private Friend[] getAllFriends(final String type) throws SkypeException {
 		try {
 			String responseHeader = "APPLICATION " + getName() + " " + type
 					+ " ";
@@ -539,9 +541,9 @@ public final class Application {
 	 * @param list
 	 *            with search results.
 	 * @return array of parsed users.
-	 * @throws SkypeException
+	 @throws SkypeException when connection is gone bad.
 	 */
-	private Friend[] extractFriends(String list) throws SkypeException {
+	private Friend[] extractFriends(final String list) throws SkypeException {
 		assert list != null;
 		if ("".equals(list)) {
 			return new Friend[0];
