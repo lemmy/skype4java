@@ -14,14 +14,37 @@
  ******************************************************************************/
 package com.skype;
 
+/**
+ * Exception that will be thrown when the connection with Skype is not OK or unexpected events happen.
+ * @author Koji Hisano
+ *
+ */
 public class SkypeException extends Exception {
-    SkypeException() {
+    /**
+	 * SerialVersionUID needed for serialisation.
+	 */
+	private static final long serialVersionUID = -4277557764382543108L;
+
+	/**
+	 * Constructor.
+	 *
+	 */
+	SkypeException() {
     }
 
+	/**
+	 * Constructor with message to provide with the exception.
+	 * @param message the exception message.
+	 */
     SkypeException(String message) {
         super(message);
     }
 
+    /**
+     * Constructor not only with a message but also a cause.
+     * @param message the exception message.
+     * @param cause the exception cause.
+     */
     SkypeException(String message, Throwable cause) {
         super(message, cause);
     }
