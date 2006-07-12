@@ -8,8 +8,7 @@
  * and is available at http://www.eclipse.org/legal/cpl-v10.html
  * 
  * Contributors: 
- * Bart Lamot
- * Koji Hisano - initial API and implementation Kamil Sarelo -
+ * Bart Lamot - initial API and implementation
  ******************************************************************************/
 package com.skype.connector.linux;
 
