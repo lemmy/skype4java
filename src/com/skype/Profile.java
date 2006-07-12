@@ -661,7 +661,11 @@ public final class Profile {
      */
     public CallForwardingRule[] getAllCallForwardingRules() throws SkypeException {
         List<CallForwardingRule> rules = new ArrayList<CallForwardingRule>();
-        for (String rule : getProperty("CALL_FORWARD_RULES").split(" ")) {
+        String value = getProperty("CALL_FORWARD_RULES");
+        if ("".equals(value)) {
+            return new CallForwardingRule[0];
+        }
+        for (String rule : value.split(" ")) {
             String[] elements = rule.split(",");
             rules.add(new CallForwardingRule(Integer.parseInt(elements[0]), Integer.parseInt(elements[1]), elements[2]));
         }
