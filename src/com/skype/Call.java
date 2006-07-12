@@ -11,6 +11,7 @@
  * 
  * Contributors:
  * Koji Hisano - initial API and implementation
+ * Bart Lamot - good javadocs and bug report of video status
  ******************************************************************************/
 package com.skype;
 
@@ -28,10 +29,8 @@ import com.skype.connector.ConnectorException;
  * This class implements all features of the SKYPE CALL protocol.
  * @see https://developer.skype.com/Docs/ApiDoc/CALL_object
  * @author Koji Hisano
- *
  */
 public final class Call {
-	
 	/**
 	 * Enumeration of call status types.
 	 */
@@ -90,10 +89,9 @@ public final class Call {
     }
 
     /**
-     * @TODO: fill in this javadoc. Bart can't find this in SKYPE API docs.
-     *
+     * Enumeration of video enabled status types.
      */
-    private enum VideoEnabled {
+    private enum VideoEnabledStatus {
     	/**
     	 * VIDEO_NONE.
     	 * VIDEO_SEND_ENABLED.
@@ -410,7 +408,7 @@ public final class Call {
      * @throws SkypeException when connection is bad.
      */
     public boolean isReceiveVideoEnabled() throws SkypeException {
-        VideoEnabled enabled = VideoEnabled.valueOf(getProperty("VIDEO_STATUS"));
+        VideoEnabledStatus enabled = VideoEnabledStatus.valueOf(getProperty("VIDEO_STATUS"));
         switch (enabled) {
         case VIDEO_NONE:
         case VIDEO_SEND_ENABLED:
@@ -444,7 +442,7 @@ public final class Call {
      * @throws SkypeException when connection is bad.
      */
     public boolean isSendVideoEnabled() throws SkypeException {
-        VideoEnabled enabled = VideoEnabled.valueOf(getProperty("VIDEO_STATUS"));
+        VideoEnabledStatus enabled = VideoEnabledStatus.valueOf(getProperty("VIDEO_STATUS"));
         switch (enabled) {
         case VIDEO_NONE:
         case VIDEO_RECV_ENABLED:
