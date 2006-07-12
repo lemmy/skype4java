@@ -33,7 +33,7 @@ import com.skype.connector.ConnectorException;
 public final class Call {
 	
 	/**
-	 * Enumeration of status types a CALL object can have.
+	 * Enumeration of call status types.
 	 */
     public enum Status {
     	/**
@@ -74,16 +74,19 @@ public final class Call {
     }
 
     /**
-     * Enumeration of video CALL objects. 
+     * Enumeration of video status types.
      */
     public enum VideoStatus {
     	/**
-    	 * VIDEO_NONE.
-    	 * VIDEO_SEND_ENABLED.
-    	 * VIDEO_RECV_ENABLED.
-    	 * VIDEO_BOTH_ENABLED.
+         * NOT_AVAILABLE - The user does not have video capability because video is disabled or a webcam is unplugged).
+         * AVAILABLE - The user is video-capable but the video is not running (can occur during a manual send).
+         * STARTING - The video is sending but is not yet running at full speed.
+         * REJECTED - The receiver rejects the video feed (can occur during a manual receive).
+         * RUNNING - The video is actively running.
+         * STOPPING - The active video is in the process of stopping but has not halted yet.
+         * PAUSED - The video call is placed on hold.
     	 */
-        NOT_AVAILABLE, AVAILABLE, STARTING, REJECTED, RUNNING, STOPPING, PAUSED;
+        NOT_AVAILABLE, AVAILABLE, STARTING, REJECTED, RUNNING, STOPPING, PAUSED
     }
 
     /**
