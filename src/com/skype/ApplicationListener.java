@@ -11,6 +11,7 @@
  * 
  * Contributors:
  * Koji Hisano - initial API and implementation
+ * Bart Lamot - good javadocs
  ******************************************************************************/
 package com.skype;
 
@@ -18,7 +19,6 @@ package com.skype;
  * Listener used for the Application class.
  * Listener gets triggerd by AP2AP events.
  * @author Koji Hisano
- *
  */
 public interface ApplicationListener {
     /**

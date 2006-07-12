@@ -11,7 +11,7 @@
  * 
  * Contributors:
  * Koji Hisano - initial API and implementation
- * Bart Lamot - good javadocs and bug report of video status
+ * Bart Lamot - good javadocs
  ******************************************************************************/
 package com.skype;
 

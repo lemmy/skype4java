@@ -9,7 +9,9 @@
  * this distribution, and is available at
  * http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
+ * Bart Lamot - good javadocs
  ******************************************************************************/
 package com.skype;
 
@@ -22,7 +24,6 @@ import com.skype.connector.ConnectorException;
  * object representing Skype CHAT object.
  * @see https://developer.skype.com/Docs/ApiDoc/CHAT_object 
  * @author Koji Hisano.
- *
  */
 public final class Chat {
 	/**

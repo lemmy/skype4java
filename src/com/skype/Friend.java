@@ -9,7 +9,9 @@
  * this distribution, and is available at
  * http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
+ * Bart Lamot - good javadocs
  ******************************************************************************/
 package com.skype;
 
@@ -17,10 +19,8 @@ package com.skype;
  * Implementation of a special USER, one that is authorized and on the contactlist.
  * @see User
  * @author Koji Hisano
- *
  */
 public final class Friend extends User {
-    
 	/**
 	 * Constuctor.
 	 * @param id ID of this User.

@@ -9,7 +9,9 @@
  * this distribution, and is available at
  * http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
+ * Bart Lamot - good javadocs
  ******************************************************************************/
 package com.skype;
 
@@ -19,12 +21,10 @@ import com.skype.connector.ConnectorException;
 /**
  * This object can be used for all actions normal to a contactlist, like searching users and friends.
  * @author Koji Hisano.
- *
  */
 public final class ContactList {
 	/**
 	 * Constructor.
-	 *
 	 */
     ContactList() {
     }

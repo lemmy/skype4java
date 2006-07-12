@@ -9,7 +9,9 @@
  * this distribution, and is available at
  * http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
+ * Bart Lamot - good javadocs
  ******************************************************************************/
 package com.skype;
 
@@ -19,13 +21,11 @@ import java.util.Date;
  * This class implements Skype CHATMESSAGE object.
  * @see https://developer.skype.com/Docs/ApiDoc/CHATMESSAGE_object
  * Protocol 3. Supersedes the MESSAGE object.
- * 
  * @author Koji Hisano
  */
 public final class ChatMessage {
     /**
      * Enumeration for type.
-     *
      */
 	public enum Type {
 		/**

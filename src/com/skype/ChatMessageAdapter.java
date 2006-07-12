@@ -9,7 +9,9 @@
  * this distribution, and is available at
  * http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
+ * Bart Lamot - good javadocs
  ******************************************************************************/
 package com.skype;
 
@@ -18,10 +20,8 @@ package com.skype;
  * Overide the methods to use for event trigger.
  * @see ChatMessageListener
  * @author Koji Hisano
- *
  */
 public class ChatMessageAdapter implements ChatMessageListener {
-    
 	/**
 	 * This method is called when a chatmessage is received.
 	 * @param receivedChatMessage the actual message.

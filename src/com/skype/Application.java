@@ -11,6 +11,7 @@
  * 
  * Contributors:
  * Koji Hisano - initial API and implementation
+ * Bart Lamot - good javadocs
  ******************************************************************************/
 package com.skype;
 
@@ -29,7 +30,6 @@ import com.skype.connector.ConnectorMessageReceivedListener;
  * 
  * @see https://developer.skype.com/Docs/ApiDoc/Application_to_application_commands
  * @author Koji Hisano
- * 
  */
 public final class Application {
 	/**

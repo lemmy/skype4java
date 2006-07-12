@@ -11,13 +11,13 @@
  * 
  * Contributors:
  * Koji Hisano - initial API and implementation
+ * Bart Lamot - good javadocs
  ******************************************************************************/
 package com.skype;
 
 /**
  * Exception that will be thrown when the connection with Skype is not OK or unexpected events happen.
  * @author Koji Hisano
- *
  */
 public class SkypeException extends Exception {
     /**

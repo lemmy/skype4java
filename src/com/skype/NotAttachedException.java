@@ -9,15 +9,15 @@
  * this distribution, and is available at
  * http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
+ * Bart Lamot - good javadocs
  ******************************************************************************/
 package com.skype;
 
 /**
  * Exception which is thrown when the connection the SKYPE Client isn't in place.
- * 
  * @author Koji Hisano
- *
  */
 public class NotAttachedException extends SkypeException {
     /**

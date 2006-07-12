@@ -11,13 +11,13 @@
  * 
  * Contributors:
  * Koji Hisano - initial API and implementation
+ * Bart Lamot - good javadocs
  ******************************************************************************/
 package com.skype;
 
 /**
  * Listener interface for CALL objects status changed events.
  * @author Koji Hisano.
- *
  */
 public interface CallStatusChangedListener {
     /**

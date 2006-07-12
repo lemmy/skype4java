@@ -8,9 +8,10 @@
  * terms of the Common Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation Kamil Sarelo -
- * modified getInstalledPath() to support installing by an administrator account
- * and added some JavaDoc
+ * Contributors:
+ * Koji Hisano - initial API and implementation
+ * Kamil Sarelo - modified getInstalledPath() to support installing by an
+ *                administrator account and added javadocs
  ******************************************************************************/
 package com.skype.connector.windows;
 

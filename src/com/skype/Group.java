@@ -9,7 +9,9 @@
  * this distribution, and is available at
  * http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
+ * Bart Lamot - good javadocs
  ******************************************************************************/
 package com.skype;
 
@@ -21,10 +23,8 @@ import com.skype.connector.ConnectorException;
  * The GROUP object enables users to group contacts. There are two types of GROUP ; custom groups and hardwired groups.
  * @see https://developer.skype.com/Docs/ApiDoc/GROUP_object
  * @author Koji Hisano
- *
  */
 public final class Group {
-	
 	/**
 	 * Enumeration of the type attribute.
 	 */

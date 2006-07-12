@@ -9,7 +9,9 @@
  * this distribution, and is available at
  * http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
+ * Bart Lamot - good javadocs
  ******************************************************************************/
 package com.skype;
 
@@ -17,10 +19,8 @@ package com.skype;
  * This is the listener for the ChatMessage object.
  * @see ChatMessage
  * @author Koji Hisano
- *
  */
 public interface ChatMessageListener {
-    
 	/**
 	 * This method is called when a ChatMessage is received.
 	 * @param receivedChatMessage the received message.

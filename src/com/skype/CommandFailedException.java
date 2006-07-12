@@ -9,14 +9,15 @@
  * this distribution, and is available at
  * http://www.eclipse.org/legal/cpl-v10.html
  * 
- * Contributors: Koji Hisano - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
+ * Bart Lamot - good javadocs
  ******************************************************************************/
 package com.skype;
 
 /**
  * This exception is used for commands that get a ERROR reply.
  * @author Koji Hisano
- *
  */
 public final class CommandFailedException extends SkypeException {
     /**

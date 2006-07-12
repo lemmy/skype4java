@@ -17,6 +17,7 @@ package com.skype;
 /**
  * Interface to handle an uncaught {@link Throwable} in the listener's callback method. 
  * @see Skype#setSkypeExceptionHanlder()
+ * @author Koji Hisano
  */
 public interface SkypeExceptionHandler {
     /** 

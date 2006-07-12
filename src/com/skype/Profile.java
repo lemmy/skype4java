@@ -28,6 +28,7 @@ import java.util.List;
  * And you can change it by the following code:
  * <pre>Skype.getProfile().setMoodMessage("Happy!");</pre>
  * </p>
+ * @author Koji Hisano
  */
 public final class Profile {
     /**

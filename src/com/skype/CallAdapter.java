@@ -11,13 +11,13 @@
  * 
  * Contributors:
  * Koji Hisano - initial API and implementation
+ * Bart Lamot - good javadocs
  ******************************************************************************/
 package com.skype;
 
 /**
  * Empty implementation of CallListener to overide and use as a listener.
  * @author Koji Hisano
- *
  */
 public class CallAdapter implements CallListener {
 	/**
