@@ -1,6 +1,0 @@
-rule DefineHeaderDependencies
-{
-}
-
-DefineHeaderDependencies "<libJSA.jnilib>libJSA.jnilib" ;
-
