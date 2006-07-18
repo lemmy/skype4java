@@ -15,6 +15,9 @@
  ******************************************************************************/
 package com.skype;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
 
@@ -24,7 +27,26 @@ import com.skype.connector.ConnectorException;
  * @see https://developer.skype.com/Docs/ApiDoc/GROUP_object
  * @author Koji Hisano
  */
-public final class Group {
+public final class Group extends SkypeObject {
+    /**
+     * Collection of Group objects.
+     */
+    private static final Map<String, Group> groups = new HashMap<String, Group>();
+    
+    /**
+     * Returns the Group object by the specified id.
+     * @param id whose associated Group object is to be returned.
+     * @return Group object with ID == id.
+     */
+    static Group getInstance(final String id) {
+        synchronized(groups) {
+            if (!groups.containsKey(id)) {
+                groups.put(id, new Group(id));
+            }
+            return groups.get(id);
+        }
+    }
+
 	/**
 	 * Enumeration of the type attribute.
 	 */
@@ -57,7 +79,7 @@ public final class Group {
      * Constructor.
      * @param newId ID of this GROUP.
      */
-    Group(String newId) {
+    private Group(String newId) {
         this.id = newId;
     }
 

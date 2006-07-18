@@ -185,7 +185,7 @@ public final class Skype {
             String response = Connector.getInstance().executeWithId("CALL " + skypeId, responseHeader);
             Utils.checkError(response);
             String id = response.substring(responseHeader.length(), response.indexOf(" STATUS "));
-            return Call.getCall(id);
+            return Call.getInstance(id);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return null;
@@ -217,7 +217,7 @@ public final class Skype {
             String response = Connector.getInstance().executeWithId("CHAT CREATE " + skypeId, responseHeader);
             Utils.checkError(response);
             String id = response.substring(responseHeader.length(), response.indexOf(" STATUS "));
-            return new Chat(id);
+            return Chat.getInstance(id);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return null;
@@ -333,7 +333,7 @@ public final class Skype {
             String response = Connector.getInstance().executeWithId("CREATE SMS " + type + " " + number, responseHeader);
             Utils.checkError(response);
             String id = response.substring(responseHeader.length(), response.indexOf(" STATUS "));
-            return new SMS(id);
+            return SMS.getInstance(id);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return null;
@@ -373,7 +373,7 @@ public final class Skype {
             String[] ids = Utils.convertToArray(data);
             SMS[] smss = new SMS[ids.length];
             for (int i = 0; i < ids.length; ++i) {
-                smss[i] = new SMS(ids[i]);
+                smss[i] = SMS.getInstance(ids[i]);
             }
             return smss;
         } catch (ConnectorException e) {
@@ -394,7 +394,7 @@ public final class Skype {
             String response = Connector.getInstance().execute("VOICEMAIL " + skypeId, responseHeader);
             Utils.checkError(response);
             String id = response.substring(responseHeader.length(), response.indexOf(' ', responseHeader.length()));
-            return new VoiceMail(id);
+            return VoiceMail.getInstance(id);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return null;
@@ -408,9 +408,7 @@ public final class Skype {
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
     public static Application addApplication(String name) throws SkypeException {
-        Application application = new Application(name);
-        application.initialize();
-        return application;
+        return Application.getInstance(name);
     }
 
     /**
@@ -542,13 +540,17 @@ public final class Skype {
             String[] ids = Utils.convertToArray(data);
             Chat[] chats = new Chat[ids.length];
             for (int i = 0; i < ids.length; ++i) {
-                chats[i] = new Chat(ids[i]);
+                chats[i] = Chat.getInstance(ids[i]);
             }
             return chats;
         } catch (ConnectorException ex) {
             Utils.convertToSkypeException(ex);
             return null;
         }
+    }
+    
+    public static User getUser(String id) {
+        return User.getInstance(id);
     }
 
     /**
@@ -573,7 +575,7 @@ public final class Skype {
                             if ("STATUS".equals(propertyName)) {
                                 String propertyValue = propertyNameAndValue.substring(propertyNameAndValue.indexOf(' ') + 1);
                                 ChatMessageListener[] listeners = chatMessageListeners.toArray(new ChatMessageListener[0]);
-                                ChatMessage chatMessage = new ChatMessage(id);
+                                ChatMessage chatMessage = ChatMessage.getInstance(id);
                                 if ("SENT".equals(propertyValue)) {
                                     for (ChatMessageListener listener : listeners) {
                                         try {
@@ -641,7 +643,7 @@ public final class Skype {
                             if ("STATUS".equals(propertyName)) {
                                 String propertyValue = propertyNameAndValue.substring(propertyNameAndValue.indexOf(' ') + 1);
                                 Call.Status status = Call.Status.valueOf(propertyValue);
-                                Call call = Call.getCall(id);
+                                Call call = Call.getInstance(id);
                                 EXIT: if (status == Call.Status.RINGING) {
                                     synchronized(call) {
                                         if (call.isCallListenerEventFired()) {

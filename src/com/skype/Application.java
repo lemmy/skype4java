@@ -31,8 +31,27 @@ import com.skype.connector.ConnectorMessageReceivedListener;
  * @see https://developer.skype.com/Docs/ApiDoc/Application_to_application_commands
  * @author Koji Hisano
  */
-public final class Application {
-	/**
+public final class Application extends SkypeObject {
+    /**
+     * Collection of Application objects.
+     */
+    private static final Map<String, Application> applications = new HashMap<String, Application>();
+    
+    /**
+     * Returns the Application object by the specified id.
+     * @param id whose associated Application object is to be returned.
+     * @return Application object with ID == id.
+     */
+    static Application getInstance(final String id) throws SkypeException {
+        synchronized(applications) {
+            if (!applications.containsKey(id)) {
+                applications.put(id, new Application(id));
+            }
+            return applications.get(id);
+        }
+    }
+
+    /**
 	 * Application name, used to register with the Skype client.
 	 */
 	private final String name;
@@ -85,10 +104,42 @@ public final class Application {
 	 *            An arbitrary name to identify the application that will be
 	 *            exchanging data.
 	 */
-	Application(final String newName) {
+	private Application(final String newName) throws SkypeException {
 		assert newName != null;
 		this.name = newName;
+        initialize();
 	}
+
+    /**
+     * Initializes the AP2AP.
+     * 
+     @throws SkypeException when connection is gone bad.
+     *             if connection could not be established.
+     */
+    void initialize() throws SkypeException {
+        try {
+            String response = Connector.getInstance().execute(
+                    "CREATE APPLICATION " + name);
+            Utils.checkError(response);
+            Connector.getInstance().addConnectorMessageReceivedListener(
+                    dataListener);
+            shutdownHookForFinish = new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        Connector.getInstance().execute(
+                                "DELETE APPLICATION "
+                                        + Application.this.getName());
+                    } catch (ConnectorException e) {
+                        //because we are already stopping the app ignore the errors.
+                    }
+                }
+            };
+            Runtime.getRuntime().addShutdownHook(shutdownHookForFinish);
+        } catch (ConnectorException e) {
+            Utils.convertToSkypeException(e);
+        }
+    }
 
 	/**
 	 * Enable nice printing of Object, by returning the app name.
@@ -98,37 +149,6 @@ public final class Application {
 	public String toString() {
 		return getName();
 	};
-
-	/**
-	 * Initializes the AP2AP.
-	 * 
-	 @throws SkypeException when connection is gone bad.
-	 *             if connection could not be established.
-	 */
-	void initialize() throws SkypeException {
-		try {
-			String response = Connector.getInstance().execute(
-					"CREATE APPLICATION " + name);
-			Utils.checkError(response);
-			Connector.getInstance().addConnectorMessageReceivedListener(
-					dataListener);
-			shutdownHookForFinish = new Thread() {
-				@Override
-				public void run() {
-					try {
-						Connector.getInstance().execute(
-								"DELETE APPLICATION "
-										+ Application.this.getName());
-					} catch (ConnectorException e) {
-						//because we are already stopping the app ignore the errors.
-					}
-				}
-			};
-			Runtime.getRuntime().addShutdownHook(shutdownHookForFinish);
-		} catch (ConnectorException e) {
-			Utils.convertToSkypeException(e);
-		}
-	}
 
 	/**
 	 * End the AP2AP data connection.

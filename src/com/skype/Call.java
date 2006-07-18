@@ -27,10 +27,32 @@ import com.skype.connector.ConnectorException;
 
 /**
  * This class implements all features of the SKYPE CALL protocol.
- * @see https://developer.skype.com/Docs/ApiDoc/CALL_object
+ * @see <a href="https://developer.skype.com/Docs/ApiDoc/Making_and_managing_voice_calls">Skype API reference - Commands - Making and managing voice calls</a>
+ * @see <a href="https://developer.skype.com/Docs/ApiDoc/Making_and_managing_video_calls">Skype API reference - Commands - Making and managing video calls</a>
+ * @see <a href="https://developer.skype.com/Docs/ApiDoc/CALL_object">Skype API reference - Objects - CALL object</a>
+ * @see <a href="https://developer.skype.com/Docs/ApiDoc/Call_notifications">Skype API reference - Notifications - Object notifications - Call notifications</a>
  * @author Koji Hisano
  */
-public final class Call {
+public final class Call extends SkypeObject {
+    /**
+     * Collection of Call objects, filled at runtime when new CALL objects are created (by events or by application).
+     */
+    private static final Map<String, Call> calls = new HashMap<String, Call>();
+    
+    /**
+     * Returns the Call object by the specified id.
+     * @param id whose associated Call object is to be returned.
+     * @return Call object with ID == id.
+     */
+    static Call getInstance(final String id) {
+        synchronized(calls) {
+            if (!calls.containsKey(id)) {
+                calls.put(id, new Call(id));
+            }
+            return calls.get(id);
+        }
+    }
+
 	/**
 	 * Enumeration of call status types.
 	 */
@@ -102,25 +124,6 @@ public final class Call {
     }
     
     /**
-     * Hashmap of CALL objects, filled at runtime when new CALL objects are created (by events or by application).
-     */
-    private static final Map< String, Call > calls = new HashMap< String, Call >();
-    
-    /**
-     * Return a CALL object from the calls hashmap, identifying it by it's ID.
-     * @param id the CALL to return.
-     * @return Call object with ID == id.
-     */
-    static Call getCall(final String id) {
-        synchronized(calls) {
-            if (!calls.containsKey(id)) {
-                calls.put(id, new Call(id));
-            }
-            return calls.get(id);
-        }
-    }
-
-    /**
      * The CALL objects ID.
      */
     private final String id;
@@ -129,11 +132,6 @@ public final class Call {
      * List of listeners to CALL objects.
      */
     private final List<CallStatusChangedListener> listeners = Collections.synchronizedList(new ArrayList<CallStatusChangedListener>());
-    
-    /**
-     * Collection of DATA added to CALL objects.
-     */
-    private final Map<String, Object> data = Collections.synchronizedMap(new HashMap<String, Object>());
     
     /**
      * Previous status.
@@ -178,24 +176,6 @@ public final class Call {
             return id.equals(((Call) compared).id);
         }
         return false;
-    }
-
-    /**
-     * Return DATA field of the CALL object.
-     * @param name fieldname of the DATA field.
-     * @return data.
-     */
-    public Object getData(final String name) {
-        return data.get(name);
-    }
-    
-    /**
-     * Add data to the CALL object.
-     * @param name fieldname.
-     * @param value DATA to add to the fieldname.
-     */
-    public void setData(final String name, final Object value) {
-        data.put(name, value);
     }
 
     /**
@@ -329,7 +309,7 @@ public final class Call {
      * @throws SkypeException when connection is bad.
      */
     public User getPartner() throws SkypeException {
-        return new User(getPartnerId());
+        return User.getInstance(getPartnerId());
     }
 
     /**

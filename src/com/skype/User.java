@@ -18,7 +18,9 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
@@ -30,7 +32,51 @@ import com.skype.connector.ConnectorException;
  * <pre>System.out.println(new User("echo123").getFullName());</pre>
  * </p>
  */
-public class User {
+public class User extends SkypeObject {
+    /**
+     * Collection of User objects.
+     */
+    private static final Map<String, User> users = new HashMap<String, User>();
+    
+    /**
+     * Returns the User object by the specified id.
+     * @param id whose associated User object is to be returned.
+     * @return User object with ID == id.
+     */
+    static User getInstance(final String id) {
+        synchronized(users) {
+            if (!users.containsKey(id)) {
+                users.put(id, new User(id));
+            }
+            return users.get(id);
+        }
+    }
+    
+    /**
+     * Returns the Friend object by the specified id.
+     * @param id whose associated Friend object is to be returned.
+     * @return Friend object with ID == id.
+     */
+    static Friend getFriendInstance(String id) {
+        synchronized(users) {
+            if (!users.containsKey(id)) {
+                Friend friend = new Friend(id);
+                users.put(id, friend);
+                return friend;
+            } else {
+                User user = users.get(id);
+                if (user instanceof Friend) {
+                    return (Friend)user;
+                } else {
+                    Friend friend = new Friend(id);
+                    friend.copyFrom(user);
+                    users.put(id, friend);
+                    return friend;
+                }
+            }
+        }
+    }
+
     /**
      * The <code>Status</code> enum contains the online status constants of the skype user.
      * @see User#getOnlineStatus()
@@ -91,11 +137,7 @@ public class User {
 
     private String id;
 
-    /*
-     * HANDLE HASCALLEQUIPMENT BUDDYSTATUS, ISAUTHORIZED ISBLOCKED
-     * LASTONLINETIMESTAMP
-     */
-    public User(String id) {
+    User(String id) {
         this.id = id;
     }
 
@@ -219,7 +261,7 @@ public class User {
         String[] ids = getHistory("CHATMESSAGES");
         ChatMessage[] messages = new ChatMessage[ids.length];
         for (int i = 0; i < ids.length; i++) {
-            messages[i] = new ChatMessage(ids[i]);
+            messages[i] = ChatMessage.getInstance(ids[i]);
         }
         List<ChatMessage> messageList = Arrays.asList(messages);
         Collections.reverse(messageList);
@@ -230,7 +272,7 @@ public class User {
         String[] ids = getHistory("CALLS");
         Call[] calls = new Call[ids.length];
         for (int i = 0; i < ids.length; i++) {
-            calls[i] = Call.getCall(ids[i]);
+            calls[i] = Call.getInstance(ids[i]);
         }
         return calls;
     }
@@ -246,5 +288,9 @@ public class User {
             Utils.convertToSkypeException(e);
             return null;
         }
+    }
+
+    void dispose() {
+        users.remove(getId());
     }
 }

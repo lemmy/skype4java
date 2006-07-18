@@ -17,12 +17,33 @@ package com.skype;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
 
-public final class SMS {
+public final class SMS extends SkypeObject {
+    /**
+     * Collection of SMS objects.
+     */
+    private static final Map<String, SMS> smses = new HashMap<String, SMS>();
+    
+    /**
+     * Returns the SMS object by the specified id.
+     * @param id whose associated SMS object is to be returned.
+     * @return SMS object with ID == id.
+     */
+    static SMS getInstance(final String id) {
+        synchronized(smses) {
+            if (!smses.containsKey(id)) {
+                smses.put(id, new SMS(id));
+            }
+            return smses.get(id);
+        }
+    }
+
     public enum Type {
         INCOMING, OUTGOING, CONFIRMATION_CODE_REQUEST, CONFIRMATION_CODE_SUBMIT, UNKNOWN;
     }
@@ -75,7 +96,7 @@ public final class SMS {
 
     private final String id;
 
-    SMS(String id) {
+    private SMS(String id) {
         assert id != null;
         this.id = id;
     }

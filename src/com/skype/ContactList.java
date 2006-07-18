@@ -43,7 +43,7 @@ public final class ContactList {
             String[] ids = Utils.convertToArray(data);
             Friend[] friends = new Friend[ids.length];
             for (int i = 0; i < ids.length; i++) {
-                friends[i] = new Friend(ids[i]);
+                friends[i] = User.getFriendInstance(ids[i]);
             }
             return friends;
         } catch (ConnectorException e) {
@@ -120,7 +120,7 @@ public final class ContactList {
             String[] ids = Utils.convertToArray(data);
             Group[] groups = new Group[ids.length];
             for (int i = 0; i < ids.length; i++) {
-                groups[i] = new Group(ids[i]);
+                groups[i] = Group.getInstance(ids[i]);
             }
             return groups;
         } catch (ConnectorException e) {
@@ -157,7 +157,7 @@ public final class ContactList {
             String response = Connector.getInstance().execute("CREATE GROUP " + name, responseHeader).substring(responseHeader.length());
             Utils.checkError(response);
             String id = response.substring(0, response.indexOf(' '));
-            return new Group(id);
+            return Group.getInstance(id);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return null;

@@ -63,7 +63,7 @@ public final class Stream {
     }
 
     public Friend getFriend() {
-        return new Friend(getId().substring(0, getId().indexOf(':')));
+        return User.getFriendInstance(getId().substring(0, getId().indexOf(':')));
     }
 
     public void write(String text) throws SkypeException {

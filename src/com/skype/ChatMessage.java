@@ -16,6 +16,8 @@
 package com.skype;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This class implements Skype CHATMESSAGE object.
@@ -23,7 +25,26 @@ import java.util.Date;
  * Protocol 3. Supersedes the MESSAGE object.
  * @author Koji Hisano
  */
-public final class ChatMessage {
+public final class ChatMessage extends SkypeObject {
+    /**
+     * Collection of ChatMessage objects.
+     */
+    private static final Map<String, ChatMessage> chatMessages = new HashMap<String, ChatMessage>();
+    
+    /**
+     * Returns the ChatMessage object by the specified id.
+     * @param id whose associated ChatMessage object is to be returned.
+     * @return ChatMessage object with ID == id.
+     */
+    static ChatMessage getInstance(final String id) {
+        synchronized(chatMessages) {
+            if (!chatMessages.containsKey(id)) {
+                chatMessages.put(id, new ChatMessage(id));
+            }
+            return chatMessages.get(id);
+        }
+    }
+
     /**
      * Enumeration for type.
      */
@@ -76,7 +97,7 @@ public final class ChatMessage {
      * Constructor.
      * @param newId The ID of this CHATMESSAGE.
      */
-    ChatMessage(String newId) {
+    private ChatMessage(String newId) {
         this.id = newId;
     }
 
@@ -126,7 +147,7 @@ public final class ChatMessage {
      * @throws SkypeException when connection has gone bad.
      */
     public User getSender() throws SkypeException {
-        return new User(getSenderId());
+        return User.getInstance(getSenderId());
     }
 
     /**
@@ -193,7 +214,7 @@ public final class ChatMessage {
      * @throws SkypeException when the connection has gone bad.
      */
     public Chat getChat() throws SkypeException {
-        return new Chat(getProperty("CHATNAME"));
+        return Chat.getInstance(getProperty("CHATNAME"));
     }
 
     /**
@@ -209,7 +230,7 @@ public final class ChatMessage {
         String[] ids = value.split(" ");
         User[] users = new User[ids.length];
         for (int i = 0; i < ids.length; i++) {
-            users[i] = new User(ids[i]);
+            users[i] = User.getInstance(ids[i]);
         }
         return users;
     }
