@@ -217,8 +217,11 @@ public abstract class Connector {
             	String osName = System.getProperty("os.name");
             	if (osName.startsWith("Linux") || osName.startsWith("LINUX")) {
             		execute("NAME " + getApplicationName(), new String[] { "OK"  }, false);
+            	} else if (osName.startsWith("Mac OS X")) { 
+            		// NOT IMPLEMENTED
+            		//execute("NAME " + getApplicationName(), new String[] { "NAME " + getApplicationName() }, false);
             	} else {
-            		execute("NAME " + getApplicationName(), new String[] { "NAME " + getApplicationName() }, false);
+            		execute("NAME " + getApplicationName(), new String[] { "NAME " + getApplicationName() }, false);	
             	}
                 execute("PROTOCOL 9999", new String[] { "PROTOCOL " }, false);
             } catch (TimeOutException e) {
@@ -357,7 +360,9 @@ public abstract class Connector {
         Status status = getStatus();
         if (status != Status.ATTACHED) {
             status = connect();
+            status = getStatus();
             if (status != Status.ATTACHED) {
+            	System.err.println("Connector.assureAttached() status="+status);
                 throw new NotAttachedException(status);
             }
         }
