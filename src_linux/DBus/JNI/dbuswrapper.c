@@ -111,7 +111,7 @@ DBusWatch      *g_watch = NULL;
      DBusError error;
      dbus_error_init (&error);
      //Connect to DBus
-     connection = dbus_bus_get (DBUS_BUS_SYSTEM, &error);
+     connection = dbus_bus_get (DBUS_BUS_SESSION, &error);
      //if connection failed set the Java status to NOT_CONNECTED 
      if (connection == NULL){
          fprintf(stderr, "Failed to open connection to bus: %s\n", error.message);
@@ -119,9 +119,20 @@ DBusWatch      *g_watch = NULL;
         statusToJava(3); 
 	return -1;
      }
-     //D-BUS connection OK!
+     //Test if the service is around....
+     //Service can be on SYSTEM bus if there is no SESSION bus.
+	if (!dbus_bus_service_exists(connection,"com.Skype.API",&error)) {
+ 	 connection = dbus_bus_get (DBUS_BUS_SYSTEM, &error);
+     	 //if connection failed set the Java status to NOT_CONNECTED
+     	 if (connection == NULL){
+          fprintf(stderr, "Failed to open connection to bus: %s\n", error.message);
+          dbus_error_free (&error);
+          statusToJava(3);
+          return -1;
+     	 }
+        }
      dbus_error_free (&error);
-	DBusObjectPathVTable vtable =
+     DBusObjectPathVTable vtable =
          { &nm_unregister_handler, &nm_message_handler,
                          NULL, NULL, NULL, NULL };
 
