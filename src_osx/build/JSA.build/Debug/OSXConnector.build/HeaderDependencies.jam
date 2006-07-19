@@ -1,0 +1,6 @@
+rule DefineHeaderDependencies
+{
+}
+
+DefineHeaderDependencies "<OSXConnector>OSXConnector" ;
+
