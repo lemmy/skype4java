@@ -130,19 +130,22 @@ public class OSXConnector extends Connector
      * This method gets called by the native library when a message from Skype is received.
      * @param message The received message.
      */
-    public static void receiveSkypeMessage(String message)
+    public static synchronized void receiveSkypeMessage(final String message)
     {
         System.out.println((new StringBuilder()).append("OSXConnector.receiveSkypeMessage(").append(message).append(") start").toString());
-        if(_instance.getStatus() != com.skype.connector.Connector.Status.ATTACHED)
-        {
-            System.out.println((new StringBuilder()).append("OSXConnector.receiveSkypeMessage(").append(message).append(") Status =").append(_instance.getStatus()).toString());
-            setConnectedStatus(1);
-            synchronized(lock)
+        
+        new Thread() { public void run() {
+        	if(_instance.getStatus() != com.skype.connector.Connector.Status.ATTACHED)
             {
-                lock.notifyAll();
+                setConnectedStatus(1);
+                synchronized(lock)
+                {
+                    lock.notifyAll();
+                }
             }
-        }
-        _instance.fireMessageReceived(message);
+        	_instance.fireMessageReceived(message);	
+        }}.start();
+        
         System.out.println((new StringBuilder()).append("OSXConnector.receiveSkypeMessage(").append(message).append(") end").toString());
     }
 
