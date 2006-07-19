@@ -1,156 +1,212 @@
-/*******************************************************************************
- * Copyright (c) 2006 Bart Lamot
- * 
- * Contributors: Bart Lamot - initial API and implementation
- ******************************************************************************/
 package com.skype.connector.osx;
 
 import com.skype.connector.Connector;
 
-public class OSXConnector extends Connector implements Runnable{
+/**
+ * 
+ * @author Bart Lamot
+ *
+ */
+public class OSXConnector extends Connector
+    implements Runnable
+{
 
-	private static final String CONNECTOR_STATUS_CHANGED = "ConnectorStatusChanged";
+	/** The singleton instance. */
+    private static OSXConnector _instance = null;
+    /** Thread synchronisation lock. */
+    private static final Object lock = new Object();
+    /** Don't reinit the native code over and over. */
+    private boolean inited;
 
-	private static OSXConnector _instance = null;
+    /**
+     * Constructor.
+     * It loads the native library, if it can't be loaded the status is set to NOT_AVAILABLE.
+     *
+     */
+    private OSXConnector()
+    {
+        inited = false;
+        try
+        {
+            System.loadLibrary("JSA");
+        }
+        catch(Exception e)
+        {
+            setStatus(com.skype.connector.Connector.Status.NOT_AVAILABLE);
+            fireMessageReceived("ConnectorStatusChanged");
+        }
+    }
 
-	private static Object lock = new Object();
-	
-	/**
-	 * Private constructor to keep this a singleton.
-	 * Use getInstance to get an instance.
-	 */
-	private OSXConnector(){
-		System.out.println("OSXConnector.OSXConnector()");
-		new Thread(this).start();
-	}
+    /**
+     * Return the singleton instance of this connector.
+     * @return singleton instance.
+     */
+    public static synchronized OSXConnector getInstance()
+    {
+        System.out.println("OSXConnector.getInstance()");
+        if(_instance == null)
+            _instance = new OSXConnector();
+        return _instance;
+    }
 
-	/**
-	 * Get the singleton instance of this Connector.
-	 * @return the singleton instance.
-	 */
-	public static synchronized OSXConnector getInstance() {
-		System.out.println("OSXConnector.getInstance()");
-		if (_instance == null) {
-			_instance = new OSXConnector();
-		}
-		return _instance;
-	}
+    /**
+     * Send a command to the Skype API.
+     * @param command the command to send.
+     */
+    protected void sendCommand(String command)
+    {
+        System.out.println((new StringBuilder()).append("OSXConnector.sendCommand(").append(command).append(") start").toString());
+        sendSkypeMessage(command);
+        System.out.println((new StringBuilder()).append("OSXConnector.sendCommand(").append(command).append(") end").toString());
+    }
 
-	/**
-	 * Initialize the native library and connection with DBus.
-	 *
-	 */
-	public void init() {
-		System.out.println("OSXConnector.init() start");
-		init(getApplicationName());
-		System.out.println("OSXConnector.init() end");
-	}
+    /**
+     * Disconnect from the Skype API and clean up the native implementation.
+     */
+    protected void disposeImpl()
+    {
+        System.out.println("OSXConnector.disposeImpl() start");
+        setConnectedStatus(5);
+        disposeNative();
+        _instance = null;
+        System.out.println("OSXConnector.disposeImpl() end");
+    }
 
-	/**
-	 * Send a command to the Skype client using the native DBus code.
-	 */
-	@Override
-	protected void sendCommand(final String command) {
-		System.out.println("OSXConnector.sendCommand("+command+") start");
-		sendSkypeMessage(command);
-		System.out.println("OSXConnector.sendCommand("+command+") end");
-	}
-	
-	/**
-	 * Dispose the native DBus connection.
-	 */
-	@Override
-	protected void disposeImpl() {
-		System.out.println("OSXConnector.disposeImpl() start");
-		setConnectedStatus(5);	
-		disposeNative();
-		_instance = null;
-		System.out.println("OSXConnector.disposeImpl() end");
-	}
+    /**
+     * Wait for the connection to get initialized.
+     * @param timeout Wait for this amout of millisecs to initialize.
+     */
+    protected com.skype.connector.Connector.Status connectImpl(int timeout)
+    {
+        System.out.println((new StringBuilder()).append("OSXConnector.connectImpl(").append(timeout).append(") start").toString());
+        if (getStatus() == Status.PENDING_AUTHORIZATION) {
+        	synchronized(lock)	
+        	{
+        		try
+        		{
+        			lock.wait(timeout);
+        		}
+        		catch(InterruptedException e)
+        		{
+        			e.printStackTrace();
+        		}
+        	}
+        }
+        System.out.println((new StringBuilder()).append("OSXConnector.connectImpl(").append(timeout).append(") end").toString());
+        return getStatus();
+    }
 
-	/**
-	 * abstract method overridden.
-	 */
-	@Override
-	protected Status connectImpl(int timeout) {
-		System.out.println("OSXConnector.connectImpl("+timeout+")");
-		if (getStatus() == Status.PENDING_AUTHORIZATION){
-				synchronized(lock) {
-					try {
-						lock.wait(timeout);
-					} catch (InterruptedException e) {
-					e.printStackTrace();
-					}
-				}
-				System.out.println("OSXConnector.connectImpl("+timeout+") end 1 ->"+Status.ATTACHED);
-				return Status.ATTACHED;
-		}
-		System.out.println("OSXConnector.connectImpl("+timeout+") end 2 ->"+getStatus());
-		return getStatus();
-	}
+    /**
+     * Initialize the connection to Skype API.
+     * @param timeout Wait for this amout of millisecs to initialize.
+     */
+    protected void initialize(int timeout)
+    {
+        System.out.println((new StringBuilder()).append("OSXConnector.initialize(").append(timeout).append(") start ***************").toString());
+        if(!inited)
+        {
+            inited = true;
+            (new Thread(this)).start();
+            setStatus(com.skype.connector.Connector.Status.PENDING_AUTHORIZATION);
+            fireMessageReceived("ConnectorStatusChanged");
+            setDebugPrinting(true);
+            init(getApplicationName());
+        }
+        synchronized(lock)
+        {
+            try
+            {
+                lock.wait(timeout);
+            }
+            catch(InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }
+        System.out.println((new StringBuilder()).append("OSXConnector.initialize(").append(timeout).append(") end ***************").toString());
+    }
 
-	/**
-	 * overriden method to initialize.
-	 */
-	@Override
-	protected void initialize(int timeout) {
-		System.out.println("OSXConnector.initialize("+timeout+") start");
-		try {
-			System.loadLibrary("JSA");
-		} catch (Exception e) {
-			setStatus(Status.NOT_AVAILABLE);
-			fireMessageReceived(CONNECTOR_STATUS_CHANGED);
-		}
-        setStatus(Status.PENDING_AUTHORIZATION);
-        fireMessageReceived(CONNECTOR_STATUS_CHANGED);
-        
-        init();
-		System.out.println("OSXConnector.initialize("+timeout+") end");
-	}
-	
-	private native void init(String applicationName);
-	
-	private native void sendSkypeMessage(String message);
+    /**
+     * This method gets called by the native library when a message from Skype is received.
+     * @param message The received message.
+     */
+    public static void receiveSkypeMessage(String message)
+    {
+        System.out.println((new StringBuilder()).append("OSXConnector.receiveSkypeMessage(").append(message).append(") start").toString());
+        if(_instance.getStatus() != com.skype.connector.Connector.Status.ATTACHED)
+        {
+            System.out.println((new StringBuilder()).append("OSXConnector.receiveSkypeMessage(").append(message).append(") Status =").append(_instance.getStatus()).toString());
+            setConnectedStatus(1);
+            synchronized(lock)
+            {
+                lock.notifyAll();
+            }
+        }
+        _instance.fireMessageReceived(message);
+        System.out.println((new StringBuilder()).append("OSXConnector.receiveSkypeMessage(").append(message).append(") end").toString());
+    }
 
-	private native void disposeNative();
+    /**
+     * This method gets called from the native library when the status is changed by Skype API.
+     * @param status the new status.
+     */
+    public static void setConnectedStatus(int status)
+    {
+        System.out.println((new StringBuilder()).append("OSXConnector.setConnectedStatus(").append(status).append(") start").toString());
+        synchronized(lock)
+        {
+            lock.notifyAll();
+        }
+        switch(status)
+        {
+        case 0: // '\0'
+            _instance.setStatus(com.skype.connector.Connector.Status.PENDING_AUTHORIZATION);
+            break;
 
-	/**
-	 * This method is used for callback by JNI code.
-	 * When a message is received.
-	 * @param message the received message.
-	 */
-	public static void receiveSkypeMessage(String message) {
-		System.out.println("OSXConnector.receiveSkypeMessage("+message+") start");
-		lock.notify();
-		if (_instance.getStatus() != Status.ATTACHED) {
-			setConnectedStatus(1);
-		}
-		_instance.fireMessageReceived(message);
-		System.out.println("OSXConnector.receiveSkypeMessage("+message+") end");
-	}
+        case 1: // '\001'
+            _instance.setStatus(com.skype.connector.Connector.Status.ATTACHED);
+            break;
 
-	/**
-	 * This method is used for callback by JNI code to set the Status.
-	 * @param status status to be set.
-	 */
-	public static void setConnectedStatus(int status) {
-		System.out.println("OSXConnector.setConnectedStatus("+status+") start");
-		lock.notify();
-		switch(status) {
-			case 0:	_instance.setStatus(Status.PENDING_AUTHORIZATION);break;
-			case 1:	_instance.setStatus(Status.ATTACHED);break;
-			case 2:	_instance.setStatus(Status.REFUSED);break;
-			case 3:	_instance.setStatus(Status.NOT_AVAILABLE);break;	
-			case 4:	_instance.setStatus(Status.API_AVAILABLE);break;
-			case 5:	_instance.setStatus(Status.NOT_RUNNING);break;
-			default:	_instance.setStatus(Status.NOT_RUNNING);break;
-		}
-		_instance.fireMessageReceived(CONNECTOR_STATUS_CHANGED);
-		System.out.println("OSXConnector.setConnectedStatus("+status+") end");
-	}
+        case 2: // '\002'
+            _instance.setStatus(com.skype.connector.Connector.Status.REFUSED);
+            break;
 
-	public void run() {
-		
-	}
-	
+        case 3: // '\003'
+            _instance.setStatus(com.skype.connector.Connector.Status.NOT_AVAILABLE);
+            break;
+
+        case 4: // '\004'
+            _instance.setStatus(com.skype.connector.Connector.Status.API_AVAILABLE);
+            break;
+
+        case 5: // '\005'
+            _instance.setStatus(com.skype.connector.Connector.Status.NOT_RUNNING);
+            break;
+
+        default:
+            _instance.setStatus(com.skype.connector.Connector.Status.NOT_RUNNING);
+            break;
+        }
+        _instance.fireMessageReceived("ConnectorStatusChanged");
+        System.out.println((new StringBuilder()).append("OSXConnector.setConnectedStatus(").append(status).append(") end").toString());
+    }
+
+    /**
+     * OS X needs a native event loop to run, this starts it.
+     */
+    public void run()
+    {
+        startEventLoop();
+    }
+    
+    private synchronized native void init(String s);
+
+    private native void startEventLoop();
+
+    private native void sendSkypeMessage(String s);
+
+    private native void disposeNative();
+
+    private native void setDebugPrinting(boolean flag);
+
 }
