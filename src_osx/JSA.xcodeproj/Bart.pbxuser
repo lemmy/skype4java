@@ -1,0 +1,221 @@
+// !$*UTF8*$!
+{
+	00E6828EFEC88D1A11DB9C8B /* Project object */ = {
+		activeBuildConfigurationName = Debug;
+		activeBuildStyle = 130F8B95001BDF0A11CA292A /* Debug */;
+		activeExecutable = 6A9FA6570246BA6C0CC91562 /* OSXConnector */;
+		activeTarget = 6A9FA557024694440CC91562 /* JSA */;
+		addToTargets = (
+			6A9FA55B024695C00CC91562 /* OSXConnector */,
+			4CEBA78E08679EF10015D03E /* JNILib */,
+			6A9FA6030246AD840CC91562 /* Headers */,
+			6A9FA557024694440CC91562 /* JSA */,
+		);
+		breakpoints = (
+		);
+		breakpointsGroup = CC8E036E0A5E48CB00D6313B /* XCBreakpointsBucket */;
+		codeSenseManager = CC8E03630A5E453900D6313B /* Code sense */;
+		executables = (
+			6A9FA6570246BA6C0CC91562 /* OSXConnector */,
+		);
+		perUserDictionary = {
+			"PBXConfiguration.PBXBreakpointsDataSource.v1:1CA1AED706398EBD00589147" = {
+				PBXFileTableDataSourceColumnSortingDirectionKey = "-1";
+				PBXFileTableDataSourceColumnSortingKey = PBXBreakpointsDataSource_BreakpointID;
+				PBXFileTableDataSourceColumnWidthsKey = (
+					20,
+					20,
+					210,
+					20,
+					110,
+					109,
+					20,
+				);
+				PBXFileTableDataSourceColumnsKey = (
+					PBXBreakpointsDataSource_ActionID,
+					PBXBreakpointsDataSource_TypeID,
+					PBXBreakpointsDataSource_BreakpointID,
+					PBXBreakpointsDataSource_UseID,
+					PBXBreakpointsDataSource_LocationID,
+					PBXBreakpointsDataSource_ConditionID,
+					PBXBreakpointsDataSource_ContinueID,
+				);
+			};
+			PBXConfiguration.PBXFileTableDataSource3.PBXErrorsWarningsDataSource = {
+				PBXFileTableDataSourceColumnSortingDirectionKey = "-1";
+				PBXFileTableDataSourceColumnSortingKey = PBXErrorsWarningsDataSource_LocationID;
+				PBXFileTableDataSourceColumnWidthsKey = (
+					20,
+					371,
+					200,
+				);
+				PBXFileTableDataSourceColumnsKey = (
+					PBXErrorsWarningsDataSource_TypeID,
+					PBXErrorsWarningsDataSource_MessageID,
+					PBXErrorsWarningsDataSource_LocationID,
+				);
+			};
+			PBXConfiguration.PBXFileTableDataSource3.PBXExecutablesDataSource = {
+				PBXFileTableDataSourceColumnSortingDirectionKey = "-1";
+				PBXFileTableDataSourceColumnSortingKey = PBXExecutablesDataSource_NameID;
+				PBXFileTableDataSourceColumnWidthsKey = (
+					22,
+					300,
+					400,
+				);
+				PBXFileTableDataSourceColumnsKey = (
+					PBXExecutablesDataSource_ActiveFlagID,
+					PBXExecutablesDataSource_NameID,
+					PBXExecutablesDataSource_CommentsID,
+				);
+			};
+			PBXConfiguration.PBXFileTableDataSource3.PBXFileTableDataSource = {
+				PBXFileTableDataSourceColumnSortingDirectionKey = "-1";
+				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
+				PBXFileTableDataSourceColumnWidthsKey = (
+					20,
+					546,
+					20,
+					48,
+					43,
+					43,
+					20,
+				);
+				PBXFileTableDataSourceColumnsKey = (
+					PBXFileDataSource_FiletypeID,
+					PBXFileDataSource_Filename_ColumnID,
+					PBXFileDataSource_Built_ColumnID,
+					PBXFileDataSource_ObjectSize_ColumnID,
+					PBXFileDataSource_Errors_ColumnID,
+					PBXFileDataSource_Warnings_ColumnID,
+					PBXFileDataSource_Target_ColumnID,
+				);
+			};
+			PBXConfiguration.PBXTargetDataSource.PBXTargetDataSource = {
+				PBXFileTableDataSourceColumnSortingDirectionKey = "-1";
+				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
+				PBXFileTableDataSourceColumnWidthsKey = (
+					20,
+					200,
+					366,
+					20,
+					48,
+					43,
+					43,
+				);
+				PBXFileTableDataSourceColumnsKey = (
+					PBXFileDataSource_FiletypeID,
+					PBXFileDataSource_Filename_ColumnID,
+					PBXTargetDataSource_PrimaryAttribute,
+					PBXFileDataSource_Built_ColumnID,
+					PBXFileDataSource_ObjectSize_ColumnID,
+					PBXFileDataSource_Errors_ColumnID,
+					PBXFileDataSource_Warnings_ColumnID,
+				);
+			};
+			PBXPerProjectTemplateStateSaveDate = 174851235;
+			PBXWorkspaceStateSaveDate = 174851235;
+		};
+		sourceControlManager = CC8E03620A5E453900D6313B /* Source Control */;
+		userBuildSettings = {
+		};
+	};
+	363028F90383184400C91562 /* Manifest */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1005, 460}}";
+			sepNavSelRange = "{24, 0}";
+			sepNavVisRect = "{{0, 0}, {1005, 460}}";
+			sepNavWindowFrame = "{{107, 200}, {1044, 589}}";
+		};
+	};
+	4CEBA78E08679EF10015D03E /* JNILib */ = {
+		activeExec = 0;
+	};
+	6A46BB2D022D9DFF0CC91562 /* OSXConnector.java */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1005, 2198}}";
+			sepNavSelRange = "{3051, 0}";
+			sepNavVisRect = "{{0, 504}, {1005, 460}}";
+			sepNavWindowFrame = "{{176, 137}, {1044, 589}}";
+		};
+	};
+	6A52677B022AFE3B0CC91562 /* JSAjnilib.c */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1190, 3584}}";
+			sepNavSelRange = "{6145, 0}";
+			sepNavVisRect = "{{0, 2827}, {1190, 744}}";
+			sepNavWindowFrame = "{{109, 5}, {1229, 873}}";
+		};
+	};
+	6A9FA557024694440CC91562 /* JSA */ = {
+		activeExec = 0;
+	};
+	6A9FA55B024695C00CC91562 /* OSXConnector */ = {
+		activeExec = 0;
+	};
+	6A9FA6030246AD840CC91562 /* Headers */ = {
+		activeExec = 0;
+	};
+	6A9FA6570246BA6C0CC91562 /* OSXConnector */ = {
+		isa = PBXExecutable;
+		activeArgIndex = 0;
+		activeArgIndices = (
+			YES,
+		);
+		argumentStrings = (
+			"-cp OSXConnector.jar:../../skype.jar Main",
+		);
+		autoAttachOnCrash = 1;
+		configStateDict = {
+		};
+		customDataFormattersEnabled = 1;
+		debuggerPlugin = GDBDebugging;
+		disassemblyDisplayState = 0;
+		dylibVariantSuffix = "";
+		enableDebugStr = 1;
+		environmentEntries = (
+		);
+		executableSystemSymbolLevel = 0;
+		executableUserSymbolLevel = 0;
+		launchableReference = 6A9FA6590246BA770CC91562 /* java */;
+		libgmallocEnabled = 0;
+		name = OSXConnector;
+		savedGlobals = {
+		};
+		sourceDirectories = (
+		);
+	};
+	6A9FA6590246BA770CC91562 /* java */ = {
+		isa = PBXFileReference;
+		explicitFileType = "compiled.mach-o.executable";
+		name = java;
+		path = /usr/bin/java;
+		sourceTree = "<absolute>";
+	};
+	CC8E03620A5E453900D6313B /* Source Control */ = {
+		isa = PBXSourceControlManager;
+		fallbackIsa = XCSourceControlManager;
+		isSCMEnabled = 0;
+		scmConfiguration = {
+		};
+		scmType = "";
+	};
+	CC8E03630A5E453900D6313B /* Code sense */ = {
+		isa = PBXCodeSenseManager;
+		indexTemplatePath = "";
+	};
+	CC8E036E0A5E48CB00D6313B /* XCBreakpointsBucket */ = {
+		isa = XCBreakpointsBucket;
+		name = "Project Breakpoints";
+		objects = (
+		);
+	};
+	CC8E04040A5E4F7A00D6313B /* Main.java */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1190, 744}}";
+			sepNavSelRange = "{0, 0}";
+			sepNavVisRect = "{{0, 0}, {1190, 744}}";
+			sepNavWindowFrame = "{{15, 0}, {1229, 873}}";
+		};
+	};
+}
