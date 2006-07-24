@@ -1,5 +1,8 @@
 package com.skype.connector.osx;
 
+import java.io.File;
+import java.util.StringTokenizer;
+
 import com.skype.connector.Connector;
 
 /**
@@ -25,27 +28,71 @@ public class OSXConnector extends Connector
      */
     private OSXConnector()
     {
-        inited = false;
+    	/*
+        //Let's check the system.library.path :)
+    	System.out.println("TEMP : " + System.getProperty("java.io.tmpdir"));
+    	System.out.println("LIBPATH : " + System.getProperty("java.library.path"));
+    	System.out.println("CLASSPATH : " + System.getProperty("java.class.path"));
+    	System.out.println("SYSTEM DIR : " + System.getProperty("user.home")); // ex. c:\windows on Win9x system
+    	System.out.println("CURRENT DIR: " + System.getProperty("user.dir"));
+    	//check the libjni file in the libpath
+    	System.out.println("Library in path: "+checkLibraryInPath());
+    	System.out.println("Framework installed: "+checkInstalledFramework());
+        */
         try
         {
             System.loadLibrary("JSA");
         }
         catch(Exception e)
         {
+        	System.err.println("Could not load the library");
+        	if (!checkLibraryInPath())
+        		System.err.println("libJSA.jnilib is not in java.library.path");
+        	if (!checkInstalledFramework())
+        		System.err.println("Please install Skype.framework at /Library/Frameworks/Skype.framework");
             setStatus(com.skype.connector.Connector.Status.NOT_AVAILABLE);
             fireMessageReceived("ConnectorStatusChanged");
         }
+    }
+    
+    /**
+     * Checks if the library file can be found in the library path.
+     * @return true if the file is found.
+     */
+    private boolean checkInstalledFramework() {
+    	File frameworkLocation = new File("/Library/Frameworks/Skype.framework");
+    	return frameworkLocation.exists();
+    }
+    
+    /**
+     * Checks if the Skype.framework is properly installed.
+     * @return true if the framework is found at the correct location.
+     */
+    private String getLibrarySearchPath() {
+    	return System.getProperty("java.library.path")+":"+System.getProperty("user.dir")+":";
+    }
+    
+    private boolean checkLibraryInPath() {
+    	boolean libfilefound = false;
+    	String libpath = getLibrarySearchPath();
+    	File libfile = new File("");
+    	StringTokenizer st = new StringTokenizer(libpath, libfile.pathSeparator);
+    	while (st.hasMoreTokens() && !libfilefound) {
+    		libfile = new File(st.nextToken()+"/libJSA.jnilib");
+    		libfilefound = libfile.exists();
+    	}
+    	return libfilefound;
     }
 
     /**
      * Return the singleton instance of this connector.
      * @return singleton instance.
      */
-    public static synchronized OSXConnector getInstance()
+    public static OSXConnector getInstance()
     {
         System.out.println("OSXConnector.getInstance()");
         if(_instance == null)
-            _instance = new OSXConnector();
+        	_instance = new OSXConnector();
         return _instance;
     }
 
