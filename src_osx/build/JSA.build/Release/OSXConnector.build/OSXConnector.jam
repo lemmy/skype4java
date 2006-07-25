@@ -1,0 +1,98 @@
+# Jamfile for configuration Release of target "OSXConnector" of project "JSA"
+
+
+JAVAC_SOURCE_FILE_ENCODING default = MacRoman ;
+
+# Implicitly computed project-wide settings for project "JSA"
+export deferred ANTICIPATED_BUILT_PRODUCTS_DIR = $(CONFIGURATION_BUILD_DIR) ;
+export deferred ANTICIPATED_TARGET_BUILD_DIR = $(CONFIGURATION_BUILD_DIR) ;
+export deferred BUILD_STYLE = "$(CONFIGURATION)" ;
+export deferred CONFIGURATION = Release ;
+export deferred CONFIGURATION_BUILD_DIR = $(BUILD_DIR)/$(CONFIGURATION) ;
+export deferred CONFIGURATION_TEMP_DIR = $(PROJECT_TEMP_DIR)/$(CONFIGURATION) ;
+export deferred DEVELOPMENT_LANGUAGE = English ;
+export deferred GROUP = Bart ;
+export deferred PROJECT = $(PROJECT_NAME) ;
+export deferred PROJECT_DIR = /Users/Bart/Documents/workspace/SkypeAPI/src_osx ;
+export deferred PROJECT_FILE_PATH = /Users/Bart/Documents/workspace/SkypeAPI/src_osx/JSA.xcodeproj ;
+export deferred PROJECT_NAME = JSA ;
+export deferred PROJECT_TEMP_DIR = $(OBJROOT)/$(PROJECT_NAME).build ;
+export deferred SRCROOT = /Users/Bart/Documents/workspace/SkypeAPI/src_osx ;
+export deferred TARGET_TEMP_DIR = $(CONFIGURATION_TEMP_DIR)/$(TARGET_NAME).build ;
+export deferred TEMP_DIR = $(TARGET_TEMP_DIR) ;
+export deferred USER = Bart ;
+
+# Project-wide settings for project "JSA"
+export deferred ARCHS = ppc i386 ;
+export deferred FRAMEWORK_SEARCH_PATHS = $(SRCROOT)/** $(SYSTEM_LIBRARY_DIR)/Frameworks/ $(LOCAL_LIBRARY_DIR)/Frameworks/ ~/Library/Frameworks/ ;
+export deferred SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk ;
+export deferred ZERO_LINK = NO ;
+
+# User-defined project-wide settings for project "JSA"
+
+# Build Settings for target "OSXConnector"
+
+# Implicitly computed build settings for target "OSXConnector"
+export deferred CLONE_HEADERS = NO ;
+export deferred SKIP_INSTALL = YES ;
+export deferred TARGETNAME = $(TARGET_NAME) ;
+export deferred TARGET_NAME = OSXConnector ;
+
+# User-defined build settings for target "OSXConnector"
+export deferred COPY_PHASE_STRIP = YES ;
+export deferred DYLIB_COMPATIBILITY_VERSION = 1 ;
+export deferred DYLIB_CURRENT_VERSION = 1 ;
+export deferred FRAMEWORK_SEARCH_PATHS = "$(FRAMEWORK_SEARCH_PATHS)" "$(SRCROOT)" ;
+export deferred GCC_ENABLE_FIX_AND_CONTINUE = NO ;
+export deferred JAVA_ARCHIVE_COMPRESSION = NO ;
+export deferred JAVA_ARCHIVE_TYPE = JAR ;
+export deferred JAVA_COMPILER = /usr/bin/javac ;
+export deferred JAVA_MANIFEST_FILE = Manifest ;
+export deferred JAVA_SOURCE_SUBDIR = . ;
+export deferred LIBRARY_STYLE = STATIC ;
+export deferred OTHER_CFLAGS =  ;
+export deferred OTHER_LDFLAGS =  ;
+export deferred OTHER_LIBTOOL_FLAGS =  ;
+export deferred OTHER_REZFLAGS =  ;
+export deferred PRODUCT_NAME = JNIWrapper ;
+export deferred PURE_JAVA = YES ;
+export deferred REZ_EXECUTABLE = YES ;
+export deferred SECTORDER_FLAGS =  ;
+export deferred WARNING_CFLAGS = -Wmost -Wno-four-char-constants -Wno-unknown-pragmas ;
+export deferred ZERO_LINK = NO ;
+
+# Target "OSXConnector"
+
+ConditionalDefinitions _ ;
+commitdeferred ;
+
+
+BeginLibrary "<JNIWrapper>JNIWrapper" ;
+
+# Sources
+OSXConnector.java_JAVA_IMPORTS = "" ;
+Main.java_JAVA_IMPORTS = "" ;
+Main.java_MAIN_CLASS = Main.class ;
+SOURCES =
+	OSXConnector.java
+	Main.java ;
+ProcessSources "<JNIWrapper>JNIWrapper" : "$(SOURCES)" : "" : BPTag000 ;
+
+# Java Resource Files
+Manifest_JAVA_ARCHIVE_SUBDIR = "" ;
+JAVA_RESOURCE_FILES = Manifest ;
+ProcessJavaResourceFiles "<JNIWrapper>JNIWrapper" : "$(JAVA_RESOURCE_FILES)" : BPTag000 : BPTag001 ;
+
+# Frameworks & Libraries
+skype.jar_UNIQUENAME = skype_01 ;
+/System/Library/Frameworks/Carbon.framework_ATTRIBUTES = AbsolutePath ;
+Skype.framework_UNIQUENAME = Skype_02 ;
+FRAMEWORKS_AND_LIBRARIES =
+	skype.jar
+	/System/Library/Frameworks/Carbon.framework
+	Skype.framework ;
+ProcessFrameworksAndLibraries "<JNIWrapper>JNIWrapper" : "$(FRAMEWORKS_AND_LIBRARIES)" : BPTag001 : BPTag002 ;
+
+include $(TEMP_DIR)/HeaderDependencies.jam ;
+EndLibrary "<JNIWrapper>JNIWrapper" ;
+

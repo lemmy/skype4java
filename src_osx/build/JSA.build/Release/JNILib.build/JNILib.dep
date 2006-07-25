@@ -1,0 +1,5 @@
+4c60b1476a32378b1346f13a878011eb dc12acb3f02e4da4e11f1743f7e29865 ffffffffffffffffffffffffffffffff 39188 /Users/Bart/Documents/workspace/SkypeAPI/src_osx/build/Release/libJSA.jnilib
+ab5c2bd356c1613a17756d1985d7614c 7ac8bd0d6f40eabe63cbbb5b606adf23 ffffffffffffffffffffffffffffffff 18708 /Users/Bart/Documents/workspace/SkypeAPI/src_osx/build/JSA.build/Release/JNILib.build/Objects-normal/i386/libJSA.jnilib
+b767186d232b573d1f979b2045db83eb 2a933ff47098eb32786fbc5827e62c6f ffffffffffffffffffffffffffffffff 15032 /Users/Bart/Documents/workspace/SkypeAPI/src_osx/build/JSA.build/Release/JNILib.build/Objects-normal/ppc/libJSA.jnilib
+00000000403ef28f0000000000027460 ab5c2bd316ff92dc17756d1985d52582 ffffffffffffffffffffffffffffffff 6496 /Users/Bart/Documents/workspace/SkypeAPI/src_osx/build/JSA.build/Release/JNILib.build/Objects-normal/i386/JSAjnilib.o
+00000000403ef28f0000000000027460 b767186d6315a4db1f979b2045d9c726 ffffffffffffffffffffffffffffffff 8496 /Users/Bart/Documents/workspace/SkypeAPI/src_osx/build/JSA.build/Release/JNILib.build/Objects-normal/ppc/JSAjnilib.o

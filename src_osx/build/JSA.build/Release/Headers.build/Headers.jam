@@ -1,0 +1,81 @@
+# Jamfile for configuration Release of target "Headers" of project "JSA"
+
+
+JAVAC_SOURCE_FILE_ENCODING default = MacRoman ;
+
+# Implicitly computed project-wide settings for project "JSA"
+export deferred ANTICIPATED_BUILT_PRODUCTS_DIR = $(CONFIGURATION_BUILD_DIR) ;
+export deferred ANTICIPATED_TARGET_BUILD_DIR = $(CONFIGURATION_BUILD_DIR) ;
+export deferred BUILD_STYLE = "$(CONFIGURATION)" ;
+export deferred CONFIGURATION = Release ;
+export deferred CONFIGURATION_BUILD_DIR = $(BUILD_DIR)/$(CONFIGURATION) ;
+export deferred CONFIGURATION_TEMP_DIR = $(PROJECT_TEMP_DIR)/$(CONFIGURATION) ;
+export deferred DEVELOPMENT_LANGUAGE = English ;
+export deferred GROUP = Bart ;
+export deferred PROJECT = $(PROJECT_NAME) ;
+export deferred PROJECT_DIR = /Users/Bart/Documents/workspace/SkypeAPI/src_osx ;
+export deferred PROJECT_FILE_PATH = /Users/Bart/Documents/workspace/SkypeAPI/src_osx/JSA.xcodeproj ;
+export deferred PROJECT_NAME = JSA ;
+export deferred PROJECT_TEMP_DIR = $(OBJROOT)/$(PROJECT_NAME).build ;
+export deferred SRCROOT = /Users/Bart/Documents/workspace/SkypeAPI/src_osx ;
+export deferred TARGET_TEMP_DIR = $(CONFIGURATION_TEMP_DIR)/$(TARGET_NAME).build ;
+export deferred TEMP_DIR = $(TARGET_TEMP_DIR) ;
+export deferred USER = Bart ;
+
+# Project-wide settings for project "JSA"
+export deferred ARCHS = PPC i386 ;
+export deferred FRAMEWORK_SEARCH_PATHS = /Library/Frameworks ;
+export deferred SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk ;
+export deferred ZERO_LINK = NO ;
+
+# User-defined project-wide settings for project "JSA"
+
+# Build Settings for target "Headers"
+
+# Implicitly computed build settings for target "Headers"
+export deferred CLONE_HEADERS = NO ;
+export deferred SKIP_INSTALL = YES ;
+export deferred TARGETNAME = $(TARGET_NAME) ;
+export deferred TARGET_NAME = Headers ;
+
+# User-defined build settings for target "Headers"
+export deferred COPY_PHASE_STRIP = YES ;
+export deferred FRAMEWORK_SEARCH_PATHS = "$(FRAMEWORK_SEARCH_PATHS)" "$(SRCROOT)" ;
+export deferred GCC_ENABLE_FIX_AND_CONTINUE = NO ;
+export deferred PRODUCT_NAME = Headers/JNIWrapper.h ;
+export deferred REZ_EXECUTABLE = YES ;
+export deferred ZERO_LINK = NO ;
+
+# Target "Headers"
+
+ConditionalDefinitions _ ;
+commitdeferred ;
+
+
+BeginLibrary "<Headers/JNIWrapper.h>Headers/JNIWrapper.h" ;
+
+# Sources
+SOURCES = ;
+ProcessSources "<Headers/JNIWrapper.h>Headers/JNIWrapper.h" : "$(SOURCES)" : "" : BPTag000 ;
+
+# Script Build Phase Files
+SCRIPT_BUILD_PHASE_FILES = "$(TARGET_TEMP_DIR)/BPTag001-script.sh" ;
+ProcessScriptBuildPhaseFiles "<Headers/JNIWrapper.h>Headers/JNIWrapper.h" : "$(SCRIPT_BUILD_PHASE_FILES)" : BPTag000 : BPTag001 ;
+
+# Java Resource Files
+JAVA_RESOURCE_FILES = ;
+ProcessJavaResourceFiles "<Headers/JNIWrapper.h>Headers/JNIWrapper.h" : "$(JAVA_RESOURCE_FILES)" : BPTag001 : BPTag002 ;
+
+# Frameworks & Libraries
+skype.jar_UNIQUENAME = skype_01 ;
+/System/Library/Frameworks/Carbon.framework_ATTRIBUTES = AbsolutePath ;
+Skype.framework_UNIQUENAME = Skype_02 ;
+FRAMEWORKS_AND_LIBRARIES =
+	skype.jar
+	/System/Library/Frameworks/Carbon.framework
+	Skype.framework ;
+ProcessFrameworksAndLibraries "<Headers/JNIWrapper.h>Headers/JNIWrapper.h" : "$(FRAMEWORKS_AND_LIBRARIES)" : BPTag002 : BPTag003 ;
+
+include $(TEMP_DIR)/HeaderDependencies.jam ;
+EndLibrary "<Headers/JNIWrapper.h>Headers/JNIWrapper.h" ;
+
