@@ -15,8 +15,14 @@
 
     <target name="jar" depends="compile">
         <jar basedir="${build.dir}" includes="**/**" destfile="${release.dir}/skype.jar"/>
+    	<!-- create a jar with the library file in it. -->
+    	<copy todir="${build.dir}/osx">
+    		<fileset dir="${lib.dir}/osx"/>
+    	</copy>
+        <jar basedir="${build.dir}" includes="**/**" destfile="${release.dir}/skype_osx.jar"/>
+    	<delete dir="${build.dir}/osx"/>
     </target>
-
+	
     <target name="clean">
         <delete dir="${build.dir}"/>
     </target>
