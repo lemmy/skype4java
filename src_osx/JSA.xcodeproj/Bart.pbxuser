@@ -1,14 +1,12 @@
 // !$*UTF8*$!
 {
 	00E6828EFEC88D1A11DB9C8B /* Project object */ = {
-		activeBuildConfigurationName = Debug;
-		activeBuildStyle = 130F8B95001BDF0A11CA292A /* Debug */;
+		activeBuildConfigurationName = Release;
 		activeExecutable = 6A9FA6570246BA6C0CC91562 /* OSXConnector */;
 		activeTarget = 6A9FA557024694440CC91562 /* JSA */;
 		addToTargets = (
 			6A9FA55B024695C00CC91562 /* OSXConnector */,
 			4CEBA78E08679EF10015D03E /* JNILib */,
-			6A9FA6030246AD840CC91562 /* Headers */,
 			6A9FA557024694440CC91562 /* JSA */,
 		);
 		breakpoints = (
@@ -61,7 +59,7 @@
 				PBXFileTableDataSourceColumnWidthsKey = (
 					22,
 					300,
-					400,
+					590.5835,
 				);
 				PBXFileTableDataSourceColumnsKey = (
 					PBXExecutablesDataSource_ActiveFlagID,
@@ -74,7 +72,7 @@
 				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
 				PBXFileTableDataSourceColumnWidthsKey = (
 					20,
-					546,
+					703,
 					20,
 					48,
 					43,
@@ -113,8 +111,8 @@
 					PBXFileDataSource_Warnings_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 174851235;
-			PBXWorkspaceStateSaveDate = 174851235;
+			PBXPerProjectTemplateStateSaveDate = 175527663;
+			PBXWorkspaceStateSaveDate = 175527663;
 		};
 		sourceControlManager = CC8E03620A5E453900D6313B /* Source Control */;
 		userBuildSettings = {
@@ -133,17 +131,17 @@
 	};
 	6A46BB2D022D9DFF0CC91562 /* OSXConnector.java */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1005, 2198}}";
-			sepNavSelRange = "{3051, 0}";
-			sepNavVisRect = "{{0, 504}, {1005, 460}}";
+			sepNavIntBoundsRect = "{{0, 0}, {1005, 3024}}";
+			sepNavSelRange = "{4055, 0}";
+			sepNavVisRect = "{{0, 1827}, {1005, 460}}";
 			sepNavWindowFrame = "{{176, 137}, {1044, 589}}";
 		};
 	};
 	6A52677B022AFE3B0CC91562 /* JSAjnilib.c */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1190, 3584}}";
-			sepNavSelRange = "{6145, 0}";
-			sepNavVisRect = "{{0, 2827}, {1190, 744}}";
+			sepNavIntBoundsRect = "{{0, 0}, {1187, 3598}}";
+			sepNavSelRange = "{189, 25}";
+			sepNavVisRect = "{{0, 0}, {1187, 340}}";
 			sepNavWindowFrame = "{{109, 5}, {1229, 873}}";
 		};
 	};
@@ -151,9 +149,6 @@
 		activeExec = 0;
 	};
 	6A9FA55B024695C00CC91562 /* OSXConnector */ = {
-		activeExec = 0;
-	};
-	6A9FA6030246AD840CC91562 /* Headers */ = {
 		activeExec = 0;
 	};
 	6A9FA6570246BA6C0CC91562 /* OSXConnector */ = {

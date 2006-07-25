@@ -12,21 +12,8 @@
 			buildConfigurationList = 4CEBA75808679E4D0015D03E /* Build configuration list for PBXAggregateTarget "JSA" */;
 			buildPhases = (
 			);
-			buildSettings = {
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = JSA;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
 			dependencies = (
 				6A9FA55D024695C10CC91562 /* PBXTargetDependency */,
-				6A9FA6060246ADAE0CC91562 /* PBXTargetDependency */,
 				4CEBA79A08679F280015D03E /* PBXTargetDependency */,
 			);
 			name = JSA;
@@ -41,48 +28,14 @@
 		6A9FA562024695DC0CC91562 /* OSXConnector.java in Sources */ = {isa = PBXBuildFile; fileRef = 6A46BB2D022D9DFF0CC91562 /* OSXConnector.java */; };
 		CC78CB3C0A6501B200BAF183 /* Skype.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC78CB3B0A6501B200BAF183 /* Skype.framework */; };
 		CC78CB3D0A6501B200BAF183 /* Skype.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC78CB3B0A6501B200BAF183 /* Skype.framework */; };
-		CC78CB3E0A6501B200BAF183 /* Skype.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC78CB3B0A6501B200BAF183 /* Skype.framework */; };
 		CC8E03C60A5E4DDF00D6313B /* skype.jar in Frameworks */ = {isa = PBXBuildFile; fileRef = CC8E03C50A5E4DDE00D6313B /* skype.jar */; };
-		CC8E03C70A5E4DDF00D6313B /* skype.jar in Frameworks */ = {isa = PBXBuildFile; fileRef = CC8E03C50A5E4DDE00D6313B /* skype.jar */; };
 		CC8E03C80A5E4DDF00D6313B /* skype.jar in Frameworks */ = {isa = PBXBuildFile; fileRef = CC8E03C50A5E4DDE00D6313B /* skype.jar */; };
 		CC8E04050A5E4F7A00D6313B /* Main.java in Sources */ = {isa = PBXBuildFile; fileRef = CC8E04040A5E4F7A00D6313B /* Main.java */; };
 		CC8E047C0A5E584700D6313B /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC8E047B0A5E584700D6313B /* Carbon.framework */; };
 		CC8E047D0A5E584700D6313B /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC8E047B0A5E584700D6313B /* Carbon.framework */; };
-		CC8E047E0A5E584700D6313B /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC8E047B0A5E584700D6313B /* Carbon.framework */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXBuildStyle section */
-		130F8B95001BDF0A11CA292A /* Debug */ = {
-			isa = PBXBuildStyle;
-			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				ZERO_LINK = YES;
-			};
-			name = Debug;
-		};
-		130F8B96001BDF0A11CA292A /* Release */ = {
-			isa = PBXBuildStyle;
-			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				ZERO_LINK = NO;
-			};
-			name = Release;
-		};
-/* End PBXBuildStyle section */
-
 /* Begin PBXContainerItemProxy section */
-		36ABB26A061E0EED00C43093 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 00E6828EFEC88D1A11DB9C8B /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 6A9FA6030246AD840CC91562;
-			remoteInfo = Headers;
-		};
 		36ABB26B061E0EED00C43093 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 00E6828EFEC88D1A11DB9C8B /* Project object */;
@@ -100,12 +53,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		329C727F0360BF9A00C91783 /* OSXConnector.jar */ = {isa = PBXFileReference; explicitFileType = archive.jar; includeInIndex = 0; path = OSXConnector.jar; sourceTree = BUILT_PRODUCTS_DIR; };
+		329C727F0360BF9A00C91783 /* JNIWrapper.jar */ = {isa = PBXFileReference; explicitFileType = archive.jar; includeInIndex = 0; path = JNIWrapper.jar; sourceTree = BUILT_PRODUCTS_DIR; };
 		363028F90383184400C91562 /* Manifest */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Manifest; sourceTree = "<group>"; };
 		4CEBA78F08679EF10015D03E /* libJSA.jnilib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libJSA.jnilib; sourceTree = BUILT_PRODUCTS_DIR; };
 		6A46BB2D022D9DFF0CC91562 /* OSXConnector.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = OSXConnector.java; sourceTree = "<group>"; };
 		6A52677B022AFE3B0CC91562 /* JSAjnilib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = JSAjnilib.c; sourceTree = "<group>"; };
-		6A9FA6040246AD840CC91562 /* Headers/OSXConnector.h */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = Headers/OSXConnector.h; sourceTree = BUILT_PRODUCTS_DIR; };
 		6AE2200B0208CA9C0CC91562 /* JavaVM.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaVM.framework; path = /System/Library/Frameworks/JavaVM.framework; sourceTree = "<absolute>"; };
 		CC78CB3B0A6501B200BAF183 /* Skype.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Skype.framework; sourceTree = "<group>"; };
 		CC8E03C50A5E4DDE00D6313B /* skype.jar */ = {isa = PBXFileReference; lastKnownFileType = archive.jar; path = skype.jar; sourceTree = "<group>"; };
@@ -135,16 +87,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		6A9FA6020246AD840CC91562 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				CC8E03C70A5E4DDF00D6313B /* skype.jar in Frameworks */,
-				CC8E047E0A5E584700D6313B /* Carbon.framework in Frameworks */,
-				CC78CB3E0A6501B200BAF183 /* Skype.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -166,8 +108,7 @@
 		0120612AFEC8923411DB9C8B /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				6A9FA6040246AD840CC91562 /* Headers/OSXConnector.h */,
-				329C727F0360BF9A00C91783 /* OSXConnector.jar */,
+				329C727F0360BF9A00C91783 /* JNIWrapper.jar */,
 				4CEBA78F08679EF10015D03E /* libJSA.jnilib */,
 			);
 			name = Products;
@@ -194,13 +135,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		6A9FA6010246AD840CC91562 /* JavaArchive */ = {
-			isa = PBXJavaArchiveBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXJavaArchiveBuildPhase section */
 
 /* Begin PBXLibraryTarget section */
@@ -212,55 +146,12 @@
 				6A9FA559024695C00CC91562 /* JavaArchive */,
 				6A9FA55A024695C00CC91562 /* Frameworks */,
 			);
-			buildSettings = {
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				JAVA_ARCHIVE_COMPRESSION = NO;
-				JAVA_ARCHIVE_TYPE = JAR;
-				JAVA_COMPILER = /usr/bin/javac;
-				JAVA_MANIFEST_FILE = Manifest;
-				JAVA_SOURCE_SUBDIR = .;
-				LIBRARY_STYLE = STATIC;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_LIBTOOL_FLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = JNIWrapper;
-				PURE_JAVA = YES;
-				REZ_EXECUTABLE = YES;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
 			dependencies = (
 			);
 			name = OSXConnector;
 			productInstallPath = /usr/local/lib;
 			productName = JNIWrapper;
-			productReference = 329C727F0360BF9A00C91783 /* OSXConnector.jar */;
-		};
-		6A9FA6030246AD840CC91562 /* Headers */ = {
-			isa = PBXLibraryTarget;
-			buildConfigurationList = 4CEBA75008679E4D0015D03E /* Build configuration list for PBXLibraryTarget "Headers" */;
-			buildPhases = (
-				6A9FA6000246AD840CC91562 /* Sources */,
-				6A9FA6050246AD8E0CC91562 /* ShellScript */,
-				6A9FA6010246AD840CC91562 /* JavaArchive */,
-				6A9FA6020246AD840CC91562 /* Frameworks */,
-			);
-			buildSettings = {
-				PRODUCT_NAME = Headers/JNIWrapper.h;
-				REZ_EXECUTABLE = YES;
-			};
-			dependencies = (
-			);
-			name = Headers;
-			productInstallPath = /usr/local/lib;
-			productName = CreateHeaders;
-			productReference = 6A9FA6040246AD840CC91562 /* Headers/OSXConnector.h */;
+			productReference = 329C727F0360BF9A00C91783 /* JNIWrapper.jar */;
 		};
 /* End PBXLibraryTarget section */
 
@@ -275,26 +166,6 @@
 			);
 			buildRules = (
 			);
-			buildSettings = {
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = /usr/local/lib;
-				LIBRARY_STYLE = DYNAMIC;
-				OPTIMIZATION_CFLAGS = "";
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
-				PRODUCT_NAME = JNILibN;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
 			dependencies = (
 			);
 			name = JNILib;
@@ -308,12 +179,6 @@
 		00E6828EFEC88D1A11DB9C8B /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 4CEBA75C08679E4D0015D03E /* Build configuration list for PBXProject "JSA" */;
-			buildSettings = {
-			};
-			buildStyles = (
-				130F8B95001BDF0A11CA292A /* Debug */,
-				130F8B96001BDF0A11CA292A /* Release */,
-			);
 			hasScannedForEncodings = 1;
 			mainGroup = 00E6828FFEC88D1A11DB9C8B;
 			productRefGroup = 0120612AFEC8923411DB9C8B /* Products */;
@@ -321,23 +186,10 @@
 			targets = (
 				6A9FA557024694440CC91562 /* JSA */,
 				6A9FA55B024695C00CC91562 /* OSXConnector */,
-				6A9FA6030246AD840CC91562 /* Headers */,
 				4CEBA78E08679EF10015D03E /* JNILib */,
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		6A9FA6050246AD8E0CC91562 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "javah -classpath \"${BUILT_PRODUCTS_DIR}/OSXConnector.jar\" -force -d \"${OBJROOT}/Headers\" \"com.skype.connector.osx.OSXConnector\"";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		4CEBA78C08679EF10015D03E /* Sources */ = {
@@ -357,13 +209,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		6A9FA6000246AD840CC91562 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -376,11 +221,6 @@
 			isa = PBXTargetDependency;
 			target = 6A9FA55B024695C00CC91562 /* OSXConnector */;
 			targetProxy = 36ABB26B061E0EED00C43093 /* PBXContainerItemProxy */;
-		};
-		6A9FA6060246ADAE0CC91562 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 6A9FA6030246AD840CC91562 /* Headers */;
-			targetProxy = 36ABB26A061E0EED00C43093 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -456,39 +296,6 @@
 			};
 			name = Release;
 		};
-		4CEBA75108679E4D0015D03E /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(FRAMEWORK_SEARCH_PATHS)",
-					"$(SRCROOT)",
-				);
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				PRODUCT_NAME = Headers/OSXConnector.h;
-				REZ_EXECUTABLE = YES;
-				ZERO_LINK = YES;
-			};
-			name = Debug;
-		};
-		4CEBA75208679E4D0015D03E /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(FRAMEWORK_SEARCH_PATHS)",
-					"$(SRCROOT)",
-				);
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				PRODUCT_NAME = Headers/JNIWrapper.h;
-				REZ_EXECUTABLE = YES;
-				ZERO_LINK = NO;
-			};
-			name = Release;
-		};
 		4CEBA75908679E4D0015D03E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -533,7 +340,17 @@
 		4CEBA75D08679E4D0015D03E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = /Library/Frameworks;
+				ARCHS = (
+					PPC,
+					i386,
+				);
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/../Frameworks/",
+					"$(SYSTEM_LIBRARY_DIR)/Frameworks/",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks/",
+					"$(USER_LIBRARY_DIR)/Frameworks/",
+				);
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 				ZERO_LINK = NO;
 			};
 			name = Debug;
@@ -541,7 +358,17 @@
 		4CEBA75E08679E4D0015D03E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = /Library/Frameworks;
+				ARCHS = (
+					ppc,
+					i386,
+				);
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SRCROOT)/**",
+					"$(SYSTEM_LIBRARY_DIR)/Frameworks/",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks/",
+					"~/Library/Frameworks/",
+				);
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 				ZERO_LINK = NO;
 			};
 			name = Release;
@@ -591,7 +418,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = (
-					"PPC,",
+					ppc,
 					i386,
 				);
 				COPY_PHASE_STRIP = YES;
@@ -636,15 +463,6 @@
 			buildConfigurations = (
 				4CEBA74D08679E4D0015D03E /* Debug */,
 				4CEBA74E08679E4D0015D03E /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		4CEBA75008679E4D0015D03E /* Build configuration list for PBXLibraryTarget "Headers" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				4CEBA75108679E4D0015D03E /* Debug */,
-				4CEBA75208679E4D0015D03E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
