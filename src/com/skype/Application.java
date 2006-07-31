@@ -12,6 +12,7 @@
  * Contributors:
  * Koji Hisano - initial API and implementation
  * Bart Lamot - good javadocs
+ * Adrian Cockcroft - fixed null friend problem
  ******************************************************************************/
 package com.skype;
 
@@ -578,6 +579,9 @@ public final class Application extends SkypeObject {
 		List<Friend> friends = new ArrayList<Friend>();
 		for (String id : ids) {
 			Friend friend = Skype.getContactList().getFriend(id);
+            if (friend == null) {
+                continue;
+            }
 			if (!friends.contains(friend)) {
 				friends.add(friend);
 			}
