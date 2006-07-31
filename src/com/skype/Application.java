@@ -223,10 +223,10 @@ public final class Application extends SkypeObject {
 									connectorListener);
 					synchronized (wait) {
 						for (Friend friend : friends) {
-							String result = Connector.getInstance().execute(
-									"ALTER APPLICATION " + getName()
-											+ " CONNECT " + friend.getId());
-							Utils.checkError(result);
+                            if(friend != null) {
+                                String result = Connector.getInstance().execute("ALTER APPLICATION " + getName() + " CONNECT " + friend.getId());
+                                Utils.checkError(result);
+                            }
 						}
 						try {
 							wait.wait();
