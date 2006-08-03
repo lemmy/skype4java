@@ -15,12 +15,6 @@ package com.skype;
 
 import java.util.Date;
 
-import com.skype.Call;
-import com.skype.CallAdapter;
-import com.skype.CommandFailedException;
-import com.skype.Friend;
-import com.skype.Skype;
-
 import junit.framework.TestCase;
 
 public class CallAPITest extends TestCase {
@@ -51,23 +45,21 @@ public class CallAPITest extends TestCase {
         Friend friend = Skype.getContactList().getFriend(TestData.getFriendId());
         Call call = friend.call();
         Thread.sleep(10000);
-        TestUtils.showMessageDialog("Please, check 5 seconds talking, 5 seconds suspending, and 5 seconds talking.");
+        TestUtils.showMessageDialog("Please, check 2 seconds suspending, 2 seconds talking and finishing.");
         call.hold();
-        Thread.sleep(5000);
+        Thread.sleep(2000);
         call.resume();
-        Thread.sleep(5000);
+        Thread.sleep(2000);
         call.finish();
-        TestUtils.showCheckDialog("You have gotton a 5 seconds talking, 5 seconds suspending, and 5 seconds talking?");
+        TestUtils.showCheckDialog("You have gotton a 2 seconds suspending, and 2 seconds talking?");
     }
 
     public void testCallProperty() throws Exception {
         Date startTime = new Date();
-        TestUtils.showMessageDialog("Please, start a talking with " + TestData.getFriendId() + " in ten seconds after starting a call.");
+        TestUtils.showMessageDialog("Please, start a talking with " + TestData.getFriendId() + " and finish in ten seconds after starting a call.");
         Friend friend = Skype.getContactList().getFriend(TestData.getFriendId());
         Call call = friend.call();
         Thread.sleep(10000);
-        TestUtils.showMessageDialog("The tests for call properties will be started.");
-        call.finish();
         Date endTime = new Date();
         assertTrue(call.getStartTime().getTime() - startTime.getTime() <= endTime.getTime() - startTime.getTime());
         assertTrue(call.getDuration() <= endTime.getTime() - startTime.getTime());
@@ -76,14 +68,21 @@ public class CallAPITest extends TestCase {
     }
 
     public void testCallReceived() throws Exception {
+        final Object wait = new Object();
         final Call[] result = new Call[1];
         Skype.addCallListener(new CallAdapter() {
             @Override
             public void callReceived(Call call) throws SkypeException {
+                synchronized(wait) {
+                    wait.notify();
+                }
                 result[0] = call;
             }
         });
         TestUtils.showMessageDialog("Please, request " + TestData.getFriendId() + " to call me, receive the call, and finish.");
+        synchronized(wait) {
+            wait.wait();
+        }
         assertEquals(TestData.getFriendId(), result[0].getPartnerId());
     }
 }
