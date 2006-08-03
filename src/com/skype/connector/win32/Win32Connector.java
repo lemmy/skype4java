@@ -66,7 +66,7 @@ public final class Win32Connector extends Connector {
     }
 
     @Override
-    protected Status connectImpl(int timeout) throws ConnectorException {
+    protected Status connect(int timeout) throws ConnectorException {
         try {
             while(true) {
                 jni_connect();
@@ -83,6 +83,12 @@ public final class Win32Connector extends Connector {
         } catch(InterruptedException e) {
             throw new ConnectorException("Trying to connect was interrupted.", e);
         }
+    }
+
+    @Override
+    protected void sendApplicationName(final String applicationName) throws ConnectorException {
+        String command = "NAME " + applicationName;
+        execute(command, new String[] {command}, false);
     }
 
     public void jni_onAttach(int status) {

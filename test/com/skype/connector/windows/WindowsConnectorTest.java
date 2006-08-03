@@ -12,13 +12,13 @@
  ******************************************************************************/
 package com.skype.connector.windows;
 
-import com.skype.TestUtils;
-import com.skype.connector.Connector;
-import com.skype.connector.ConnectorStatusChangedListener;
-import com.skype.connector.Connector.Status;
-import com.skype.connector.windows.WindowsConnector;
-
 import junit.framework.TestCase;
+
+import com.skype.TestUtils;
+import com.skype.connector.AbstractConnectorListener;
+import com.skype.connector.Connector;
+import com.skype.connector.ConnectorListener;
+import com.skype.connector.ConnectorStatusEvent;
 
 public final class WindowsConnectorTest extends TestCase {
     public void testAttachedAfterTryingToConnect() throws Exception {
@@ -39,14 +39,15 @@ public final class WindowsConnectorTest extends TestCase {
         assertEquals(Connector.Status.NOT_AVAILABLE, WindowsConnector.getInstance().connect());
 
         final boolean[] available = new boolean[1];
-        ConnectorStatusChangedListener listener = new ConnectorStatusChangedListener() {
-            public void statusChanged(Status newStatus) {
-                if (newStatus == Connector.Status.API_AVAILABLE) {
+        ConnectorListener listener = new AbstractConnectorListener() {
+            public void statusChanged(ConnectorStatusEvent event) {
+                Connector.Status status = event.getStatus();
+                if (status == Connector.Status.API_AVAILABLE) {
                     available[0] = true;
                 }
             }
         };
-        WindowsConnector.getInstance().addConnectorStatusChangedListener(listener);
+        WindowsConnector.getInstance().addConnectorListener(listener);
         TestUtils.showMessageDialog("Sign in Skype, please.");
         assertTrue(available[0]);
     }

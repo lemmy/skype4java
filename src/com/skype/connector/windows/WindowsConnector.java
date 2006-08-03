@@ -24,9 +24,11 @@ import org.eclipse.swt.internal.win32.TCHAR;
 import org.eclipse.swt.internal.win32.WNDCLASS;
 import org.eclipse.swt.widgets.Display;
 
+import com.skype.connector.AbstractConnectorListener;
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
-import com.skype.connector.ConnectorMessageReceivedListener;
+import com.skype.connector.ConnectorListener;
+import com.skype.connector.ConnectorMessageEvent;
 
 public final class WindowsConnector extends Connector {
     /**
@@ -94,18 +96,14 @@ public final class WindowsConnector extends Connector {
     /**
      * The window handle indicating all top-level windows in the system.
      * 
-     * @see <a
-     *      href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/windowing/messagesandmessagequeues/messagesandmessagequeuesreference/messagesandmessagequeuesfunctions/sendmessage.asp">MSDN
-     *      Library</a>
+     * @see <a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/windowing/messagesandmessagequeues/messagesandmessagequeuesreference/messagesandmessagequeuesfunctions/sendmessage.asp">MSDN Library</a>
      */
     private static final int HWND_BROADCAST = 0xffff;
 
     /**
      * The window message type to pass data to another application.
      * 
-     * @see <a
-     *      href="http://search.msdn.microsoft.com/search/Redirect.aspx?title=WM_COPYDATA+Message&url=http://msdn.microsoft.com/library/en-us/winui/winui/windowsuserinterface/dataexchange/datacopy/datacopyreference/datacopymessages/wm_copydata.asp">MSDN
-     *      Library</a>
+     * @see <a href="http://search.msdn.microsoft.com/search/Redirect.aspx?title=WM_COPYDATA+Message&url=http://msdn.microsoft.com/library/en-us/winui/winui/windowsuserinterface/dataexchange/datacopy/datacopyreference/datacopymessages/wm_copydata.asp">MSDN Library</a>
      */
     private static final int WM_COPYDATA = 0x004a;
 
@@ -128,11 +126,8 @@ public final class WindowsConnector extends Connector {
     private static final String CONNECTOR_STATUS_CHANGED_MESSAGE = "ConnectorStatusChanged";
 
     private Display display;
-
     private TCHAR windowClass;
-
     private int windowHandle;
-
     private int skypeWindowHandle;
 
     private WindowsConnector() {
@@ -167,7 +162,7 @@ public final class WindowsConnector extends Connector {
      * @return the value to which the specified key and data is mapped or
      *         <code>null</code>.
      */
-    private String getRegistryValue(int hKey, String keyName, String dataName) {
+    private String getRegistryValue(final int hKey, final String keyName, final String dataName) {
         int[] phkResult = new int[1];
         if (OS.RegOpenKeyEx(hKey, new TCHAR(0, keyName, true), 0, OS.KEY_READ, phkResult) != 0) {
             return null;
@@ -192,7 +187,7 @@ public final class WindowsConnector extends Connector {
     }
 
     @Override
-    protected void initialize(int timeout) throws ConnectorException {
+    protected void initialize(final int timeout) throws ConnectorException {
         final Object object = new Object();
         Thread thread = new Thread("SkypeEventDispatcher") {
             public void run() {
@@ -240,10 +235,11 @@ public final class WindowsConnector extends Connector {
     }
 
     @Override
-    protected Status connectImpl(int timeout) throws ConnectorException {
+    protected Status connect(final int timeout) throws ConnectorException {
         final Object object = new Object();
-        ConnectorMessageReceivedListener listener = new ConnectorMessageReceivedListener() {
-            public void messageReceived(String message) {
+        ConnectorListener listener = new AbstractConnectorListener() {
+            public void messageReceived(ConnectorMessageEvent event) {
+                String message = event.getMessage();
                 if (message.equals(CONNECTOR_STATUS_CHANGED_MESSAGE)) {
                     synchronized (object) {
                         object.notify();
@@ -252,7 +248,7 @@ public final class WindowsConnector extends Connector {
             }
         };
         try {
-            addConnectorMessageReceivedListener(listener, false);
+            addConnectorListener(listener, false);
         } catch (ConnectorException e) {
             throw new InternalError("The listener couldn't be added.");
         }
@@ -274,12 +270,18 @@ public final class WindowsConnector extends Connector {
             } catch (InterruptedException e) {
                 throw new ConnectorException("Trying to connect was interrupted.", e);
             } finally {
-                removeConnectorMessageReceivedListener(listener);
+                removeConnectorListener(listener);
             }
         }
     }
 
-    int messageReceived(int hwnd, int msg, int wParam, int lParam) {
+    @Override
+    protected void sendApplicationName(final String applicationName) throws ConnectorException {
+        String command = "NAME " + applicationName;
+        execute(command, new String[] {command}, false);
+    }
+    
+    int messageReceived(final int hwnd, final int msg, final int wParam, final int lParam) {
         if (msg == ATTACH_MESSAGE_ID) {
             switch (lParam) {
             case ATTACH_PENDING_AUTHORIZATION:

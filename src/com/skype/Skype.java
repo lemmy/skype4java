@@ -21,7 +21,9 @@ import java.util.List;
 
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
-import com.skype.connector.ConnectorMessageReceivedListener;
+import com.skype.connector.AbstractConnectorListener;
+import com.skype.connector.ConnectorMessageEvent;
+import com.skype.connector.ConnectorListener;
 
 /**
  * Main model (not view) class of the Skype Java API.
@@ -39,14 +41,14 @@ public final class Skype {
     /** chatMessageListener lock. */
     private static Object chatMessageListenerMutex = new Object();
     /** CHATMESSAGE listener. */
-    private static ConnectorMessageReceivedListener chatMessageListener;
+    private static ConnectorListener chatMessageListener;
     /** Collection of listeners. */
     private static List<ChatMessageListener> chatMessageListeners = Collections.synchronizedList(new ArrayList<ChatMessageListener>());
 
     /** callListener lock object. */
     private static Object callListenerMutex = new Object();
     /** CALL listener. */
-    private static ConnectorMessageReceivedListener callListener;
+    private static ConnectorListener callListener;
     /** Collection of all CALL listeners. */
     private static List<CallListener> callListeners = Collections.synchronizedList(new ArrayList<CallListener>());
 
@@ -564,9 +566,9 @@ public final class Skype {
         synchronized (chatMessageListenerMutex) {
             chatMessageListeners.add(listener);
             if (chatMessageListener == null) {
-                chatMessageListener = new ConnectorMessageReceivedListener() {
-                    public void messageReceived(String message) {
-                        assert message != null;
+                chatMessageListener = new AbstractConnectorListener() {
+                    public void messageReceived(ConnectorMessageEvent event) {
+                        String message = event.getMessage();
                         if (message.startsWith("CHATMESSAGE ")) {
                             String data = message.substring("CHATMESSAGE ".length());
                             String id = data.substring(0, data.indexOf(' '));
@@ -598,7 +600,7 @@ public final class Skype {
                     }
                 };
                 try {
-                    Connector.getInstance().addConnectorMessageReceivedListener(chatMessageListener);
+                    Connector.getInstance().addConnectorListener(chatMessageListener);
                 } catch (ConnectorException e) {
                     Utils.convertToSkypeException(e);
                 }
@@ -616,7 +618,7 @@ public final class Skype {
         synchronized (chatMessageListenerMutex) {
             chatMessageListeners.remove(listener);
             if (chatMessageListeners.isEmpty()) {
-                Connector.getInstance().removeConnectorMessageReceivedListener(chatMessageListener);
+                Connector.getInstance().removeConnectorListener(chatMessageListener);
                 chatMessageListener = null;
             }
         }
@@ -633,10 +635,11 @@ public final class Skype {
         synchronized (callListenerMutex) {
             callListeners.add(listener);
             if (callListener == null) {
-                callListener = new ConnectorMessageReceivedListener() {
-                    public void messageReceived(String receivedMessage) {
-                        if (receivedMessage.startsWith("CALL ")) {
-                            String data = receivedMessage.substring("CALL ".length());
+                callListener = new AbstractConnectorListener() {
+                    public void messageReceived(ConnectorMessageEvent event) {
+                        String message = event.getMessage();
+                        if (message.startsWith("CALL ")) {
+                            String data = message.substring("CALL ".length());
                             String id = data.substring(0, data.indexOf(' '));
                             String propertyNameAndValue = data.substring(data.indexOf(' ') + 1);
                             String propertyName = propertyNameAndValue.substring(0, propertyNameAndValue.indexOf(' '));
@@ -688,7 +691,7 @@ public final class Skype {
                     }
                 };
                 try {
-                    Connector.getInstance().addConnectorMessageReceivedListener(callListener);
+                    Connector.getInstance().addConnectorListener(callListener);
                 } catch (ConnectorException e) {
                     Utils.convertToSkypeException(e);
                 }
@@ -706,7 +709,7 @@ public final class Skype {
         synchronized (callListenerMutex) {
             callListeners.remove(listener);
             if (callListeners.isEmpty()) {
-                Connector.getInstance().removeConnectorMessageReceivedListener(callListener);
+                Connector.getInstance().removeConnectorListener(callListener);
                 callListener = null;
             }
         }

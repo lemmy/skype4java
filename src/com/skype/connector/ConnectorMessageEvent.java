@@ -13,6 +13,16 @@
  ******************************************************************************/
 package com.skype.connector;
 
-public interface ConnectorStatusChangedListener {
-    void statusChanged(Connector.Status newStatus);
+public final class ConnectorMessageEvent extends ConnectorEvent {
+    private final String message;
+
+    ConnectorMessageEvent(Object source, String message) {
+        super(source);
+        assert message != null;
+        this.message = message;
+    }
+    
+    public String getMessage() {
+        return message;
+    }
 }

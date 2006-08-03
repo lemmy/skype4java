@@ -24,7 +24,9 @@ import java.util.Map;
 
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
-import com.skype.connector.ConnectorMessageReceivedListener;
+import com.skype.connector.AbstractConnectorListener;
+import com.skype.connector.ConnectorMessageEvent;
+import com.skype.connector.ConnectorListener;
 
 /**
  * Implements the AP2AP API.
@@ -76,7 +78,7 @@ public final class Application extends SkypeObject {
 	/**
 	 * Listener for messages received through Skype.
 	 */
-	private final ConnectorMessageReceivedListener dataListener = new DataListener();
+	private final ConnectorListener dataListener = new DataListener();
 
 	/**
 	 * Boolean to check the application state.
@@ -122,7 +124,7 @@ public final class Application extends SkypeObject {
             String response = Connector.getInstance().execute(
                     "CREATE APPLICATION " + name);
             Utils.checkError(response);
-            Connector.getInstance().addConnectorMessageReceivedListener(
+            Connector.getInstance().addConnectorListener(
                     dataListener);
             shutdownHookForFinish = new Thread() {
                 @Override
@@ -159,7 +161,7 @@ public final class Application extends SkypeObject {
 	public void finish() throws SkypeException {
 		synchronized (isFinishedFieldMutex) {
 			if (!isFinished) {
-				Connector.getInstance().removeConnectorMessageReceivedListener(
+				Connector.getInstance().removeConnectorListener(
 						dataListener);
 				Runtime.getRuntime().removeShutdownHook(shutdownHookForFinish);
 				isFinished = true;
@@ -208,9 +210,10 @@ public final class Application extends SkypeObject {
 		synchronized (connectMutex) {
 			try {
 				final Object wait = new Object();
-				ConnectorMessageReceivedListener connectorListener = new ConnectorMessageReceivedListener() {
-					public void messageReceived(final String receivedMessage) {
-						if (receivedMessage.equals("APPLICATION " + getName()
+				ConnectorListener connectorListener = new AbstractConnectorListener() {
+					public void messageReceived(ConnectorMessageEvent event) {
+                        String message = event.getMessage();
+						if (message.equals("APPLICATION " + getName()
 								+ " CONNECTING ")) {
 							synchronized (wait) {
 								wait.notify();
@@ -220,7 +223,7 @@ public final class Application extends SkypeObject {
 				};
 				try {
 					Connector.getInstance()
-							.addConnectorMessageReceivedListener(
+							.addConnectorListener(
 									connectorListener);
 					synchronized (wait) {
 						for (Friend friend : friends) {
@@ -242,7 +245,7 @@ public final class Application extends SkypeObject {
 					return null;
 				} finally {
 					Connector.getInstance()
-							.removeConnectorMessageReceivedListener(
+							.removeConnectorListener(
 									connectorListener);
 				}
 			} catch (SkypeException e) {
@@ -400,15 +403,15 @@ public final class Application extends SkypeObject {
 	 * @author Koji Hisano
 	 * 
 	 */
-	private class DataListener implements ConnectorMessageReceivedListener {
-
+	private class DataListener extends AbstractConnectorListener {
 		/**
 		 * Message received event method. It checks the name of the AP2AP
 		 * application name and strips the SKYPE protocol data from the message.
 		 * Then it will call handleData(String) to process the inner data.
 		 * @param message the message received.
 		 */
-		public void messageReceived(final String message) {
+        public void messageReceived(ConnectorMessageEvent event) {
+            String message = event.getMessage();
 			String streamsHeader = "APPLICATION " + getName() + " STREAMS ";
 			if (message.startsWith(streamsHeader)) {
 				String streamIds = message.substring(streamsHeader.length());

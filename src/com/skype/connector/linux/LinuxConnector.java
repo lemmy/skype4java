@@ -12,6 +12,8 @@
  ******************************************************************************/
 package com.skype.connector.linux;
 
+import com.skype.connector.ConnectorException;
+
 public class LinuxConnector extends com.skype.connector.Connector {
 	
 	private static final String CONNECTOR_STATUS_CHANGED = "ConnectorStatusChanged";
@@ -69,10 +71,14 @@ public class LinuxConnector extends com.skype.connector.Connector {
 		_instance = null;
 	}
 
+    protected void sendApplicationName(String applicationName) throws ConnectorException {
+        execute("NAME " + getApplicationName(), new String[] { "OK"  }, false);
+    }
+
 	/**
 	 * abstract method overridden.
 	 */
-	protected Status connectImpl(int timeout) {
+	protected Status connect(int timeout) {
 		if (getStatus() == Status.PENDING_AUTHORIZATION) {
 			return Status.ATTACHED;
 		}

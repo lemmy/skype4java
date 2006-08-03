@@ -13,24 +13,13 @@
  ******************************************************************************/
 package com.skype.connector;
 
-public abstract class MessageProcessor {
-    private Object lock;
-
-    private ConnectorListener parent;
-
-    final void init(Object lock, ConnectorListener parent) {
-        this.lock = lock;
+public abstract class AbstractConnectorListener implements ConnectorListener {
+    public void messageReceived(ConnectorMessageEvent event) {
     }
 
-    protected abstract void messageReceived(String message);
-
-    protected final void releaseLock() {
-        synchronized (lock) {
-            lock.notify();
-        }
+    public void messageSent(ConnectorMessageEvent event) {
     }
-
-    protected final void processedAllMessages() {
-        Connector.getInstance().removeConnectorListener(parent);
+    
+    public void statusChanged(ConnectorStatusEvent event) {
     }
 }

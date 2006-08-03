@@ -222,7 +222,7 @@ public class OSXConnector extends Connector
      * Wait for the connection to get initialized.
      * @param timeout Wait for this amout of millisecs to initialize.
      */
-    protected com.skype.connector.Connector.Status connectImpl(int timeout)
+    protected com.skype.connector.Connector.Status connect(int timeout)
     {
         //System.out.println((new StringBuilder()).append("OSXConnector.connectImpl(").append(timeout).append(") start").toString());
         if (getStatus() == Status.PENDING_AUTHORIZATION) {
