@@ -233,37 +233,6 @@ public abstract class Connector {
         }
     }
 
-    public final void execute(final String command, final MessageProcessor processor) throws ConnectorException {
-        Utils.checkNotNull("command", command);
-        Utils.checkNotNull("processor", processor);
-        assureAttached();
-        final Object lock = new Object();
-        ConnectorListener listener = new AbstractConnectorListener() {
-            public void messageReceived(ConnectorMessageEvent event) {
-                processor.messageReceived(event.getMessage());
-            }
-        };
-        processor.init(lock, listener);
-        addConnectorListener(listener, false);
-        fireMessageSent(command);
-        synchronized (lock) {
-            try {
-                sendCommand(command);
-                long start = System.currentTimeMillis();
-                long commandResponseTime = getCommandTimeout();
-                lock.wait(commandResponseTime);
-                if (commandResponseTime <= System.currentTimeMillis() - start) {
-                    setStatus(Status.NOT_RUNNING);
-                    throw new TimeOutException("The '" + command + "' command failed by timeout.");
-                }
-            } catch (InterruptedException e) {
-                throw new ConnectorException("The '" + command + "' command was interrupted.", e);
-            } finally {
-                removeConnectorListener(listener);
-            }
-        }
-    }
-
     public final String execute(final String command) throws ConnectorException {
         Utils.checkNotNull("command", command);
         return execute(command, command);
