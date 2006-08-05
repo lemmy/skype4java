@@ -11,7 +11,7 @@
  * Contributors:
  * Koji Hisano - initial API and implementation
  ******************************************************************************/
-package com.skype.sample.temporary;
+package com.skype.sample;
 
 import java.util.Arrays;
 
