@@ -199,6 +199,7 @@ public abstract class Connector {
         if (status == Status.ATTACHED) {
             try {
                 sendApplicationName(getApplicationName());
+                execute("PROTOCOL 9999", new String[] {"PROTOCOL "}, false);
             } catch (TimeOutException e) {
                 status = Status.NOT_RUNNING;
             }
