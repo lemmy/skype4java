@@ -383,8 +383,8 @@ public abstract class Connector {
                     return;
                 }
                 ConnectorMessageEvent event = new ConnectorMessageEvent(this, message);
-                for (ConnectorListener listener : listeners) {
-                    listener.messageReceived(event);
+                for (int i = listeners.length - 1; 0 <= i; i--) {
+                    listeners[i].messageReceived(event);
                 }
             };
         }.start();
@@ -399,8 +399,8 @@ public abstract class Connector {
                     return;
                 }
                 ConnectorStatusEvent event = new ConnectorStatusEvent(this, status);
-                for (ConnectorListener listener : listeners) {
-                    listener.statusChanged(event);
+                for (int i = listeners.length - 1; 0 <= i; i--) {
+                    listeners[i].statusChanged(event);
                 }
             };
         }.start();
