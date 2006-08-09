@@ -1,14 +1,8 @@
 package com.skype.connector.osx;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.StringTokenizer;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
 import com.skype.connector.Connector;
+import com.skype.connector.Utils;
 
 /**
  * 
@@ -25,6 +19,10 @@ public class OSXConnector extends Connector
     private static final Object lock = new Object();
     /** Don't reinit the native code over and over. */
     private boolean inited;
+    /** Name of the library. */
+    private static final String LIBNAME = "JSA";
+    /** Filename of the OS X jnilib. */
+    private static final String LIBFILENAME = "libJSA.jnilib";
 
     /**
      * Constructor.
@@ -33,20 +31,22 @@ public class OSXConnector extends Connector
      */
     private OSXConnector()
     {
-    	if (!checkLibraryInPath() || !checkInstalledFramework() )
-    		getJarFile();
+    	if (!Utils.checkLibraryInPath(LIBFILENAME) || !checkInstalledFramework() ) {
+    		Utils.extractFromJarToTemp(LIBFILENAME);
+    		installFramework();
+    	}
         try
         {
-            System.loadLibrary("JSA");
+            System.loadLibrary(LIBNAME);
         }
         catch(Throwable e)
         {
         	try {
-        	System.load("/tmp/libJSA.jnilib");
+        	System.load(System.getProperty("java.io.tmpdir")+File.separatorChar+LIBFILENAME);
         	} catch (Throwable e2) {
         		System.err.println("Could not load the library");
-        		if (!checkLibraryInPath())
-        			System.err.println("libJSA.jnilib is not in java.library.path");
+        		if (!Utils.checkLibraryInPath(LIBFILENAME))
+        			System.err.println(LIBFILENAME+" is not in java.library.path");
         		if (!checkInstalledFramework())
         			System.err.println("Please install Skype.framework at /Library/Frameworks/Skype.framework");
         	   		//Sorry could not load.
@@ -61,127 +61,39 @@ public class OSXConnector extends Connector
      * @return true if the file is found.
      */
     private boolean checkInstalledFramework() {
-    	File frameworkLocation = new File("~/Library/Frameworks/Skype.framework");
-    	return frameworkLocation.exists();
-    }
-    
-    /**
-     * Checks if the Skype.framework is properly installed.
-     * @return true if the framework is found at the correct location.
-     */
-    private String getLibrarySearchPath() {
-    	return System.getProperty("java.library.path")+":"+System.getProperty("user.dir")+":";
-    }
-    
-    private boolean checkLibraryInPath() {
-    	boolean libfilefound = false;
-    	String libpath = getLibrarySearchPath();
-    	File libfile = new File("");
-    	StringTokenizer st = new StringTokenizer(libpath, libfile.pathSeparator);
-    	while (st.hasMoreTokens() && !libfilefound) {
-    		libfile = new File(st.nextToken()+"/libJSA.jnilib");
-    		libfilefound = libfile.exists();
-    	}
-    	return libfilefound;
+    	File frameworkLocationHome = new File("~/Library/Frameworks/Skype.framework");
+    	File frameworkLocationSystem = new File("/Library/Frameworks/Skype.framework");
+    	if (frameworkLocationHome.exists() || frameworkLocationSystem.exists()) 
+    		return true;
+    	return false;
     }
 
     /**
-     * Search for the jar file that contains this class in the classpath.
-     * @return the file (directory) or NULL if not found.
+     * Install the Skype.framework from the jarfile.
+     * create directories and extract framework files for jar.
      */
-    private File getJarFile(){
-    	boolean jarfilefound = false;
-    	//System.out.println("CLASSPATH : " + System.getProperty("java.class.path"));
-    	String classpath = System.getProperty("java.class.path");
-    	File jarfile = null;
-    	byte[] buf = new byte[1024];
-    	String destinationname;
-    	String jarFileName;
-    	StringTokenizer st = new StringTokenizer(classpath, jarfile.pathSeparator);
-    	while (st.hasMoreTokens() && !jarfilefound) {
-    		jarFileName = st.nextToken();
-    		jarfile = new File(jarFileName);
-    		if (jarfile.exists() && jarfile.isFile()) {
-    			 //Check the contents of this Jar file for the library or the Framework.
-    			 FileInputStream fis = null;
-				try {
-					fis = new FileInputStream(jarFileName);
-	    	        BufferedInputStream bis=new BufferedInputStream(fis);
-	    	        ZipInputStream zis=new ZipInputStream(bis);
-	    	        ZipEntry ze=null;
-	    	        while ((ze=zis.getNextEntry())!=null) {
-					     if (ze.getName().endsWith("libJSA.jnilib")){
-					    	  destinationname = System.getProperty("java.io.tmpdir");
-					     	if (!destinationname.endsWith(File.separator)) 
-					     		destinationname = destinationname+File.separator;
-					    	 //System.out.println("Found library in Jar file, writing it to: "+destinationname+"libJSA.jnilib");
-					    	 int n;
-					    	 FileOutputStream fileoutputstream;
-				                fileoutputstream = new FileOutputStream(destinationname+"libJSA.jnilib");             
-					                while ((n = zis.read(buf, 0, 1024)) > -1)
-					                    fileoutputstream.write(buf, 0, n);
-					                fileoutputstream.close(); 
-					     }
-					     if (ze.getName().endsWith("A/Skype")){
-					    	  destinationname = System.getProperty("user.home");
-					    	  if (!destinationname.endsWith(File.separator)) 
-					     		destinationname = destinationname+File.separator;
-					    	  //check for root
-					    	  if (destinationname.endsWith("root/"))
-					    		  destinationname = "/";
-					     	 destinationname = destinationname+"Library/Frameworks/";
-					    	 //System.out.println("Found Framework in Jar file, writing it to: "+destinationname+"Skype.framework");
-					    	 //Make Framework directories
-					    	 File frameworkDirectory = new File(destinationname+"Skype.framework/Versions/A/.tmp");
-					    	 frameworkDirectory.mkdirs();
-					    	 frameworkDirectory = new File(destinationname+"Skype.framework/Versions/Current/.tmp");
-					    	 frameworkDirectory.mkdirs();
-					    	 
-					    	 int n = 0;
-					    	 FileOutputStream fileoutputstream;
-				                fileoutputstream = new FileOutputStream(destinationname+"Skype.framework/Versions/A/Skype");             
-					                while ((n = zis.read(buf, 0, 1024)) > -1)
-					                    fileoutputstream.write(buf, 0, n);
-					                fileoutputstream.close();
-					        n = 0;
-					     	fileoutputstream = new FileOutputStream(destinationname+"Skype.framework/Versions/Current/Skype");             
-				                while ((n = zis.read(buf, 0, 1024)) > -1)
-				                    fileoutputstream.write(buf, 0, n);
-				                fileoutputstream.close();
-				         	
-	    	        		n = 0;
-	    	        		fileoutputstream = new FileOutputStream(destinationname+"Skype.framework/Skype");             
-			                while ((n = zis.read(buf, 0, 1024)) > -1)
-			                    fileoutputstream.write(buf, 0, n);
-			                fileoutputstream.close();
-					     }
-			         		
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-    		}
-    	}    			
-    	return null;
+    private void installFramework(){
+    	//First check if Framework is in jarfile. Lets not create directories if nothing can be found.
+    	if (Utils.isInJar("A/Skype")) {
+    		String destinationname;
+    		destinationname = System.getProperty("user.home");
+    		if (!destinationname.endsWith(File.separator)) 
+				destinationname = destinationname+File.separator;
+			//check for root, root doesn't have a Users home directory.
+			if (destinationname.endsWith("root/"))
+				destinationname = "/";
+		 	destinationname = destinationname+"Library/Frameworks/";
+		 	//Make Framework directories
+			File frameworkDirectory = new File(destinationname+"Skype.framework/Versions/A/.tmp");
+			frameworkDirectory.mkdirs();
+			frameworkDirectory = new File(destinationname+"Skype.framework/Versions/Current/.tmp");
+			frameworkDirectory.mkdirs();
+			Utils.extractFromJar("A/Skype", "Skype", destinationname+"Skype.framework/Versions/A");
+			Utils.extractFromJar("A/Skype", "Skype", destinationname+"Skype.framework/Versions/Current");
+			Utils.extractFromJar("A/Skype", "Skype", destinationname+"Skype.framework");
+    	}
     }
     
-    /**
-     * Extract the libjni file from the jar file and put it into a folder.
-     * @param jarfile	The jarfile to extract the lib file from.
-     * @param destinationFolder The folder to put it in.
-     */
-    private void installLib(File jarfile, String destinationFolder){
-    	
-    }
-    
-    /**
-     * Extract the Skype.framework from the jar file and put it into a folder.
-     * @param jarfile The jar file to extract it out of.
-     * @param destinationFolder the folder to put it in.
-     */
-    private void installFramework(File jarfile, String destinationFolder){
-    	
-    }
     
     /**
      * Return the singleton instance of this connector.

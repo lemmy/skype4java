@@ -17,8 +17,11 @@
  ******************************************************************************/
 package com.skype.connector.win32;
 
+import java.io.File;
+
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
+import com.skype.connector.Utils;
 
 public final class Win32Connector extends Connector {
     private static final int ATTACH_SUCCESS = 0;
@@ -27,7 +30,9 @@ public final class Win32Connector extends Connector {
     private static final int ATTACH_NOT_AVAILABLE = 3;
     private static final int ATTACH_API_AVAILABLE = 0x8001;
     private static final String CONNECTOR_STATUS_CHANGED_MESSAGE = "ConnectorStatusChanged";
-
+    /** Filename of the DLL. */
+    private static final String LIBFILENAME = "JNIConnnector.dll";
+    
     private static Win32Connector myInstance_ = null;
 
     public static synchronized Connector getInstance() {
@@ -50,8 +55,15 @@ public final class Win32Connector extends Connector {
     @Override
     protected void initialize(int timeout) {
         // Loading DLL
-        System.loadLibrary("JNIConnnector");
-
+    	try {
+    		System.loadLibrary("JNIConnnector");
+    	} catch (Exception e) {
+    		//try to extract library from jar file and load again.
+    		if (!Utils.checkLibraryInPath(LIBFILENAME)) {
+        		Utils.extractFromJarToTemp(LIBFILENAME);   
+        		System.load(System.getProperty("java.io.tmpdir")+File.separatorChar+LIBFILENAME);
+    		}
+    	}
         // Initializing JNI
         jni_init();
 

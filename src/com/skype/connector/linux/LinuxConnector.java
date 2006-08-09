@@ -12,11 +12,16 @@
  ******************************************************************************/
 package com.skype.connector.linux;
 
+import java.io.File;
+
 import com.skype.connector.ConnectorException;
+import com.skype.connector.Utils;
 
 public class LinuxConnector extends com.skype.connector.Connector {
 	
 	private static final String CONNECTOR_STATUS_CHANGED = "ConnectorStatusChanged";
+    /** Filename of the DLL. */
+    private static final String LIBFILENAME = "libJSA.so";
 
 	private static LinuxConnector _instance = null;
 	
@@ -28,12 +33,20 @@ public class LinuxConnector extends com.skype.connector.Connector {
 		try {
 			System.loadLibrary("JSA");
 		} catch (Exception e) {
-			setStatus(Status.NOT_AVAILABLE);
-                	fireMessageReceived(CONNECTOR_STATUS_CHANGED);
-		}
-                setStatus(Status.PENDING_AUTHORIZATION);
+			try {
+				if (!Utils.checkLibraryInPath(LIBFILENAME)) {
+		    		Utils.extractFromJarToTemp(LIBFILENAME);   
+		    		
+		    		System.load(System.getProperty("java.io.tmpdir")+File.separatorChar+LIBFILENAME);
+				}
+			} catch (Exception e2) {
+				setStatus(Status.NOT_AVAILABLE);
                 fireMessageReceived(CONNECTOR_STATUS_CHANGED);
-
+			}
+		}   
+		setStatus(Status.PENDING_AUTHORIZATION);
+        fireMessageReceived(CONNECTOR_STATUS_CHANGED);
+    
 	}
 
 	/**
