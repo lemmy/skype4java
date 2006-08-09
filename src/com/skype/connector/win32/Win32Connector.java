@@ -57,12 +57,11 @@ public final class Win32Connector extends Connector {
         // Loading DLL
     	try {
     		System.loadLibrary("JNIConnnector");
-    	} catch (Exception e) {
-    		//try to extract library from jar file and load again.
+    	} catch (Throwable e) {
     		if (!Utils.checkLibraryInPath(LIBFILENAME)) {
-        		Utils.extractFromJarToTemp(LIBFILENAME);   
-        		System.load(System.getProperty("java.io.tmpdir")+File.separatorChar+LIBFILENAME);
-    		}
+	    		Utils.extractFromJarToTemp(LIBFILENAME);   	    		
+	    		System.load(System.getProperty("java.io.tmpdir")+File.separatorChar+LIBFILENAME);
+			}
     	}
         // Initializing JNI
         jni_init();

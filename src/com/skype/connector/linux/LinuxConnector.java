@@ -32,7 +32,7 @@ public class LinuxConnector extends com.skype.connector.Connector {
 	private LinuxConnector(){
 		try {
 			System.loadLibrary("JSA");
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			try {
 				if (!Utils.checkLibraryInPath(LIBFILENAME)) {
 		    		Utils.extractFromJarToTemp(LIBFILENAME);   
