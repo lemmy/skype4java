@@ -13,8 +13,20 @@
  ******************************************************************************/
 package com.skype;
 
+/**
+ * Exception to throw when a timeout occurs.
+ */
 public class TimeOutException extends SkypeException {
-    TimeOutException(String message) {
+    /**
+	 * serialVersionUID needed for serialisation.
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 * Constructor.
+	 * @param message exception message.
+	 */
+	TimeOutException(String message) {
         super(message);
     }
 }
