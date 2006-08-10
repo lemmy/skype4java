@@ -22,26 +22,46 @@ import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
 import com.skype.connector.ConnectorMessageEvent;
 
+/**
+ * This class implements a simple way of sending and receiving AP2AP data.
+ */
 public final class Stream extends SkypeObject {
-    private final Application application;
+
+	/** AP2AP application to which this Stream is connected. */
+	private final Application application;
+	/** ID of this stream. */
     private final String id;
 
+    /** Listeners to this stream. */
     private List<StreamListener> listeners = new ArrayList<StreamListener>();
+    /** Exceptionhandler for this Stream. */
     private SkypeExceptionHandler exceptionHandler;
     
-    Stream(Application application, String id) {
-        assert application != null;
-        assert id != null;
-        this.application = application;
-        this.id = id;
+    /**
+     * Constructor.
+     * @param newApplication AP2AP application to which this stream belongs.
+     * @param newId ID of this stream.
+     */
+    Stream(Application newApplication, String newId) {
+        assert newApplication != null;
+        assert newId != null;
+        this.application = newApplication;
+        this.id = newId;
     }
 
-    @Override
+    /**
+     * Overridden to use ID as hashcode.
+     * @return ID.
+     */
     public int hashCode() {
         return getId().hashCode();
     }
 
-    @Override
+    /**
+     * Overridden to compare Stream objects based on ID.
+     * @param compared the object to compare to.
+     * @return true if ID's are equal.
+     */
     public boolean equals(Object compared) {
         if (compared instanceof Stream) {
             Stream comparedStream = (Stream)compared;
@@ -50,23 +70,43 @@ public final class Stream extends SkypeObject {
         return false;
     }
 
-    @Override
+    /**
+     * Return ID as String representation.
+     * @return ID.
+     */
     public String toString() {
         return getId();
     }
 
+    /**
+     * Return the application this stream belongs to.
+     * @return the AP2AP application.
+     */
     public Application getApplication() {
         return application;
     }
 
+    /**
+     * Return ID of this Stream.
+     * @return ID.
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Return the User which is on the other end of this Stream.
+     * @return User.
+     */
     public Friend getFriend() {
         return User.getFriendInstance(getId().substring(0, getId().indexOf(':')));
     }
 
+    /**
+     * Send a message through this Stream.
+     * @param text The message to send.
+     * @throws SkypeException when the connection to the Skype client has gone bad or AP2AP connection is not ok.
+     */
     public void write(String text) throws SkypeException {
         Utils.checkNotNull(text, "text");
         try {
@@ -127,6 +167,11 @@ public final class Stream extends SkypeObject {
         }
     }
 
+    /**
+     * Send a datagram message through this stream.
+     * @param datagram the data message to send.
+     * @throws SkypeException when the Skype client connection has gone bad or when AP2AP connection is not ok.
+     */
     public void send(String datagram) throws SkypeException {
         Utils.checkNotNull(datagram, "datagram");
         try {
@@ -139,20 +184,32 @@ public final class Stream extends SkypeObject {
         }
     }
 
+    /**
+     * Add a listener to this AP2AP Stream.
+     * @param listener listener to add to the collection of listeners.
+     */
     public void addStreamListener(StreamListener listener) {
         Utils.checkNotNull("listener", listener);
         listeners.add(listener);
     }
 
+    /**
+     * Remove a listener from the collection of listeners to this Stream.
+     * @param listener the listener to remove.
+     */
     public void removeStreamListener(StreamListener listener) {
         Utils.checkNotNull("listener", listener);
         listeners.remove(listener);
     }
 
+    /**
+     * Fire all listeners when a text message is received through this AP2AP Stream.
+     * @param text the message that is received.
+     */
     void fireTextReceived(String text) {
         assert text != null;
-        StreamListener[] listeners = this.listeners.toArray(new StreamListener[0]);
-        for (StreamListener listener : listeners) {
+        StreamListener[] tmpListeners = this.listeners.toArray(new StreamListener[0]);
+        for (StreamListener listener : tmpListeners) {
             try {
                 listener.textReceived(text);
             } catch (Throwable e) {
@@ -161,10 +218,14 @@ public final class Stream extends SkypeObject {
         }
     }
 
+    /**
+     * Fire all listeners when a datagram message is received through this AP2AP Stream.
+     * @param datagram The datagram message that has been received.
+     */
     void fireDatagramReceived(String datagram) {
         assert datagram != null;
-        StreamListener[] listeners = this.listeners.toArray(new StreamListener[0]);
-        for (StreamListener listener : listeners) {
+        StreamListener[] tmpListeners = this.listeners.toArray(new StreamListener[0]);
+        for (StreamListener listener : tmpListeners) {
             try {
                 listener.datagramReceived(datagram);
             } catch (Throwable e) {
@@ -173,6 +234,10 @@ public final class Stream extends SkypeObject {
         }
     }
 
+    /**
+     * Disconenct this Stream and close the AP2AP connection.
+     * @throws SkypeException when the  Skype client connection has gone bad.
+     */
     public void disconnect() throws SkypeException {
         try {
             String response = Connector.getInstance().execute("ALTER APPLICATION " + application.getName() + " DISCONNECT " + getId());
