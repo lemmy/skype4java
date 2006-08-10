@@ -10,6 +10,7 @@
  * 
  * Contributors:
  * Koji Hisano - initial API and implementation
+ * Bart Lamot - ExtractFormJar methods.
  ******************************************************************************/
 package com.skype.connector;
 
@@ -21,7 +22,18 @@ import java.util.StringTokenizer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+/**
+ * Connector helper class.
+ * Generic helper methods for all connectors.
+ */
 public final class ConnectorUtils {
+	
+	/**
+	 * Check an object if its not null.
+	 * If it is a NullPointerException will be thrown.
+	 * @param name Name of the object, used in the exception message.
+	 * @param value The object to check.
+	 */
 	public static void checkNotNull(String name, Object value) {
         if (value == null) {
             throw new NullPointerException("The" + name + " must not be null.");
@@ -36,7 +48,7 @@ public final class ConnectorUtils {
 	 * @param filename The file to search and extract.
 	 * @return true if file could be found and extracted.
 	 */
-	public static boolean extractFromJarToTemp( String filename) {
+	public static boolean extractFromJarToTemp(String filename) {
 		return extractFromJar(filename, filename, System.getProperty("java.io.tmpdir"));
 	}
 	
@@ -47,7 +59,7 @@ public final class ConnectorUtils {
 	 * @param destinationDirectory The directory to place it in.
 	 * @return true if file could be found and extracted.
 	 */
-	public static boolean extractFromJar( String filename, String destinationDirectory) {
+	public static boolean extractFromJar(String filename, String destinationDirectory) {
 		return extractFromJar(filename, filename, destinationDirectory);
 	}
 	
@@ -82,13 +94,15 @@ public final class ConnectorUtils {
 	    	        while ((ze=zis.getNextEntry())!=null) {
 					     if (ze.getName().endsWith(searchString)){
 					    	 //File found, now try to extract it.
-					     	if (!destinationDirectory.endsWith(File.separator)) 
+					     	if (!destinationDirectory.endsWith(File.separator)) { 
 					     		destinationDirectory = destinationDirectory+File.separator;
+					     	}
 					    	 int n;
 					    	 FileOutputStream fileoutputstream;
 				                fileoutputstream = new FileOutputStream(destinationDirectory+filename);             
-					                while ((n = zis.read(buf, 0, 1024)) > -1)
+					                while ((n = zis.read(buf, 0, 1024)) > -1) {
 					                    fileoutputstream.write(buf, 0, n);
+					                }
 					                fileoutputstream.close();
 					                extracted=true;
 					     }			         		
@@ -140,10 +154,19 @@ public final class ConnectorUtils {
 		return found;
 	}
 	
+	/**
+	 * Return the extended library path on which the JVM looks for lib files.
+	 * @return String with extended lib path.
+	 */
     protected static String getLibrarySearchPath() {
     	return System.getProperty("java.library.path")+File.pathSeparatorChar+System.getProperty("user.dir")+File.pathSeparatorChar;
     }
     
+    /**
+     * Check if a lib file is to be found by the JVM.
+     * @param libFilename the filename.
+     * @return true if the file is found.
+     */
     public static boolean checkLibraryInPath(String libFilename) {
     	boolean libfilefound = false;
     	String libpath = getLibrarySearchPath();
