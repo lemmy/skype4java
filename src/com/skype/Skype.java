@@ -551,6 +551,11 @@ public final class Skype {
         }
     }
     
+    /**
+     * Return User based on ID.
+     * @param id ID of the User.
+     * @return The user found.
+     */
     public static User getUser(String id) {
         return User.getInstance(id);
     }
