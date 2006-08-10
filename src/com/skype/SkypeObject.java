@@ -18,6 +18,18 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Basis of all Skype objects.
+ * @see Call
+ * @see Application
+ * @see Chat
+ * @see ChatMessage
+ * @see Group
+ * @see SMS
+ * @see Stream
+ * @see User
+ * @see VoiceMail
+ */
 class SkypeObject {
     /**
      * Map of user data added to this object.
@@ -45,6 +57,10 @@ class SkypeObject {
         userDataMap.put(name, userData);
     }
     
+    /**
+     * Copy the contents of another object to this.
+     * @param base the Object to copy from.
+     */
     void copyFrom(Object base) {
         if (base instanceof SkypeObject) {
             this.userDataMap.putAll(((SkypeObject)base).userDataMap);
