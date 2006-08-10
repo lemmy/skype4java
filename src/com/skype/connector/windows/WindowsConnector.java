@@ -30,6 +30,11 @@ import com.skype.connector.ConnectorException;
 import com.skype.connector.ConnectorListener;
 import com.skype.connector.ConnectorStatusEvent;
 
+/**
+ * Implementation of the windows connector based on the SWT libraries.
+ * Please use win32Connector if SWT is not an option for you.
+ *
+ */
 public final class WindowsConnector extends Connector {
     /**
      * The singleton instance of the WindowsConnector class.
@@ -108,26 +113,32 @@ public final class WindowsConnector extends Connector {
     private static final int WM_COPYDATA = 0x004a;
 
     /**
-     * The window message type of the response for initiating communication from
-     * Skype
+     * The window message type of the response for initiating communication from Skype.
      * 
      * @see #DISCOVER_MESSAGE_ID
      */
     private static final int ATTACH_MESSAGE_ID = OS.RegisterWindowMessage(new TCHAR(0, "SkypeControlAPIAttach", true));
 
     /**
-     * The window message type of the request to initiate communication with
-     * Skype
+     * The window message type of the request to initiate communication with Skype.
      * 
      * @see #ATTACH_MESSAGE_ID
      */
     private static final int DISCOVER_MESSAGE_ID = OS.RegisterWindowMessage(new TCHAR(0, "SkypeControlAPIDiscover", true));
 
+    /** SWT display instance. */
     private Display display;
+    /** SWT window instance. */
     private TCHAR windowClass;
+    /** SWT window handle. */
     private int windowHandle;
+    /** Skype Client window handle. */
     private int skypeWindowHandle;
 
+    /**
+     * Constructor.
+     *
+     */
     private WindowsConnector() {
     }
 
@@ -157,6 +168,9 @@ public final class WindowsConnector extends Connector {
      * Windows registry, or null if the registry contains no mapping for this
      * key and/or data.
      * 
+     * @param hKey registry hKey.
+     * @param keyName registry key name.
+     * @param dataName registry data name.
      * @return the value to which the specified key and data is mapped or
      *         <code>null</code>.
      */
@@ -184,7 +198,11 @@ public final class WindowsConnector extends Connector {
         return result;
     }
 
-    @Override
+    /**
+     * Initialize the connector.
+     * @param timeout Maximum amout of time in millieseconds to initialize.
+     * @throws ConnectorException when initialization cannot be completed.
+     */
     protected void initialize(final int timeout) throws ConnectorException {
         final Object object = new Object();
         Thread thread = new Thread("SkypeEventDispatcher") {
@@ -232,7 +250,12 @@ public final class WindowsConnector extends Connector {
         }
     }
 
-    @Override
+    /**
+     * Implementation of the connect method for this connector.
+     * @param timeout maximum amout of time to connect.
+     * @return Status after connecting.
+     * @throws ConnectorException when connection could not be established.
+     */
     protected Status connect(final int timeout) throws ConnectorException {
         final Object object = new Object();
         ConnectorListener listener = new AbstractConnectorListener() {
@@ -271,12 +294,24 @@ public final class WindowsConnector extends Connector {
         }
     }
 
-    @Override
+    /**
+     * Send the application name to the Skype Client.
+     * @param applicationName the new applicationname.
+     * @throws ConnectorException when connection to Skype client has gone bad.
+     */
     protected void sendApplicationName(final String applicationName) throws ConnectorException {
         String command = "NAME " + applicationName;
         execute(command, new String[] {command}, false);
     }
     
+    /**
+     * Gets called when a message is received.
+     * @param hwnd Skype client window handle.
+     * @param msg The message received.
+     * @param wParam The window parameter.
+     * @param lParam The lparam.
+     * @return Status value.
+     */
     int messageReceived(final int hwnd, final int msg, final int wParam, final int lParam) {
         if (msg == ATTACH_MESSAGE_ID) {
             switch (lParam) {
@@ -323,13 +358,18 @@ public final class WindowsConnector extends Connector {
         return OS.DefWindowProc(hwnd, msg, wParam, lParam);
     }
 
-    @Override
+    /**
+     * Clean up and disconnect.
+     */
     protected void disposeImpl() {
         // TODO WindowsConnector#disposeImpl()
         throw new UnsupportedOperationException("WindowsConnector#disposeImpl() is not implemented yet.");
     }
 
-    @Override
+    /**
+     * Send a command to the Skype client.
+     * @param command The command to send.
+     */
     protected void sendCommand(final String command) {
         display.asyncExec(new Runnable() {
             public void run() {
