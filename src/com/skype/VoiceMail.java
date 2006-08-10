@@ -16,8 +16,13 @@ package com.skype;
 import java.util.HashMap;
 import java.util.Map;
 
-public class VoiceMail extends SkypeObject {
-    /**
+/**
+ * Class to represent the Skype VOICEMAIL object.
+ * @see https://developer.skype.com/Docs/ApiDoc/VOICEMAIL_object
+ */
+public final class VoiceMail extends SkypeObject {
+   
+	/**
      * Collection of VoiceMail objects.
      */
     private static final Map<String, VoiceMail> voiceMails = new HashMap<String, VoiceMail>();
@@ -36,12 +41,22 @@ public class VoiceMail extends SkypeObject {
         }
     }
 
+    /** The ID of this Voicemail object. */
     private final String id;
 
-    private VoiceMail(String id) {
-        this.id = id;
+    /**
+     * Constructor.
+     * Use getInstance.
+     * @param newId the ID of this voicemail.
+     */
+    private VoiceMail(String newId) {
+        this.id = newId;
     }
 
+    /**
+     * Return the ID of the VOICEMAIL object.
+     * @return ID.
+     */
     public String getId() {
         return id;
     }
