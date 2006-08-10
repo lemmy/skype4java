@@ -45,6 +45,7 @@ public final class Application extends SkypeObject {
      * 
      * @param id whose associated Application object is to be returned.
      * @return Application object with ID == id.
+     * @throws SkypeException when connection has gone bad.
      */
     static Application getInstance(final String id) throws SkypeException {
         synchronized(applications) {
@@ -104,6 +105,7 @@ public final class Application extends SkypeObject {
      * Constructor.
      * 
      * @param newName An arbitrary name to identify the application that will be exchanging data.
+     * @throws SkypeException when connection to Skype client has gone bad.
      */
     private Application(final String newName) throws SkypeException {
         assert newName != null;
@@ -378,7 +380,7 @@ public final class Application extends SkypeObject {
         /**
          * Message received event method. It checks the name of the AP2AP application name and strips the SKYPE protocol data from the message. Then it will call handleData(String) to process the inner data.
          * 
-         * @param message the message received.
+         * @param event The event and message that triggered this listener.
          */
         public void messageReceived(ConnectorMessageEvent event) {
             String message = event.getMessage();
