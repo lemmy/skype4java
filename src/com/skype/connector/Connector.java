@@ -93,11 +93,16 @@ public abstract class Connector {
         return instance;
     }
     
-    protected static synchronized void setInstance(final Connector instance) throws ConnectorException {
+    /**
+     * Set the instance of the connector.
+     * @param newInstance The new instance.
+     * @throws ConnectorException thrown when instance is not valid.
+     */
+    protected static synchronized void setInstance(final Connector newInstance) throws ConnectorException {
         if (Connector.instance != null) {
             Connector.instance.dispose();
         }
-        Connector.instance = instance;
+        Connector.instance = newInstance;
     }
 
     /**
