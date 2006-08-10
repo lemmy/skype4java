@@ -23,17 +23,33 @@ import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
 import com.skype.connector.ConnectorUtils;
 
+/**
+ * Implementation of a connector for Windows.
+ * This implementation uses a small dll to connect.
+ * The WindowsConnector uses SWT library.
+ * Choose wisely.
+ */
 public final class Win32Connector extends Connector {
-    private static final int ATTACH_SUCCESS = 0;
+    /** Status ATTACH_SUCCES value. */
+	private static final int ATTACH_SUCCESS = 0;
+	/** Status ATTACH_PENDING_AUTHORISATION value. */
     private static final int ATTACH_PENDING_AUTHORIZATION = 1;
+    /** Status ATTACH_REFUSED value. */
     private static final int ATTACH_REFUSED = 2;
+    /** Status ATTACH_NOT_AVAILABLE value. */
     private static final int ATTACH_NOT_AVAILABLE = 3;
+    /** Status ATTACH_API_AVAILABLE value. */
     private static final int ATTACH_API_AVAILABLE = 0x8001;
     /** Filename of the DLL. */
     private static final String LIBFILENAME = "JNIConnnector.dll";
     
+    /** Singleton instance. */
     private static Win32Connector myInstance_ = null;
 
+    /**
+     * Get singleton instance.
+     * @return instance.
+     */
     public static synchronized Connector getInstance() {
         if(myInstance_ == null) {
             myInstance_ = new Win32Connector();
@@ -41,17 +57,28 @@ public final class Win32Connector extends Connector {
         return (Connector) myInstance_;
     }
 
-    Thread thread_ = null;
+    /** Thread. */
+    private Thread thread_ = null;
 
+    /**
+     * Constructor.
+     *
+     */
     private Win32Connector() {
     }
 
-    @Override
+    /**
+     * Return the path of Skype.exe.
+     * @return absolute path to Skype.exe.
+     */
     public String getInstalledPath() {
         return jni_getInstalledPath();
     }
 
-    @Override
+    /**
+     * Initialize the connector.
+     * @param timeout maximum time in miliseconds to initialize.
+     */
     protected void initialize(int timeout) {
         // Loading DLL
     	try {
@@ -75,7 +102,12 @@ public final class Win32Connector extends Connector {
         thread_.start();
     }
 
-    @Override
+    /**
+     * Connect to Skype client.
+     * @param timeout the maximum time in milliseconds to connect.
+     * @return Status the status after connecting.
+     * @throws ConnectorException when connection can not be established.
+     */
     protected Status connect(int timeout) throws ConnectorException {
         try {
             while(true) {
@@ -95,12 +127,21 @@ public final class Win32Connector extends Connector {
         }
     }
 
-    @Override
+    /**
+     * Send applicationname to Skype client.
+     * @param applicationName The new Application name.
+     * @throws ConnectorException when Skype Client connection has gone bad. 
+     */
     protected void sendApplicationName(final String applicationName) throws ConnectorException {
         String command = "NAME " + applicationName;
         execute(command, new String[] {command}, false);
     }
 
+    /**
+     * Set the connector status.
+     * This method will be called by the native lib.
+     * @param status The new status.
+     */
     public void jni_onAttach(int status) {
         switch(status) {
             case ATTACH_PENDING_AUTHORIZATION:
@@ -124,25 +165,57 @@ public final class Win32Connector extends Connector {
         }
     }
 
+    /**
+     * This method gets called when the native lib has a message received.
+     * @param message The received message.
+     */
     public void jni_onSkypeMessage(String message) {
         fireMessageReceived(message);
     }
 
-    @Override
+    /**
+     * Clean up the connector and the native lib.
+     */
     protected void disposeImpl() {
         // TODO WindowsConnector#disposeImpl()
         throw new UnsupportedOperationException("WindowsConnector#disposeImpl() is not implemented yet.");
     }
 
-    @Override
+    /**
+     * Send a command to the Skype client.
+     * @param command The command to send.
+     */
     protected void sendCommand(final String command) {
         jni_sendMessage(command);
     }
 
     // for native
+    /**
+     * Native init method.
+     */
     private native void jni_init();
+    
+    /**
+     * native event loop method.
+     *
+     */
     private native void jni_windowProc();
+    
+    /**
+     * Native send message method.
+     * @param message The message to send.
+     */
     private native void jni_sendMessage(String message);
+    
+    /***
+     * The native connect method.
+     *
+     */
     private native void jni_connect();
+    
+    /**
+     * The native get installed path method.
+     * @return String with the absolute path to Skype.exe.
+     */
     private native String jni_getInstalledPath();
 }
