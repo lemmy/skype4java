@@ -13,8 +13,22 @@
  ******************************************************************************/
 package com.skype.connector;
 
+/**
+ * This exception is thrown when a connector is working with a timeout.
+ * Like initializing and connecting.
+ */
 public final class TimeOutException extends ConnectorException {
-    public TimeOutException(String message) {
+	
+    /**
+	 * Needed for serialisation.
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 * Constructor.
+	 * @param message Exception message.
+	 */
+	public TimeOutException(String message) {
         super(message);
     }
 }

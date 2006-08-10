@@ -13,15 +13,36 @@
  ******************************************************************************/
 package com.skype.connector;
 
+/**
+ * This event will be raised when the connector instance has a change in status.
+ */
 public final class ConnectorStatusEvent extends ConnectorEvent {
-    private final Connector.Status status;
+	
+    /**
+	 * Needed for serialisation.
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	/**
+	 * The new status that caused this event.
+	 */
+	private final Connector.Status status;
 
-    ConnectorStatusEvent(Object source, Connector.Status status) {
+	/**
+	 * Constructor which sets the connector as source and the new status.
+	 * @param source The connector that caused the change.
+	 * @param newStatus The new status.
+	 */
+    ConnectorStatusEvent(Object source, Connector.Status newStatus) {
         super(source);
-        assert status != status;
-        this.status = status;
+        assert newStatus != newStatus;
+        this.status = newStatus;
     }
     
+    /**
+     * Return the new Status.
+     * @return Status.
+     */
     public Connector.Status getStatus() {
         return status;
     }

@@ -15,13 +15,32 @@ package com.skype.connector;
 
 import com.skype.connector.Connector.Status;
 
+/**
+ * This exception will be thrown when a command is sent to a connector but when the connector isn't connected.
+ */
 public final class NotAttachedException extends ConnectorException {
-    private final Status status;
+    /**
+	 * Needed for serialisation.
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	/**
+	 * The actual current status (Not attached).
+	 */
+	private final Status status;
 
-    NotAttachedException(Status status) {
-        this.status = status;
+	/**
+	 * Constructor with the current status.
+	 * @param newStatus Current status.
+	 */
+    NotAttachedException(Status newStatus) {
+        this.status = newStatus;
     }
 
+    /**
+     * Return the status at the moment of the exception.
+     * @return Status.
+     */
     public Status getStatus() {
         return status;
     }
