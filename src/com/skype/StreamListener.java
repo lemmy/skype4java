@@ -13,7 +13,23 @@
  ******************************************************************************/
 package com.skype;
 
+/**
+ * Listener interface for Stream object events.
+ * @see Stream
+ * @see StreamAdapter
+ */
 public interface StreamListener {
-    public void textReceived(String receivedText) throws SkypeException;
-    public void datagramReceived(String receivedDatagram) throws SkypeException;
+    /**
+     * This method will be fired when a text message is received.
+     * @param receivedText the received message.
+     * @throws SkypeException when the connection to the Skype client has gone bad.
+     */
+	void textReceived(String receivedText) throws SkypeException;
+    
+	/**
+     * This method will be fired when a datagram message is received.
+     * @param receivedDatagram the received message.
+     * @throws SkypeException when the connection to the Skype client has gone bad.
+     */
+	void datagramReceived(String receivedDatagram) throws SkypeException;
 }
