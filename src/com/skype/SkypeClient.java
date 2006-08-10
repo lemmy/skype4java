@@ -23,8 +23,16 @@ import java.io.File;
  * @see Skype
  * @author Koji Hisano
  */
-public class SkypeClient {
-    /**
+public final class SkypeClient {
+    
+	/**
+	 * 
+	 * This class should be used staticly, so making the constructor private prefents instantiation.
+	 */
+	private SkypeClient() {
+	}
+	
+	/**
      * Enumeration of the OPTIONS page.
      * Options dialog of Skype client.
      */
