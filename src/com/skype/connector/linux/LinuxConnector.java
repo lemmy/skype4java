@@ -16,11 +16,15 @@ import java.io.File;
 
 import com.skype.connector.ConnectorException;
 import com.skype.connector.ConnectorUtils;
-
-public class LinuxConnector extends com.skype.connector.Connector {
+/**
+ * Implementation of the Linux connector class.
+ * Only works for DBus 0.22 not newer DBus or X11 messaging.
+ */
+public final class LinuxConnector extends com.skype.connector.Connector {
     /** Filename of the DLL. */
     private static final String LIBFILENAME = "libJSA.so";
 
+    /** Singleton instance of this connector. */
 	private static LinuxConnector _instance = null;
 	
 	/**
@@ -66,6 +70,7 @@ public class LinuxConnector extends com.skype.connector.Connector {
 
 	/**
 	 * Send a command to the Skype client using the native DBus code.
+	 * @param command The command to send.
 	 */
 	protected void sendCommand(final String command) {
 		sendSkypeMessage(command);
@@ -80,12 +85,19 @@ public class LinuxConnector extends com.skype.connector.Connector {
 		_instance = null;
 	}
 
-    protected void sendApplicationName(String applicationName) throws ConnectorException {
-        execute("NAME " + getApplicationName(), new String[] { "OK"  }, false);
+	/**
+	 * send the application name to the Skype client.
+	 * @param newApplicationName the new application name.
+	 * @throws ConnectorException when the connection with the Skype client has gone bad.
+	 */
+    protected void sendApplicationName(String newApplicationName) throws ConnectorException {
+        execute("NAME " + newApplicationName, new String[] { "OK"  }, false);
     }
 
 	/**
 	 * abstract method overridden.
+	 * @param timeout the maximum time to use in milliseconds to connect.
+	 * @return The status after connecting.
 	 */
 	protected Status connect(int timeout) {
 		if (getStatus() == Status.PENDING_AUTHORIZATION) {
@@ -96,15 +108,28 @@ public class LinuxConnector extends com.skype.connector.Connector {
 
 	/**
 	 * overriden method to initialize.
+	 * @param timeout the maximum time in milliseconds to initialize.
 	 */
 	protected void initialize(int timeout) {
 		init();
 	}
 	
+	/**
+	 * Native init method.
+	 * @param applicationName Applicationname to set.
+	 */
 	private native void init(String applicationName);
 	
+	/**
+	 * Native sendSkypeMessage method.
+	 * @param message The message to send.
+	 */
 	public native void sendSkypeMessage(String message);
 
+	/**
+	 * Native dispose method.
+	 * Cleans up and disconnects native library.
+	 */
 	public native void disposeNative();
 
 	/**
