@@ -28,7 +28,7 @@ import com.skype.connector.AbstractConnectorListener;
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
 import com.skype.connector.ConnectorListener;
-import com.skype.connector.ConnectorMessageEvent;
+import com.skype.connector.ConnectorStatusEvent;
 
 public final class WindowsConnector extends Connector {
     /**
@@ -122,8 +122,6 @@ public final class WindowsConnector extends Connector {
      * @see #ATTACH_MESSAGE_ID
      */
     private static final int DISCOVER_MESSAGE_ID = OS.RegisterWindowMessage(new TCHAR(0, "SkypeControlAPIDiscover", true));
-
-    private static final String CONNECTOR_STATUS_CHANGED_MESSAGE = "ConnectorStatusChanged";
 
     private Display display;
     private TCHAR windowClass;
@@ -238,12 +236,10 @@ public final class WindowsConnector extends Connector {
     protected Status connect(final int timeout) throws ConnectorException {
         final Object object = new Object();
         ConnectorListener listener = new AbstractConnectorListener() {
-            public void messageReceived(ConnectorMessageEvent event) {
-                String message = event.getMessage();
-                if (message.equals(CONNECTOR_STATUS_CHANGED_MESSAGE)) {
-                    synchronized (object) {
-                        object.notify();
-                    }
+            @Override
+            public void statusChanged(ConnectorStatusEvent event) {
+                synchronized (object) {
+                    object.notify();
                 }
             }
         };
@@ -300,8 +296,10 @@ public final class WindowsConnector extends Connector {
             case ATTACH_API_AVAILABLE:
                 setStatus(Status.API_AVAILABLE);
                 break;
+            default:
+                setStatus(Status.NOT_RUNNING);
+                break;
             }
-            fireMessageReceived(CONNECTOR_STATUS_CHANGED_MESSAGE);
             return 1;
         } else if (msg == WM_COPYDATA) {
             if (wParam == skypeWindowHandle) {

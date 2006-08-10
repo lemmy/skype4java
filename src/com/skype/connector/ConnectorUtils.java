@@ -21,9 +21,8 @@ import java.util.StringTokenizer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-public final class Utils {
-    
-	static void checkNotNull(String name, Object value) {
+public final class ConnectorUtils {
+	public static void checkNotNull(String name, Object value) {
         if (value == null) {
             throw new NullPointerException("The" + name + " must not be null.");
         }
@@ -161,6 +160,6 @@ public final class Utils {
 	 * The methods of this class should be used staticly.
 	 * That is why the constructor is private.
 	 */
-    private Utils() {
+    private ConnectorUtils() {
     }
 }

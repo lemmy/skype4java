@@ -21,7 +21,7 @@ import java.io.File;
 
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
-import com.skype.connector.Utils;
+import com.skype.connector.ConnectorUtils;
 
 public final class Win32Connector extends Connector {
     private static final int ATTACH_SUCCESS = 0;
@@ -29,7 +29,6 @@ public final class Win32Connector extends Connector {
     private static final int ATTACH_REFUSED = 2;
     private static final int ATTACH_NOT_AVAILABLE = 3;
     private static final int ATTACH_API_AVAILABLE = 0x8001;
-    private static final String CONNECTOR_STATUS_CHANGED_MESSAGE = "ConnectorStatusChanged";
     /** Filename of the DLL. */
     private static final String LIBFILENAME = "JNIConnnector.dll";
     
@@ -58,8 +57,8 @@ public final class Win32Connector extends Connector {
     	try {
     		System.loadLibrary("JNIConnnector");
     	} catch (Throwable e) {
-    		if (!Utils.checkLibraryInPath(LIBFILENAME)) {
-	    		Utils.extractFromJarToTemp(LIBFILENAME);   	    		
+    		if (!ConnectorUtils.checkLibraryInPath(LIBFILENAME)) {
+	    		ConnectorUtils.extractFromJarToTemp(LIBFILENAME);   	    		
 	    		System.load(System.getProperty("java.io.tmpdir")+File.separatorChar+LIBFILENAME);
 			}
     	}
@@ -120,9 +119,9 @@ public final class Win32Connector extends Connector {
                 setStatus(Status.API_AVAILABLE);
                 break;
             default:
+                setStatus(Status.NOT_RUNNING);
                 break;
         }
-        fireMessageReceived(CONNECTOR_STATUS_CHANGED_MESSAGE);
     }
 
     public void jni_onSkypeMessage(String message) {

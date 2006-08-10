@@ -92,6 +92,13 @@ public abstract class Connector {
         }
         return instance;
     }
+    
+    protected static synchronized void setInstance(final Connector instance) throws ConnectorException {
+        if (Connector.instance != null) {
+            Connector.instance.dispose();
+        }
+        Connector.instance = instance;
+    }
 
     /**
      * The debug output stream.
@@ -180,7 +187,7 @@ public abstract class Connector {
      * @see #getDebugOut()
      */
     public final void setDebugOut(final PrintWriter newDebugOut) {
-        Utils.checkNotNull("debugOut", newDebugOut);
+        ConnectorUtils.checkNotNull("debugOut", newDebugOut);
         this.debugOut = newDebugOut;
     }
 
@@ -192,7 +199,7 @@ public abstract class Connector {
      * @see #getDebugOut()
      */
     public final void setDebugOut(final PrintStream newDebugOut) {
-        Utils.checkNotNull("debugOut", newDebugOut);
+        ConnectorUtils.checkNotNull("debugOut", newDebugOut);
         setDebugOut(new PrintWriter(newDebugOut, true));
     }
 
@@ -212,7 +219,7 @@ public abstract class Connector {
      * @param newApplicationName Name of this application.
      */
     public final void setApplicationName(final String newApplicationName) {
-        Utils.checkNotNull("applicationName", newApplicationName);
+        ConnectorUtils.checkNotNull("applicationName", newApplicationName);
         this.applicationName = newApplicationName;
     }
 
@@ -367,7 +374,7 @@ public abstract class Connector {
      * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
      */
     public final String execute(final String command) throws ConnectorException {
-        Utils.checkNotNull("command", command);
+        ConnectorUtils.checkNotNull("command", command);
         return execute(command, command);
     }
 
@@ -379,8 +386,8 @@ public abstract class Connector {
      * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
      */
     public final String executeWithId(final String command, final String responseHeader) throws ConnectorException {
-        Utils.checkNotNull("command", command);
-        Utils.checkNotNull("responseHeader", responseHeader);
+        ConnectorUtils.checkNotNull("command", command);
+        ConnectorUtils.checkNotNull("responseHeader", responseHeader);
         String header = "#" + (commandCount++) + " ";
         String response = execute(header + command, new String[] { header + responseHeader, header + "ERROR " }, true);
         return response.substring(header.length());
@@ -394,7 +401,7 @@ public abstract class Connector {
      * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
      */
     public final String execute(final String command, final String responseHeader) throws ConnectorException {
-        Utils.checkNotNull("responseHeader", responseHeader);
+        ConnectorUtils.checkNotNull("responseHeader", responseHeader);
         return execute(command, new String[] { responseHeader, "ERROR " }, true);
     }
 
@@ -406,8 +413,8 @@ public abstract class Connector {
      * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
      */
     public final String execute(final String command, final String[] responseHeaders) throws ConnectorException {
-        Utils.checkNotNull("command", command);
-        Utils.checkNotNull("responseHeaders", responseHeaders);
+        ConnectorUtils.checkNotNull("command", command);
+        ConnectorUtils.checkNotNull("responseHeaders", responseHeaders);
         return execute(command, responseHeaders, true);
     }
 
@@ -420,8 +427,8 @@ public abstract class Connector {
      * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
      */
     protected final String execute(final String command, final String[] responseHeaders, final boolean checkAttached) throws ConnectorException {
-        Utils.checkNotNull("command", command);
-        Utils.checkNotNull("responseHeaders", responseHeaders);
+        ConnectorUtils.checkNotNull("command", command);
+        ConnectorUtils.checkNotNull("responseHeaders", responseHeaders);
         if (checkAttached) {
             assureAttached();
         }
@@ -517,7 +524,7 @@ public abstract class Connector {
      * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
      */
     protected final void addConnectorListener(final ConnectorListener listener, boolean checkAttached) throws ConnectorException {
-        Utils.checkNotNull("listener", listener);
+        ConnectorUtils.checkNotNull("listener", listener);
         listeners.add(ConnectorListener.class, listener);
         if (checkAttached) {
             assureAttached();
@@ -529,7 +536,7 @@ public abstract class Connector {
      * @param listener The listener to remove.
      */
     public final void removeConnectorListener(final ConnectorListener listener) {
-        Utils.checkNotNull("listener", listener);
+        ConnectorUtils.checkNotNull("listener", listener);
         listeners.remove(ConnectorListener.class, listener);
     }
 
@@ -538,7 +545,7 @@ public abstract class Connector {
      * @param message the message that triggered the event.
      */
     protected final void fireMessageReceived(final String message) {
-        Utils.checkNotNull("message", message);
+        ConnectorUtils.checkNotNull("message", message);
         new Thread("MessageSender") {
             public void run() {
                 ConnectorListener[] fireListeners = Connector.this.listeners.getListeners(ConnectorListener.class);
@@ -558,7 +565,7 @@ public abstract class Connector {
      * @param newStatus the new status that triggered this event.
      */
     protected final void fireStatusChanged(final Status newStatus) {
-        Utils.checkNotNull("status", newStatus);
+        ConnectorUtils.checkNotNull("status", newStatus);
         new Thread("StatusSender") {
             public void run() {
                 ConnectorListener[] fireListeners = Connector.this.listeners.getListeners(ConnectorListener.class);

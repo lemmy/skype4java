@@ -2,7 +2,7 @@ package com.skype.connector.osx;
 
 import java.io.File;
 import com.skype.connector.Connector;
-import com.skype.connector.Utils;
+import com.skype.connector.ConnectorUtils;
 
 /**
  * 
@@ -31,8 +31,8 @@ public class OSXConnector extends Connector
      */
     private OSXConnector()
     {
-    	if (!Utils.checkLibraryInPath(LIBFILENAME) || !checkInstalledFramework() ) {
-    		Utils.extractFromJarToTemp(LIBFILENAME);
+    	if (!ConnectorUtils.checkLibraryInPath(LIBFILENAME) || !checkInstalledFramework() ) {
+    		ConnectorUtils.extractFromJarToTemp(LIBFILENAME);
     		installFramework();
     	}
         try
@@ -45,7 +45,7 @@ public class OSXConnector extends Connector
         	System.load(System.getProperty("java.io.tmpdir")+File.separatorChar+LIBFILENAME);
         	} catch (Throwable e2) {
         		System.err.println("Could not load the library");
-        		if (!Utils.checkLibraryInPath(LIBFILENAME))
+        		if (!ConnectorUtils.checkLibraryInPath(LIBFILENAME))
         			System.err.println(LIBFILENAME+" is not in java.library.path");
         		if (!checkInstalledFramework())
         			System.err.println("Please install Skype.framework at /Library/Frameworks/Skype.framework");
@@ -74,7 +74,7 @@ public class OSXConnector extends Connector
      */
     private void installFramework(){
     	//First check if Framework is in jarfile. Lets not create directories if nothing can be found.
-    	if (Utils.isInJar("A/Skype")) {
+    	if (ConnectorUtils.isInJar("A/Skype")) {
     		String destinationname;
     		destinationname = System.getProperty("user.home");
     		if (!destinationname.endsWith(File.separator)) 
@@ -88,9 +88,9 @@ public class OSXConnector extends Connector
 			frameworkDirectory.mkdirs();
 			frameworkDirectory = new File(destinationname+"Skype.framework/Versions/Current/.tmp");
 			frameworkDirectory.mkdirs();
-			Utils.extractFromJar("A/Skype", "Skype", destinationname+"Skype.framework/Versions/A");
-			Utils.extractFromJar("A/Skype", "Skype", destinationname+"Skype.framework/Versions/Current");
-			Utils.extractFromJar("A/Skype", "Skype", destinationname+"Skype.framework");
+			ConnectorUtils.extractFromJar("A/Skype", "Skype", destinationname+"Skype.framework/Versions/A");
+			ConnectorUtils.extractFromJar("A/Skype", "Skype", destinationname+"Skype.framework/Versions/Current");
+			ConnectorUtils.extractFromJar("A/Skype", "Skype", destinationname+"Skype.framework");
     	}
     }
     
