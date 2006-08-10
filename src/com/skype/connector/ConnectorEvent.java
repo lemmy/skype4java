@@ -16,19 +16,40 @@ package com.skype.connector;
 import java.util.Date;
 import java.util.EventObject;
 
+/**
+ * Event will by raised when a connector has a event.
+ */
 class ConnectorEvent extends EventObject {
-    private final long time;
+    /**
+	 * Needed for all serialization classes. 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	/** Time. */
+	private final long time;
 
+	/**
+	 * Constructor.
+	 * @param source The event source.
+	 */
     ConnectorEvent(final Object source) {
         super(source);
         assert source != null;
         time = System.currentTimeMillis();
     }
 
+    /**
+     * Get the source Connector.
+     * @return Connector.
+     */
     public final Connector getConnector() {
         return (Connector)getSource();
     }
     
+    /**
+     * Get the time of the event.
+     * @return Date fo event.
+     */
     public final Date getTime() {
         return new Date(time);
     }

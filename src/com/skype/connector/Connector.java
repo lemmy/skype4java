@@ -20,14 +20,36 @@ import java.lang.reflect.Method;
 
 import javax.swing.event.EventListenerList;
 
+/**
+ * Base class for all platform specific connectors.
+ * A connector connects the Skype Java API with a running Skype client.
+ */
 public abstract class Connector {
-    public enum Status {
+
+	/**
+	 * Enumeration of the connector status.
+	 */
+	public enum Status {
+		/**
+		 * PENDING_AUTHORIZATION - The connector is waiting for the user to accept this app to connect to the Skype client.
+		 * ATTACHED - The connector is attached to the Skype client.
+		 * REFUSED - The user denied the application to connect to the Skype client.
+		 * NOT_AVAILABLE - The is no Skype client available to connect to.
+		 * API_AVAILABLE - Redundant of ATTACHED.
+		 * NOT_RUNNING - Connection can't be established. 
+		 */
         PENDING_AUTHORIZATION, ATTACHED, REFUSED, NOT_AVAILABLE, API_AVAILABLE, NOT_RUNNING;
     }
 
+	/** useJNIConnector if this is true on windows the connection will be made using a dll instead of using swt library. */
     private static boolean useJNIConnector;
+    /** Singleton instance of this class. */
     private static Connector instance;
 
+    /**
+     * To use the win32 dll instead of the SWT library please use this method.
+     * @param on If true the win32 connector will be used.
+     */
     public static synchronized void useJNIConnector(final boolean on) {
         if (instance != null) {
             throw new IllegalStateException("You should call this method before calling Connector#getInstance().");
@@ -35,11 +57,18 @@ public abstract class Connector {
         useJNIConnector = on;
     }
 
+    /**
+     * Initialize a platform specific connection.
+     * This method will select a connector based on the os.name.
+     * Windows has two versions see useJNIConnector.
+     * @return an initialized connection.
+     */
     public static synchronized Connector getInstance() {
         if (instance == null) {
             String osName = System.getProperty("os.name");
             String connectorClassName = null;
             if (osName.startsWith("Windows")) {
+            	//Todo: add a check to see if swt is in the classpath, if not use the other connector.
                 if (useJNIConnector) {
                     connectorClassName = "com.skype.connector.win32.Win32Connector";
                 } else {
@@ -72,28 +101,52 @@ public abstract class Connector {
      * </p>
      */
     private PrintWriter debugOut = new PrintWriter(System.out, true);
+    /** debugListener. */
     private ConnectorListener debugListener;
+    /** debug printer lock object. */
     private Object debugFieldMutex = new Object();
-
+    
+    /** application name to send to Skype client. */
     private String applicationName = "SkypeAPI4Java";
 
+    /** Initialize the status of the connector. */
     private Status status = Status.NOT_RUNNING;
+    /** Boolean to check if the connector is already initialized. */
     private boolean isInitialized;
 
+    /** global connector timeout. */
     private int connectTimeout = 10000;
+    /** global command-reply timeout. */
     private int commandTimeout = 10000;
 
+    /** Collection of event listeners for the connector. */
     private EventListenerList listeners = new EventListenerList();
 
+    /** Command counter, can be used to identify message and reply pairs. */
     private int commandCount;
 
+    /**
+     * Because this object should be a singleton the constructor is protected.
+     *
+     */
     protected Connector() {
     }
 
+    /**
+     * Try to get the absolute path to the skype client.
+     * Should be overridden for each platfrom specific connector.
+     * Not geranteed to work.
+     * @return The absolute path to the Skype client executable.
+     */
     public String getInstalledPath() {
-        return "skype";
+		return "skype";
     }
 
+    /**
+     * Enable or disable debug printing for more information.
+     * @param on if true debug output will be written to System.out
+     * @throws ConnectorException thrown when connection to Skype Client has gone bad.
+     */
     public final void setDebug(final boolean on) throws ConnectorException {
         synchronized (debugFieldMutex) {
             if (on) {
@@ -121,26 +174,26 @@ public abstract class Connector {
 
     /**
      * Sets the debug output stream.
-     * @param debugOut the new debug output stream
-     * @throws NullPointerException if <code>debugOut</code> is null.
+     * @param newDebugOut the new debug output stream
+     * throws NullPointerException if <code>debugOut</code> is null.
      * @see #setDebugOut(PrintStream)
      * @see #getDebugOut()
      */
-    public final void setDebugOut(final PrintWriter debugOut) {
-        Utils.checkNotNull("debugOut", debugOut);
-        this.debugOut = debugOut;
+    public final void setDebugOut(final PrintWriter newDebugOut) {
+        Utils.checkNotNull("debugOut", newDebugOut);
+        this.debugOut = newDebugOut;
     }
 
     /**
      * Sets the debug output stream.
-     * @param debugOut the new debug output stream
-     * @throws NullPointerException if <code>debugOut</code> is null.
+     * @param newDebugOut the new debug output stream
+     * throws NullPointerException if <code>debugOut</code> is null.
      * @see #setDebugOut(PrintWriter)
      * @see #getDebugOut()
      */
-    public final void setDebugOut(final PrintStream debugOut) {
-        Utils.checkNotNull("debugOut", debugOut);
-        setDebugOut(new PrintWriter(debugOut, true));
+    public final void setDebugOut(final PrintStream newDebugOut) {
+        Utils.checkNotNull("debugOut", newDebugOut);
+        setDebugOut(new PrintWriter(newDebugOut, true));
     }
 
     /**
@@ -153,15 +206,28 @@ public abstract class Connector {
         return debugOut;
     }
 
-    public final void setApplicationName(final String applicationName) {
-        Utils.checkNotNull("applicationName", applicationName);
-        this.applicationName = applicationName;
+    /**
+     * Set the application name for this application.
+     * This is what the User will see in the Allow/Deny dialog.
+     * @param newApplicationName Name of this application.
+     */
+    public final void setApplicationName(final String newApplicationName) {
+        Utils.checkNotNull("applicationName", newApplicationName);
+        this.applicationName = newApplicationName;
     }
 
+    /**
+     * Return the current application name.
+     * @return applicationName.
+     */
     public final String getApplicationName() {
         return applicationName;
     }
 
+    /**
+     * Set the status of this connector instance.
+     * @param newValue The new status.
+     */
     protected final void setStatus(final Status newValue) {
         if (status != newValue) {
             status = newValue;
@@ -169,49 +235,104 @@ public abstract class Connector {
         }
     }
 
+    /**
+     * Return the status of this connector instance.
+     * @return status.
+     */
     public final Status getStatus() {
         return status;
     }
 
+    /**
+     * Change the connect timeout of this connector instance.
+     * @param newValue the new timeout value in milliseconds.
+     */
     public final void setConnectTimeout(final int newValue) {
         connectTimeout = newValue;
     }
 
+    /**
+     * Return the current connect timeout settings of the connector instance.
+     * @return current connect timeout.
+     */
     public final int getConnectTimeout() {
         return connectTimeout;
     }
 
+    /**
+     * Change the command timeout value.
+     * @param newValue The new timeout value in milliseconds.
+     */
     public final void setCommandTimeout(final int newValue) {
         commandTimeout = newValue;
     }
 
+    /**
+     * Return the current command timeout setting.
+     * @return command timeout value.
+     */
     public final int getCommandTimeout() {
         return commandTimeout;
     }
 
+    /**
+     * Connect the connector instance to the Skype client.
+     * @return the status after connecting.
+     * @throws ConnectorException thrown when a connection could not be made due to technical problems.
+     */
     public final synchronized Status connect() throws ConnectorException {
         int timeout = getConnectTimeout();
         if (!isInitialized) {
             initialize(timeout);
             isInitialized = true;
         }
-        Status status = connect(timeout);
-        if (status == Status.ATTACHED) {
+        Status tmpStatus = connect(timeout);
+        if (tmpStatus == Status.ATTACHED) {
             try {
                 sendApplicationName(getApplicationName());
                 execute("PROTOCOL 9999", new String[] {"PROTOCOL "}, false);
             } catch (TimeOutException e) {
-                status = Status.NOT_RUNNING;
+                tmpStatus = Status.NOT_RUNNING;
             }
         }
-        return status;
+        return tmpStatus;
     }
     
+    /**
+     * Platform specific connector needs to implement it's own initialize method.
+     * @param timeout Timeout in milliseconds to use while initializing.
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
     protected abstract void initialize(int timeout) throws ConnectorException;
+    
+    /**
+     * Platform specific connector needs to implement it's own connect method. 
+     * @param timeout Timeout is milliseconds to use while connecting.
+     * @return Status after connecting.
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
     protected abstract Status connect(int timeout) throws ConnectorException;
-    protected void sendApplicationName(String applicationName) throws ConnectorException {
+    
+    /**
+     * Clean-up and disconnect from Skype client.
+     */
+    protected abstract void disposeImpl();
+    
+    /**
+     * Send the application name to the Skype client.
+     * todo: should this be abstract?
+     * @param newApplicationName new application name.
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
+    protected void sendApplicationName(String newApplicationName) throws ConnectorException {
     }
 
+    /**
+     * Clean up this connection instance and the platform specific one.
+     * IMPORTANT!
+     * This allows all native code to clean up and disconnect in a nice way.
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
     public final synchronized void dispose() throws ConnectorException {
         if (!isInitialized) {
             return;
@@ -220,8 +341,12 @@ public abstract class Connector {
         isInitialized = false;
     }
 
-    protected abstract void disposeImpl();
-
+    
+    /**
+     * Check if connector is connected to the Skype Client.
+     * @return true if connector is connected.
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
     public final boolean isRunning() throws ConnectorException {
         try {
             assureAttached();
@@ -233,11 +358,26 @@ public abstract class Connector {
         }
     }
 
+    /**
+     * Send a Skype command to the Skype client and wait for the reply.
+     * This method is not event-save. another reply could be picked-up.
+     * Please use executeWithID or execute with responseheader instead.
+     * @param command the command to send.
+     * @return the reply message.
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
     public final String execute(final String command) throws ConnectorException {
         Utils.checkNotNull("command", command);
         return execute(command, command);
     }
 
+    /**
+     * Send a Skype command to the Skype client and wait for the reply, using an ID.
+     * @param command The command to send.
+     * @param responseHeader The expected reply header.
+     * @return The reply.
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
     public final String executeWithId(final String command, final String responseHeader) throws ConnectorException {
         Utils.checkNotNull("command", command);
         Utils.checkNotNull("responseHeader", responseHeader);
@@ -246,18 +386,40 @@ public abstract class Connector {
         return response.substring(header.length());
     }
 
+    /**
+     * Send a Skype command to the Skype client and wait for the reply based on the responseheader.
+     * @param command the command to send.
+     * @param responseHeader the expected reply header.
+     * @return the reply.
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
     public final String execute(final String command, final String responseHeader) throws ConnectorException {
         Utils.checkNotNull("responseHeader", responseHeader);
         return execute(command, new String[] { responseHeader, "ERROR " }, true);
     }
 
+    /**
+     * Send a Skype command to Skype client and allow for several reply headers.
+     * @param command the command to send.
+     * @param responseHeaders the expected response headers.
+     * @return the reply.
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
     public final String execute(final String command, final String[] responseHeaders) throws ConnectorException {
         Utils.checkNotNull("command", command);
         Utils.checkNotNull("responseHeaders", responseHeaders);
         return execute(command, responseHeaders, true);
     }
 
-    protected String execute(final String command, final String[] responseHeaders, final boolean checkAttached) throws ConnectorException {
+    /**
+     * Send a Skype command to Skype (actual implementation method) and wait for response.
+     * @param command the command to send.
+     * @param responseHeaders The expected response headers.
+     * @param checkAttached if true the connector will first check if it is connected.
+     * @return the response.
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
+    protected final String execute(final String command, final String[] responseHeaders, final boolean checkAttached) throws ConnectorException {
         Utils.checkNotNull("command", command);
         Utils.checkNotNull("responseHeaders", responseHeaders);
         if (checkAttached) {
@@ -300,36 +462,60 @@ public abstract class Connector {
         return response[0];
     }
 
+    /**
+     * Event trigger called when a command is send to the Skype client.
+     * @param message the message that has been send.
+     */
     private void fireMessageSent(final String message) {
         assert message != null;
-        ConnectorListener[] listeners = Connector.this.listeners.getListeners(ConnectorListener.class);
-        if (listeners.length == 0) {
+        ConnectorListener[] fireListeners = Connector.this.listeners.getListeners(ConnectorListener.class);
+        if (fireListeners.length == 0) {
             return;
         }
         ConnectorMessageEvent event = new ConnectorMessageEvent(this, message);
-        for (ConnectorListener listener : listeners) {
+        for (ConnectorListener listener : fireListeners) {
             listener.messageSent(event);
         }
     }
 
+    /**
+     * Send a command message to the Skype client.
+     * @param command the command message to send.
+     */
     protected abstract void sendCommand(String command);
 
+    /**
+     * Method to check the attached status of the connector to the Skype Client.
+     * If it isn't connected it will connect.
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
     private void assureAttached() throws ConnectorException {
-        Status status = getStatus();
-        if (status != Status.ATTACHED) {
-            status = connect();
-            status = getStatus();
-            if (status != Status.ATTACHED) {
-            	System.err.println("Connector.assureAttached() status="+status);
-                throw new NotAttachedException(status);
+        Status attachedStatus = getStatus();
+        if (attachedStatus != Status.ATTACHED) {
+            attachedStatus = connect();
+            attachedStatus = getStatus();
+            if (attachedStatus != Status.ATTACHED) {
+            	System.err.println("Connector.assureAttached() status="+attachedStatus);
+                throw new NotAttachedException(attachedStatus);
             }
         }
     }
 
+    /**
+     * Add a listener to this connector instance.
+     * @param listener the listener to add.
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
     public final void addConnectorListener(final ConnectorListener listener) throws ConnectorException {
         addConnectorListener(listener, true);
     }
 
+    /**
+     * Add a listener to this connector if the connector is attached.
+     * @param listener The listener to add.
+     * @param checkAttached if true check if connector is attached.
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
     protected final void addConnectorListener(final ConnectorListener listener, boolean checkAttached) throws ConnectorException {
         Utils.checkNotNull("listener", listener);
         listeners.add(ConnectorListener.class, listener);
@@ -338,38 +524,50 @@ public abstract class Connector {
         }
     }
 
+    /**
+     * Remove a listener from the collection of listeners. The listener will no longer be triggered when a event happens.
+     * @param listener The listener to remove.
+     */
     public final void removeConnectorListener(final ConnectorListener listener) {
         Utils.checkNotNull("listener", listener);
         listeners.remove(ConnectorListener.class, listener);
     }
 
+    /**
+     * Fire a message received event.
+     * @param message the message that triggered the event.
+     */
     protected final void fireMessageReceived(final String message) {
         Utils.checkNotNull("message", message);
         new Thread("MessageSender") {
             public void run() {
-                ConnectorListener[] listeners = Connector.this.listeners.getListeners(ConnectorListener.class);
-                if (listeners.length == 0) {
+                ConnectorListener[] fireListeners = Connector.this.listeners.getListeners(ConnectorListener.class);
+                if (fireListeners.length == 0) {
                     return;
                 }
                 ConnectorMessageEvent event = new ConnectorMessageEvent(this, message);
-                for (int i = listeners.length - 1; 0 <= i; i--) {
-                    listeners[i].messageReceived(event);
+                for (int i = fireListeners.length - 1; 0 <= i; i--) {
+                    fireListeners[i].messageReceived(event);
                 }
             };
         }.start();
     }
 
-    protected final void fireStatusChanged(final Status status) {
-        Utils.checkNotNull("status", status);
+    /**
+     * Fire a status change event.
+     * @param newStatus the new status that triggered this event.
+     */
+    protected final void fireStatusChanged(final Status newStatus) {
+        Utils.checkNotNull("status", newStatus);
         new Thread("StatusSender") {
             public void run() {
-                ConnectorListener[] listeners = Connector.this.listeners.getListeners(ConnectorListener.class);
-                if (listeners.length == 0) {
+                ConnectorListener[] fireListeners = Connector.this.listeners.getListeners(ConnectorListener.class);
+                if (fireListeners.length == 0) {
                     return;
                 }
-                ConnectorStatusEvent event = new ConnectorStatusEvent(this, status);
-                for (int i = listeners.length - 1; 0 <= i; i--) {
-                    listeners[i].statusChanged(event);
+                ConnectorStatusEvent event = new ConnectorStatusEvent(this, newStatus);
+                for (int i = fireListeners.length - 1; 0 <= i; i--) {
+                    fireListeners[i].statusChanged(event);
                 }
             };
         }.start();

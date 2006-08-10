@@ -13,13 +13,28 @@
  ******************************************************************************/
 package com.skype.connector;
 
+/**
+ * Abstract basis for all platform dependant connectorLinstener implementations.
+ */
 public abstract class AbstractConnectorListener implements ConnectorListener {
+	/**
+	 * This method gets fired when a Message is received.
+	 * @param event The event that triggered this.
+	 */
     public void messageReceived(ConnectorMessageEvent event) {
     }
 
+    /**
+     * This method gets fired when a message is being send.
+	 * @param event The event that triggered this.
+     */
     public void messageSent(ConnectorMessageEvent event) {
     }
     
+    /**
+     * This method is called when a status of a connector changes.
+	 * @param event The event that triggered this. 
+     */
     public void statusChanged(ConnectorStatusEvent event) {
     }
 }

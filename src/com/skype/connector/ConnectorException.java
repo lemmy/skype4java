@@ -13,14 +13,35 @@
  ******************************************************************************/
 package com.skype.connector;
 
+/**
+ * Exception class which connectors can throw.
+ */
 public class ConnectorException extends Exception {
-    public ConnectorException() {
+    /**
+	 * Needed for all serialisationable objects.
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
+     * Constructor.
+     *
+     */
+	public ConnectorException() {
     }
 
+	/**
+	 * Constructor with message.
+	 * @param message The exception message.
+	 */
     public ConnectorException(String message) {
         super(message);
     }
 
+    /**
+     * Constructor with message and cause.
+     * @param message The exception message.
+     * @param cause The cause exception.
+     */
     public ConnectorException(String message, Throwable cause) {
         super(message, cause);
     }

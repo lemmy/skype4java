@@ -13,15 +13,36 @@
  ******************************************************************************/
 package com.skype.connector;
 
+/**
+ * Event object a connector will use when it fires a message received or sent event.
+ */
 public final class ConnectorMessageEvent extends ConnectorEvent {
-    private final String message;
+	
+    /**
+	 * Needed for serialisation.
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	/**
+	 * The message that triggered the event.
+	 */
+	private final String message;
 
-    ConnectorMessageEvent(Object source, String message) {
+	/**
+	 * Constructor with source (connector) and the message.
+	 * @param source Connector which threw the event.
+	 * @param newMessage The message sent or received.
+	 */
+    ConnectorMessageEvent(Object source, String newMessage) {
         super(source);
-        assert message != null;
-        this.message = message;
+        assert newMessage != null;
+        this.message = newMessage;
     }
     
+    /**
+     * Get the message of this event.
+     * @return Message.
+     */
     public String getMessage() {
         return message;
     }
