@@ -135,19 +135,31 @@ public class User extends SkypeObject {
         FEMALE;
     }
 
+    /** ID of this User. */
     private String id;
 
-    User(String id) {
-        this.id = id;
+    /**
+     * Constructor.
+     * @param newId The USER ID.
+     */
+    User(String newId) {
+        this.id = newId;
     }
 
-    @Override
-    public int hashCode() {
+    /**
+     * Overridden to provide ID as hashcode.
+     * @return ID.
+     */
+    public final int hashCode() {
         return getId().hashCode();
     }
 
-    @Override
-    public boolean equals(Object compared) {
+    /**
+     * Overridden to compare User obejct based on ID.
+     * @param compared the User to compare to.
+     * @return true if ID's are equal.
+     */
+    public final boolean equals(Object compared) {
         if (compared instanceof User) {
             User comparedUser = (User)compared;
             return getId().equals(comparedUser.getId());
@@ -155,20 +167,37 @@ public class User extends SkypeObject {
         return false;
     }
 
-    @Override
-    public String toString() {
+    /**
+     * Provide ID as string representation.
+     * @return ID.
+     */
+    public final String toString() {
         return getId();
     }
 
-    public String getId() {
+    /**
+     * Return ID of this User.
+     * @return ID.
+     */
+    public final String getId() {
         return id;
     }
 
-    public String getFullName() throws SkypeException {
+    /**
+     * Return full name of this User.
+     * @return String with fullname.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final String getFullName() throws SkypeException {
         return getProperty("FULLNAME");
     }
 
-    public Date getBirthDay() throws SkypeException {
+    /**
+     * Return the birthdate of this User.
+     * @return Date of birthday.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final Date getBirthDay() throws SkypeException {
         String value = getProperty("BIRTHDAY");
         if ("0".equals(value)) {
             return null;
@@ -181,83 +210,184 @@ public class User extends SkypeObject {
         }
     }
 
-    public Sex getSex() throws SkypeException {
+    /**
+     * Return the sex of this User.
+     * @return Sex of this User.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final Sex getSex() throws SkypeException {
         return Sex.valueOf((getProperty("SEX")));
     }
 
-    public Status getOnlineStatus() throws SkypeException {
+    /**
+     * Return the online status of this User.
+     * @return Status of this User.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final Status getOnlineStatus() throws SkypeException {
         return Status.valueOf((getProperty("ONLINESTATUS")));
     }
 
-    public String getLauguage() throws SkypeException {
+    /**
+     * Return the native language of this User.
+     * @return String with native language.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final String getLauguage() throws SkypeException {
         return getProperty("LANGUAGE");
     }
 
-    public String getCountry() throws SkypeException {
+    /**
+     * Return the country the User is based.
+     * @return String with country.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final String getCountry() throws SkypeException {
         return getProperty("COUNTRY");
     }
 
-    public String getProvince() throws SkypeException {
+    /**
+     * Return the province the user is based.
+     * @return String with the province the user is based.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final String getProvince() throws SkypeException {
         return getProperty("PROVINCE");
     }
 
-    public String getCity() throws SkypeException {
+    /**
+     * Return the city this User is based in.
+     * @return String with the city name the User is based in.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final String getCity() throws SkypeException {
         return getProperty("CITY");
     }
 
-    public String getHomePhone() throws SkypeException {
+    /**
+     * Return the home phone number that is in the User profile.
+     * @return String with Home phone number.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final String getHomePhone() throws SkypeException {
         return getProperty("PHONE_HOME");
     }
 
-    public String getOfficePhone() throws SkypeException {
+    /**
+     * Return the office phone number that is in the User profile.
+     * @return String with office phone number.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final String getOfficePhone() throws SkypeException {
         return getProperty("PHONE_OFFICE");
     }
 
-    public String getMobilePhone() throws SkypeException {
+    /**
+     * Return the mobile phone number of this User.
+     * @return String with mobile phone number.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final String getMobilePhone() throws SkypeException {
         return getProperty("PHONE_MOBILE");
     }
 
-    public String getHomePageAddress() throws SkypeException {
+    /**
+     * Return the homepage URL of this User.
+     * @return String with URL of homepage.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final String getHomePageAddress() throws SkypeException {
         return getProperty("HOMEPAGE");
     }
 
-    public String getAbout() throws SkypeException {
+    /**
+     * Return extra information User has provided in his/her profile.
+     * @return STring with extra info.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final String getAbout() throws SkypeException {
         return getProperty("ABOUT");
     }
 
-    public String getDisplayName() throws SkypeException {
+    /**
+     * Return the displayname of this User.
+     * @return String with displayname.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final String getDisplayName() throws SkypeException {
         return getProperty("DISPLAYNAME");
     }
 
-    public boolean isVideoCapable() {
+    /**
+     * Check if this User has a Skype client that can do video chats.
+     * @return true if User can do videochats.
+     */
+    public final boolean isVideoCapable() {
         return Boolean.parseBoolean("IS_VIDEO_CAPABLE");
     }
 
+    /**
+     * Method used by other methods to retrieve a property value from Skype client.
+     * @param name name of the property.
+     * @return value of the property.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
     private String getProperty(String name) throws SkypeException {
         return Utils.getProperty("USER", getId(), name);
     }
 
-    public Call call() throws SkypeException {
+    /**
+     * Start a call to this User.
+     * @return new Call object.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final Call call() throws SkypeException {
         return Skype.call(getId());
     }
 
-    public Chat chat() throws SkypeException {
+    /**
+     * Start a chat to this User.
+     * @return new Chat object.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final Chat chat() throws SkypeException {
         return Skype.chat(getId());
     }
 
-    public ChatMessage send(String message) throws SkypeException {
+    /**
+     * Send this User a chatMessage.
+     * @param message The message to send.
+     * @return the new chatMessage object.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final ChatMessage send(String message) throws SkypeException {
         return Skype.chat(getId()).send(message);
     }
 
-    public VoiceMail leaveVoiceMail() throws SkypeException {
+    /**
+     * Leave a voicemail for this User.
+     * @return new VoiceMail object.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final VoiceMail leaveVoiceMail() throws SkypeException {
         return Skype.leaveVoiceMail(getId());
     }
 
-    public void setDisplayName(String displayName) throws SkypeException {
+    /**
+     * Set a displayname for this User.
+     * @param displayName the new name to set.
+     * @throws SkypeException  when connection to Skype client has gone bad.
+     */
+    public final void setDisplayName(String displayName) throws SkypeException {
         Utils.setProperty("USER", getId(), "DISPLAYNAME", displayName);
     }
 
-    public ChatMessage[] getAllChatMessages() throws SkypeException {
+    /**
+     * Search for all chatMessages to and from this User.
+     * @return array of Chatmessages found.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final ChatMessage[] getAllChatMessages() throws SkypeException {
         String[] ids = getHistory("CHATMESSAGES");
         ChatMessage[] messages = new ChatMessage[ids.length];
         for (int i = 0; i < ids.length; i++) {
@@ -268,7 +398,12 @@ public class User extends SkypeObject {
         return messageList.toArray(new ChatMessage[0]);
     }
 
-    public Call[] getAllCalls() throws SkypeException {
+    /**
+     * Search all calls to and from this User.
+     * @return an array of found calls.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final Call[] getAllCalls() throws SkypeException {
         String[] ids = getHistory("CALLS");
         Call[] calls = new Call[ids.length];
         for (int i = 0; i < ids.length; i++) {
@@ -277,6 +412,12 @@ public class User extends SkypeObject {
         return calls;
     }
 
+    /**
+     * Search the history with this user.
+     * @param type Specify which history to search for.
+     * @return an String array with found events.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
     private String[] getHistory(String type) throws SkypeException {
         try {
             String responseHeader = type + " ";
@@ -290,7 +431,10 @@ public class User extends SkypeObject {
         }
     }
 
-    void dispose() {
+    /**
+     * Remove this User from the list of watchable Users.
+     */
+    final void dispose() {
         users.remove(getId());
     }
 }
