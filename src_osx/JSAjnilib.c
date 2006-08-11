@@ -110,7 +110,6 @@ void initSkypeConnection(CFStringRef cfStrAppname) {
 
 void skypeEventLoop() {
 	printDebug("JSAjnilib.skypeEventLoop() start");
-
 	while(disposed==FALSE) {		
 		RunApplicationEventLoop();
 		usleep(500);
@@ -130,8 +129,8 @@ void skypeEventLoop() {
 void sendToJava(const char *message) { 
 	printDebug("JSAjnilib.sendToJava(char *) start");
 	
-	while (sending == TRUE);
-	sending = TRUE;
+	//while (sending == TRUE);
+	//sending = TRUE;
 	if (g_env != NULL) {
 		(*g_env)->GetJavaVM(g_env, &g_Jvm);
 		(*g_Jvm)->AttachCurrentThread(g_Jvm, (void **)&g_env, NULL);
@@ -141,10 +140,26 @@ void sendToJava(const char *message) {
 			return;
 		}
 		(*g_env)->CallStaticVoidMethod(g_env, clsMain, midReceiveMessage,(*g_env)->NewStringUTF(g_env,message));
-		(*g_Jvm)->DetachCurrentThread(g_Jvm);
+		//(*g_Jvm)->DetachCurrentThread(g_Jvm);
+		//usleep(200);
 	}
-	sending = FALSE;
-	
+	//sending = FALSE;
+	jthrowable exc;
+	exc = (*g_env)->ExceptionOccurred(g_env);
+     if (exc) {
+         /* We don't do much with the exception, except that
+            we print a debug message for it, clear it, and 
+            throw a new exception. */
+         jclass newExcCls;
+         (*g_env)->ExceptionDescribe(g_env);
+         (*g_env)->ExceptionClear(g_env);
+         newExcCls = (*g_env)->FindClass(g_env, "java/lang/IllegalArgumentException");
+         if (newExcCls == NULL) {
+             /* Unable to find the exception class, give up. */
+             return;
+         }
+         (*g_env)->ThrowNew(g_env, newExcCls, "thrown from C code");
+	  }
 	printDebug("JSAjnilib.sendToJava() end");	
 }
 
@@ -154,8 +169,8 @@ void sendToJava(const char *message) {
 void statusToJava(int status) {
 	printDebug("JSAjnilib.statusToJava(int) start");
 	
-	while (statusing == TRUE);
-	statusing = TRUE;
+	//while (statusing == TRUE);
+	//statusing = TRUE;
 	if (g_env != NULL) {
         (*g_env)->GetJavaVM(g_env, &g_Jvm);
         (*g_Jvm)->AttachCurrentThread(g_Jvm, (void **)&g_env, NULL);
@@ -165,9 +180,9 @@ void statusToJava(int status) {
 			return;
         }
 		(*g_env)->CallStaticVoidMethod(g_env, clsMain, midsetConnectedStatus,status);
-		(*g_Jvm)->DetachCurrentThread(g_Jvm);
+		//(*g_Jvm)->DetachCurrentThread(g_Jvm);
 	}
-	statusing = FALSE;
+	//statusing = FALSE;
 	
 	printDebug("JSAjnilib.statusToJava() end");	
 }
