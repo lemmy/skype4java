@@ -264,7 +264,7 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>0</integer>
+									<integer>12</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
@@ -368,9 +368,9 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>CCBFCBDB0A765734000A97D9</string>
+				<string>CC04FE900A8C856000A8708B</string>
 				<string>1CE0B1FE06471DED0097A5F4</string>
-				<string>CCBFCBDC0A765734000A97D9</string>
+				<string>CC04FE910A8C856000A8708B</string>
 				<string>1CE0B20306471E060097A5F4</string>
 				<string>1CE0B20506471E060097A5F4</string>
 			</array>
@@ -504,6 +504,7 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
+		<string>1C0AD2B3069F1EA900FABCE6</string>
 		<string>CC8E03730A5E48EC00D6313B</string>
 		<string>/Users/Bart/Documents/workspace/SkypeAPI/src_osx/JSA.xcodeproj</string>
 	</array>
@@ -529,7 +530,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CD0528F0623707200166675</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>JSAjnilib.c</string>
+								<string></string>
 								<key>StatusBarVisibility</key>
 								<true/>
 							</dict>
@@ -546,8 +547,6 @@
 							<string>372pt</string>
 						</dict>
 						<dict>
-							<key>BecomeActive</key>
-							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
@@ -587,7 +586,7 @@
 			<key>TableOfContents</key>
 			<array>
 				<string>CC8E03730A5E48EC00D6313B</string>
-				<string>CCBFCBDD0A765734000A97D9</string>
+				<string>CC04FE940A8C865300A8708B</string>
 				<string>1CD0528F0623707200166675</string>
 				<string>XCMainBuildResultsModuleGUID</string>
 			</array>
@@ -949,9 +948,9 @@
 			<key>TableOfContents</key>
 			<array>
 				<string>1C0AD2B3069F1EA900FABCE6</string>
-				<string>CC68B3180A761AFF0036B9CC</string>
+				<string>CC04FE950A8C865300A8708B</string>
 				<string>1CD0528B0623707200166675</string>
-				<string>CC68B3190A761AFF0036B9CC</string>
+				<string>CC04FE960A8C865300A8708B</string>
 			</array>
 			<key>ToolbarConfiguration</key>
 			<string>xcode.toolbar.config.run</string>

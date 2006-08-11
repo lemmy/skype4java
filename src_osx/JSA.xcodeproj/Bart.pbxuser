@@ -95,7 +95,7 @@
 				PBXFileTableDataSourceColumnWidthsKey = (
 					20,
 					200,
-					366,
+					523,
 					20,
 					48,
 					43,
@@ -111,8 +111,8 @@
 					PBXFileDataSource_Warnings_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 175527663;
-			PBXWorkspaceStateSaveDate = 175527663;
+			PBXPerProjectTemplateStateSaveDate = 176981343;
+			PBXWorkspaceStateSaveDate = 176981343;
 		};
 		sourceControlManager = CC8E03620A5E453900D6313B /* Source Control */;
 		userBuildSettings = {
@@ -139,9 +139,9 @@
 	};
 	6A52677B022AFE3B0CC91562 /* JSAjnilib.c */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1187, 3598}}";
+			sepNavIntBoundsRect = "{{0, 0}, {1190, 3794}}";
 			sepNavSelRange = "{189, 25}";
-			sepNavVisRect = "{{0, 0}, {1187, 340}}";
+			sepNavVisRect = "{{0, 1818}, {1190, 744}}";
 			sepNavWindowFrame = "{{109, 5}, {1229, 873}}";
 		};
 	};
