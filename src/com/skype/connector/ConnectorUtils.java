@@ -97,6 +97,11 @@ public final class ConnectorUtils {
 					     	if (!destinationDirectory.endsWith(File.separator)) { 
 					     		destinationDirectory = destinationDirectory+File.separator;
 					     	}
+                            // First delete old file.
+                            File destFile = new File(destinationDirectory+filename);
+                            if (destFile.exists()) {
+                                destFile.delete();
+                            }
 					    	 int n;
 					    	 FileOutputStream fileoutputstream;
 				                fileoutputstream = new FileOutputStream(destinationDirectory+filename);             
@@ -105,6 +110,7 @@ public final class ConnectorUtils {
 					                }
 					                fileoutputstream.close();
 					                extracted=true;
+                                    destFile.deleteOnExit();
 					     }			         		
 					}
 				} catch (Exception e) {
@@ -179,6 +185,28 @@ public final class ConnectorUtils {
     	return libfilefound;
     }
 	
+    /** 
+     * Deletes all files and subdirectories under dir.
+     * Returns true if all deletions were successful.
+     * If a deletion fails, the method stops attempting to delete and returns false.
+     * @param dir The directory to delete.
+     * @return True if deletion is succesfull.
+     */
+    public static boolean deleteDir(File dir) {
+        if (dir.isDirectory()) {
+            String[] children = dir.list();
+            for (int i=0; i<children.length; i++) {
+                boolean success = deleteDir(new File(dir, children[i]));
+                if (!success) {
+                    return false;
+                }
+            }
+        }
+    
+        // The directory is now empty so delete it
+        return dir.delete();
+    }
+    
 	/**
 	 * The methods of this class should be used staticly.
 	 * That is why the constructor is private.
