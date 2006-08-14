@@ -29,6 +29,7 @@ public final class OSXConnector extends Connector implements Runnable {
 	 */
 	private OSXConnector() {
 		if (!ConnectorUtils.checkLibraryInPath(LIBFILENAME) || !checkInstalledFramework()) {
+            
 			ConnectorUtils.extractFromJarToTemp(LIBFILENAME);
 			installFramework();
 		}
@@ -74,6 +75,18 @@ public final class OSXConnector extends Connector implements Runnable {
 		// First check if Framework is in jarfile. Lets not create directories
 		// if nothing can be found.
 		if (ConnectorUtils.isInJar("A/Skype")) {
+            //The framework is in the jarfile.
+            //Clean up old one.
+            File frameworkLocation = new File("~/Library/Frameworks/Skype.framework");
+            if (frameworkLocation.exists()) {
+                ConnectorUtils.deleteDir(frameworkLocation);
+            }
+            frameworkLocation = new File("/Library/Frameworks/Skype.framework");
+            if (frameworkLocation.exists()) {
+                ConnectorUtils.deleteDir(frameworkLocation);
+            }
+
+            
 			String destinationname;
 			destinationname = System.getProperty("user.home");
 			if (!destinationname.endsWith(File.separator)) {
@@ -145,12 +158,14 @@ public final class OSXConnector extends Connector implements Runnable {
 		// System.out.println((new
 		// StringBuilder()).append("OSXConnector.connectImpl(").append(timeout).append(")
 		// start").toString());
-		if (getStatus() == Status.PENDING_AUTHORIZATION) {
+        int i = 0;
+        while (getStatus() == Status.PENDING_AUTHORIZATION && i < 10) {
 			synchronized (lock) {
-				try {
-					lock.wait(timeout);
+                try {
+					lock.wait(timeout/10);
+                    i++;
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					//e.printStackTrace();
 				}
 			}
 		}
