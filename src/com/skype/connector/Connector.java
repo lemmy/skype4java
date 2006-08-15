@@ -371,6 +371,47 @@ public abstract class Connector {
     }
 
     /**
+     * Send a Skype command to the Skype client and handle responses by a message processor.
+     * This method is not event-save. another reply could be picked-up.
+     * Please use executeWithID or execute with responseheader instead.
+     * @param command the command to send.
+     * @param processor the message processor
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
+    @Deprecated
+    public final void execute(final String command, final MessageProcessor processor) throws ConnectorException {
+        ConnectorUtils.checkNotNull("command", command);
+        ConnectorUtils.checkNotNull("processor", processor);
+        assureAttached();
+        final Object lock = new Object();
+        ConnectorListener listener = new AbstractConnectorListener() {
+            public void messageReceived(ConnectorMessageEvent event) {
+                processor.messageReceived(event.getMessage());
+            }
+        };
+        processor.init(lock, listener);
+        addConnectorListener(listener, false);
+        fireMessageSent(command);
+        synchronized (lock) {
+            try {
+                sendCommand(command);
+                long start = System.currentTimeMillis();
+                long commandResponseTime = getCommandTimeout();
+                lock.wait(commandResponseTime);
+                if (commandResponseTime <= System.currentTimeMillis() - start) {
+                    setStatus(Status.NOT_RUNNING);
+                    throw new TimeOutException("The '" + command + "' command failed by timeout.");
+                }
+            } catch (InterruptedException e) {
+                throw new ConnectorException("The '" + command + "' command was interrupted.", e);
+            } finally {
+                removeConnectorListener(listener);
+            }
+        }
+    }
+
+
+    /**
      * Send a Skype command to the Skype client and wait for the reply.
      * This method is not event-save. another reply could be picked-up.
      * Please use executeWithID or execute with responseheader instead.
