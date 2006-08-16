@@ -15,6 +15,8 @@ public final class OSXConnector extends Connector implements Runnable {
 	private static OSXConnector _instance = null;
 	/** Thread synchronisation lock. */
 	private static final Object lock = new Object();
+    /** Thread synchronisation lock flag. */
+    private static boolean lockWait = false;
 	/** Don't reinit the native code over and over. */
 	private boolean inited;
 	/** Name of the library. */
@@ -158,16 +160,14 @@ public final class OSXConnector extends Connector implements Runnable {
 		// System.out.println((new
 		// StringBuilder()).append("OSXConnector.connectImpl(").append(timeout).append(")
 		// start").toString());
-        int i = 0;
-        while (getStatus() == Status.PENDING_AUTHORIZATION && i < 10) {
-			synchronized (lock) {
+        if (_instance.getStatus() != com.skype.connector.Connector.Status.ATTACHED) {
+            synchronized (lock) {
                 try {
-					lock.wait(timeout/10);
-                    i++;
-				} catch (InterruptedException e) {
-					//e.printStackTrace();
-				}
-			}
+                    lockWait = true;
+                    lock.wait(timeout);
+                } catch (InterruptedException e) {
+                }
+            }
 		}
 		// System.out.println((new
 		// StringBuilder()).append("OSXConnector.connectImpl(").append(timeout).append(")
@@ -193,13 +193,6 @@ public final class OSXConnector extends Connector implements Runnable {
 			setDebugPrinting(false);
 			init(getApplicationName());
 		}
-		synchronized (lock) {
-			try {
-				lock.wait(timeout);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
 		// System.out.println((new
 		// StringBuilder()).append("OSXConnector.initialize(").append(timeout).append(")
 		// end ***************").toString());
@@ -219,11 +212,15 @@ public final class OSXConnector extends Connector implements Runnable {
 
 		new Thread() {
 			public void run() {
-				if (_instance.getStatus() != com.skype.connector.Connector.Status.ATTACHED) {
-					setConnectedStatus(1);
+                if (_instance.getStatus() != com.skype.connector.Connector.Status.ATTACHED) {
+                    setConnectedStatus(1);
+                }
+                if (lockWait) {
+                    setConnectedStatus(1);
 					synchronized (lock) {
 						lock.notifyAll();
 					}
+                    lockWait = false;
 				}
 				_instance.fireMessageReceived(message);
 			}
@@ -245,9 +242,12 @@ public final class OSXConnector extends Connector implements Runnable {
 		// System.out.println((new
 		// StringBuilder()).append("OSXConnector.setConnectedStatus(").append(status).append(")
 		// start").toString());
-		synchronized (lock) {
-			lock.notifyAll();
-		}
+        if (lockWait) {
+            synchronized (lock) {
+                lock.notifyAll();
+                lockWait = false;
+            }
+        }
 		switch (status) {
 			case 0 : // '\0'
 				_instance.setStatus(com.skype.connector.Connector.Status.PENDING_AUTHORIZATION);
