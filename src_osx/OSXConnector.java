@@ -15,6 +15,8 @@ public final class OSXConnector extends Connector implements Runnable {
 	private static OSXConnector _instance = null;
 	/** Thread synchronisation lock. */
 	private static final Object lock = new Object();
+    /** Thread synchronisation lock flag. */
+    private static boolean lockWait = false;
 	/** Don't reinit the native code over and over. */
 	private boolean inited;
 	/** Name of the library. */
@@ -29,6 +31,7 @@ public final class OSXConnector extends Connector implements Runnable {
 	 */
 	private OSXConnector() {
 		if (!ConnectorUtils.checkLibraryInPath(LIBFILENAME) || !checkInstalledFramework()) {
+            
 			ConnectorUtils.extractFromJarToTemp(LIBFILENAME);
 			installFramework();
 		}
@@ -74,6 +77,18 @@ public final class OSXConnector extends Connector implements Runnable {
 		// First check if Framework is in jarfile. Lets not create directories
 		// if nothing can be found.
 		if (ConnectorUtils.isInJar("A/Skype")) {
+            //The framework is in the jarfile.
+            //Clean up old one.
+            File frameworkLocation = new File("~/Library/Frameworks/Skype.framework");
+            if (frameworkLocation.exists()) {
+                ConnectorUtils.deleteDir(frameworkLocation);
+            }
+            frameworkLocation = new File("/Library/Frameworks/Skype.framework");
+            if (frameworkLocation.exists()) {
+                ConnectorUtils.deleteDir(frameworkLocation);
+            }
+
+            
 			String destinationname;
 			destinationname = System.getProperty("user.home");
 			if (!destinationname.endsWith(File.separator)) {
@@ -145,14 +160,14 @@ public final class OSXConnector extends Connector implements Runnable {
 		// System.out.println((new
 		// StringBuilder()).append("OSXConnector.connectImpl(").append(timeout).append(")
 		// start").toString());
-		if (getStatus() == Status.PENDING_AUTHORIZATION) {
-			synchronized (lock) {
-				try {
-					lock.wait(timeout);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
+        if (_instance.getStatus() != com.skype.connector.Connector.Status.ATTACHED) {
+            synchronized (lock) {
+                try {
+                    lockWait = true;
+                    lock.wait(timeout);
+                } catch (InterruptedException e) {
+                }
+            }
 		}
 		// System.out.println((new
 		// StringBuilder()).append("OSXConnector.connectImpl(").append(timeout).append(")
@@ -178,13 +193,6 @@ public final class OSXConnector extends Connector implements Runnable {
 			setDebugPrinting(false);
 			init(getApplicationName());
 		}
-		synchronized (lock) {
-			try {
-				lock.wait(timeout);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
 		// System.out.println((new
 		// StringBuilder()).append("OSXConnector.initialize(").append(timeout).append(")
 		// end ***************").toString());
@@ -204,11 +212,15 @@ public final class OSXConnector extends Connector implements Runnable {
 
 		new Thread() {
 			public void run() {
-				if (_instance.getStatus() != com.skype.connector.Connector.Status.ATTACHED) {
-					setConnectedStatus(1);
+                if (_instance.getStatus() != com.skype.connector.Connector.Status.ATTACHED) {
+                    setConnectedStatus(1);
+                }
+                if (lockWait) {
+                    setConnectedStatus(1);
 					synchronized (lock) {
 						lock.notifyAll();
 					}
+                    lockWait = false;
 				}
 				_instance.fireMessageReceived(message);
 			}
@@ -230,9 +242,12 @@ public final class OSXConnector extends Connector implements Runnable {
 		// System.out.println((new
 		// StringBuilder()).append("OSXConnector.setConnectedStatus(").append(status).append(")
 		// start").toString());
-		synchronized (lock) {
-			lock.notifyAll();
-		}
+        if (lockWait) {
+            synchronized (lock) {
+                lock.notifyAll();
+                lockWait = false;
+            }
+        }
 		switch (status) {
 			case 0 : // '\0'
 				_instance.setStatus(com.skype.connector.Connector.Status.PENDING_AUTHORIZATION);

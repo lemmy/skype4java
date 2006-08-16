@@ -15,16 +15,6 @@
 Boolean THREADED = FALSE;
 Boolean debug = FALSE;
 Boolean disposed = FALSE;
-Boolean sending = FALSE;
-Boolean statusing = FALSE;
-
-//Global Java declarations
-JavaVM* g_Jvm = NULL;
-JNIEnv *g_env = NULL;
-jobject g_obj = NULL;
-jmethodID midReceiveMessage = NULL;
-jmethodID midsetConnectedStatus = NULL;
-jclass clsMain = NULL;
 
 //Global Skype declarations
 struct SkypeDelegate mySkypeDelegate;
@@ -112,7 +102,6 @@ void skypeEventLoop() {
 	printDebug("JSAjnilib.skypeEventLoop() start");
 	while(disposed==FALSE) {		
 		RunApplicationEventLoop();
-		usleep(500);
 	}
 	
 	printDebug("JSAjnilib.skypeEventLoop()  end");
@@ -129,37 +118,22 @@ void skypeEventLoop() {
 void sendToJava(const char *message) { 
 	printDebug("JSAjnilib.sendToJava(char *) start");
 	
-	//while (sending == TRUE);
-	//sending = TRUE;
-	if (g_env != NULL) {
-		(*g_env)->GetJavaVM(g_env, &g_Jvm);
-		(*g_Jvm)->AttachCurrentThread(g_Jvm, (void **)&g_env, NULL);
-		clsMain = (*g_env)->FindClass(g_env,"com/skype/connector/osx/OSXConnector");
-		if (midReceiveMessage == 0) {
-			printDebug("sendToJava() method not found");
-			return;
+	 JNIEnv *env;
+     JavaVM *jvm;
+     JDK1_1AttachArgs *args;
+     jsize count;
+		
+    JNI_GetDefaultJavaVMInitArgs(&args);
+    if (!JNI_GetCreatedJavaVMs(&jvm,1,&count))
+	{  
+		if (!(*jvm)->AttachCurrentThread(jvm,(void **)&env,&args))
+		{   
+			jstring msg = (*env)->NewStringUTF(env,message);
+			jclass OSXConnector  = (*env)->FindClass(env,"com/skype/connector/osx/OSXConnector");
+			jmethodID midReceiveMessage = (*env)->GetStaticMethodID(env, OSXConnector, "receiveSkypeMessage", "(Ljava/lang/String;)V");
+			(*env)->CallStaticVoidMethod(env, OSXConnector, midReceiveMessage, msg);
 		}
-		(*g_env)->CallStaticVoidMethod(g_env, clsMain, midReceiveMessage,(*g_env)->NewStringUTF(g_env,message));
-		//(*g_Jvm)->DetachCurrentThread(g_Jvm);
-		//usleep(200);
-	}
-	//sending = FALSE;
-	jthrowable exc;
-	exc = (*g_env)->ExceptionOccurred(g_env);
-     if (exc) {
-         /* We don't do much with the exception, except that
-            we print a debug message for it, clear it, and 
-            throw a new exception. */
-         jclass newExcCls;
-         (*g_env)->ExceptionDescribe(g_env);
-         (*g_env)->ExceptionClear(g_env);
-         newExcCls = (*g_env)->FindClass(g_env, "java/lang/IllegalArgumentException");
-         if (newExcCls == NULL) {
-             /* Unable to find the exception class, give up. */
-             return;
-         }
-         (*g_env)->ThrowNew(g_env, newExcCls, "thrown from C code");
-	  }
+	} 	 
 	printDebug("JSAjnilib.sendToJava() end");	
 }
 
@@ -168,22 +142,22 @@ void sendToJava(const char *message) {
  **/
 void statusToJava(int status) {
 	printDebug("JSAjnilib.statusToJava(int) start");
-	
-	//while (statusing == TRUE);
-	//statusing = TRUE;
-	if (g_env != NULL) {
-        (*g_env)->GetJavaVM(g_env, &g_Jvm);
-        (*g_Jvm)->AttachCurrentThread(g_Jvm, (void **)&g_env, NULL);
-		clsMain = (*g_env)->FindClass(g_env,"com/skype/connector/osx/OSXConnector");
-		if (midsetConnectedStatus == 0) {
-            printDebug("statusToJava() method not found");
-			return;
-        }
-		(*g_env)->CallStaticVoidMethod(g_env, clsMain, midsetConnectedStatus,status);
-		//(*g_Jvm)->DetachCurrentThread(g_Jvm);
-	}
-	//statusing = FALSE;
-	
+		
+	JNIEnv *env;
+    JavaVM *jvm;
+    JDK1_1AttachArgs *args;
+    jsize count;
+	 		
+    JNI_GetDefaultJavaVMInitArgs(&args);
+    if (!JNI_GetCreatedJavaVMs(&jvm,1,&count))
+	{  
+		if (!(*jvm)->AttachCurrentThread(jvm,(void **)&env,&args))
+		{   
+			jclass OSXConnector  = (*env)->FindClass(env,"com/skype/connector/osx/OSXConnector");
+			jmethodID midsetConnectedStatus = (*env)->GetStaticMethodID(env, OSXConnector, "setConnectedStatus", "(I)V");
+			(*env)->CallStaticVoidMethod(env, OSXConnector, midsetConnectedStatus,status);
+		}
+	} 
 	printDebug("JSAjnilib.statusToJava() end");	
 }
 
@@ -194,13 +168,6 @@ void statusToJava(int status) {
 JNIEXPORT void JNICALL Java_com_skype_connector_osx_OSXConnector_init
   (JNIEnv *env, jobject obj, jstring appName){
 	printDebug("JSAjnilib. .._OSXConnector_init() start");
-	
-	//Initialize Java environment for the callbacks.
-  	g_env = env;
-	g_obj = obj;
-	clsMain = (*g_env)->FindClass(g_env,"com/skype/connector/osx/OSXConnector");
-	midReceiveMessage = (*g_env)->GetStaticMethodID( g_env, clsMain, "receiveSkypeMessage", "(Ljava/lang/String;)V");
-	midsetConnectedStatus = (*g_env)->GetStaticMethodID( g_env, clsMain, "setConnectedStatus", "(I)V");
 
 	//Convert appname JString into a CFString
 	const char *appNameChar  = (*env)->GetStringUTFChars(env, appName, JNI_FALSE);
@@ -220,8 +187,8 @@ JNIEXPORT void JNICALL Java_com_skype_connector_osx_OSXConnector_init
 JNIEXPORT void JNICALL Java_com_skype_connector_osx_OSXConnector_sendSkypeMessage
   (JNIEnv *env, jobject obj, jstring message){
 	printDebug("JSAjnilib. ..OSXConnector_sendSkypeMessage() start");
-	  
-  	/* convert message into usable C string */
+	
+	/* convert message into usable C string */
 	const char *Sendstr  = (*env)->GetStringUTFChars(env, message, JNI_FALSE);
 	/*send the message*/
 	CFStringRef msgString = CFStringCreateWithCString (kCFAllocatorDefault,Sendstr,kCFStringEncodingASCII);	
@@ -254,7 +221,7 @@ JNIEXPORT void JNICALL Java_com_skype_connector_osx_OSXConnector_disposeNative
 JNIEXPORT void JNICALL Java_com_skype_connector_osx_OSXConnector_startEventLoop
   (JNIEnv *env, jobject obj) {
 	printDebug("JSAjnilib. ..OSXConnector_startEventLoop() start");
-	
+		
 	skypeEventLoop();
 	
 	printDebug("JSAjnilib. ..OSXConnector_startEventLoop() end");
@@ -265,6 +232,7 @@ JNIEXPORT void JNICALL Java_com_skype_connector_osx_OSXConnector_startEventLoop
 */
 JNIEXPORT void JNICALL Java_com_skype_connector_osx_OSXConnector_setDebugPrinting
   (JNIEnv *env , jobject obj, jboolean value) {
+  			  
 	if (value == JNI_TRUE)
 		debug = TRUE;
   }
