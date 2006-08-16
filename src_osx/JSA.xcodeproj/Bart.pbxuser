@@ -111,8 +111,8 @@
 					PBXFileDataSource_Warnings_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 176981343;
-			PBXWorkspaceStateSaveDate = 176981343;
+			PBXPerProjectTemplateStateSaveDate = 177427081;
+			PBXWorkspaceStateSaveDate = 177427081;
 		};
 		sourceControlManager = CC8E03620A5E453900D6313B /* Source Control */;
 		userBuildSettings = {
@@ -131,18 +131,18 @@
 	};
 	6A46BB2D022D9DFF0CC91562 /* OSXConnector.java */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1005, 3024}}";
-			sepNavSelRange = "{4055, 0}";
-			sepNavVisRect = "{{0, 1827}, {1005, 460}}";
+			sepNavIntBoundsRect = "{{0, 0}, {1187, 4536}}";
+			sepNavSelRange = "{2878, 61}";
+			sepNavVisRect = "{{0, 971}, {1187, 340}}";
 			sepNavWindowFrame = "{{176, 137}, {1044, 589}}";
 		};
 	};
 	6A52677B022AFE3B0CC91562 /* JSAjnilib.c */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1190, 3794}}";
-			sepNavSelRange = "{189, 25}";
-			sepNavVisRect = "{{0, 1818}, {1190, 744}}";
-			sepNavWindowFrame = "{{109, 5}, {1229, 873}}";
+			sepNavIntBoundsRect = "{{0, 0}, {1190, 3346}}";
+			sepNavSelRange = "{4343, 21}";
+			sepNavVisRect = "{{0, 1814}, {1190, 744}}";
+			sepNavWindowFrame = "{{143, 5}, {1229, 873}}";
 		};
 	};
 	6A9FA557024694440CC91562 /* JSA */ = {

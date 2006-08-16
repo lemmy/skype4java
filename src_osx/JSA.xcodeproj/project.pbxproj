@@ -25,7 +25,6 @@
 		363028FA0383184400C91562 /* Manifest in JavaArchive */ = {isa = PBXBuildFile; fileRef = 363028F90383184400C91562 /* Manifest */; settings = {JAVA_ARCHIVE_SUBDIR = ""; }; };
 		4CEBA79B08679F3E0015D03E /* JSAjnilib.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A52677B022AFE3B0CC91562 /* JSAjnilib.c */; };
 		4CEBA79C08679F510015D03E /* JavaVM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AE2200B0208CA9C0CC91562 /* JavaVM.framework */; };
-		6A9FA562024695DC0CC91562 /* OSXConnector.java in Sources */ = {isa = PBXBuildFile; fileRef = 6A46BB2D022D9DFF0CC91562 /* OSXConnector.java */; };
 		CC78CB3C0A6501B200BAF183 /* Skype.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC78CB3B0A6501B200BAF183 /* Skype.framework */; };
 		CC78CB3D0A6501B200BAF183 /* Skype.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC78CB3B0A6501B200BAF183 /* Skype.framework */; };
 		CC8E03C60A5E4DDF00D6313B /* skype.jar in Frameworks */ = {isa = PBXBuildFile; fileRef = CC8E03C50A5E4DDE00D6313B /* skype.jar */; };
@@ -204,7 +203,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6A9FA562024695DC0CC91562 /* OSXConnector.java in Sources */,
 				CC8E04050A5E4F7A00D6313B /* Main.java in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
