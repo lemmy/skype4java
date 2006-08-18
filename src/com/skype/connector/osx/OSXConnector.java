@@ -222,7 +222,9 @@ public final class OSXConnector extends Connector implements Runnable {
 					}
                     lockWait = false;
 				}
-				_instance.fireMessageReceived(message);
+                if (message != null) {
+                    _instance.fireMessageReceived(message);
+                }
 			}
 		}.start();
 
