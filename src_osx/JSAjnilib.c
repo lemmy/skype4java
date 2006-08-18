@@ -15,6 +15,7 @@
 Boolean THREADED = FALSE;
 Boolean debug = FALSE;
 Boolean disposed = FALSE;
+unsigned long MSG_MAX = 16000;
 
 //Global Skype declarations
 struct SkypeDelegate mySkypeDelegate;
@@ -47,9 +48,29 @@ void printDebug(char *message) {
 void SkypeNotificationReceived(CFStringRef aNotificationString){
 	printDebug("JSAjnilib.SkypeNotificationReceived() start");
 
-	const char *bytes;
-	bytes = CFStringGetCStringPtr(aNotificationString, kCFStringEncodingMacRoman);	
-	sendToJava(bytes);
+	//const char *bytes;
+	//bytes = CFStringGetCStringPtr(aNotificationString, kCFStringEncodingMacRoman);	
+	
+	//get the path as a UTF-8 C string.
+	//this is harder than Cocoa programmers expect. ;)
+	void (*freeFunc)(void *) = NULL;
+	char *msgUTF8 = CFStringGetCStringPtr(aNotificationString, kCFStringEncodingUTF8);
+	if(!msgUTF8) {
+        msgUTF8 = alloca(MSG_MAX);
+        if(msgUTF8)
+                CFStringGetCString(aNotificationString, msgUTF8, PATH_MAX, kCFStringEncodingUTF8);
+        else {
+                msgUTF8 = malloc(MSG_MAX);
+                if(!msgUTF8) {
+                        NSLog(CFSTR("Could not test the existence of %@: could not allocate %lu bytes for message (errno is %s)"), aNotificationString, (unsigned long)MSG_MAX, strerror(errno));
+                        return false;
+                } else {
+                        freeFunc = free;
+                        CFStringGetCString(aNotificationString, msgUTF8, MSG_MAX, kCFStringEncodingUTF8);
+                }
+        }
+	}
+	sendToJava(msgUTF8);
 	
 	printDebug("JSAjnilib.SkypeNotificationReceived() end");
 }
