@@ -526,18 +526,73 @@ public final class Skype {
         }
         return profile;
     }
-
+    
     /**
-     * Gets the recent chats in the locally-cached history.
+     * Gets the all chats.
      *
-     * @return The recent chats in the locally-cached history
+     * @return The all chats
      *
      * @throws SkypeException If there is a problem with the connection or state at the Skype client.
      */
-    public static Chat[] getRecentChats() throws SkypeException {
+    public static Chat[] getAllChats() throws SkypeException {
+        return getAllChats("CHATS");
+    }
+
+    /**
+     * Gets the all chats which are open in the windows.
+     *
+     * @return The all chats which are open in the windows
+     *
+     * @throws SkypeException If there is a problem with the connection or state at the Skype client.
+     */
+    public static Chat[] getAllActiveChats() throws SkypeException {
+        return getAllChats("ACTIVECHATS");
+    }
+
+    /**
+     * Gets the all chats which include unread messages
+     *
+     * @return The all chats which include unread messages
+     *
+     * @throws SkypeException If there is a problem with the connection or state at the Skype client.
+     */
+    public static Chat[] getAllMissedChats() throws SkypeException {
+        return getAllChats("MISSEDCHATS");
+    }
+
+    /**
+     * Gets the all recent chats in the locally-cached history.
+     *
+     * @return The all recent chats in the locally-cached history
+     *
+     * @throws SkypeException If there is a problem with the connection or state at the Skype client.
+     */
+    public static Chat[] getAllRecentChats() throws SkypeException {
+        return getAllChats("RECENTCHATS");
+    }
+
+    /**
+     * Gets the all bookmarked chats.
+     *
+     * @return The all bookmarked chats
+     *
+     * @throws SkypeException If there is a problem with the connection or state at the Skype client.
+     */
+    public static Chat[] getAllBookmarkedChats() throws SkypeException {
+        return getAllChats("BOOKMARKEDCHATS");
+    }
+
+    /**
+     * Gets the all chats by the type.
+     *
+     * @return The all chats by the type
+     *
+     * @throws SkypeException If there is a problem with the connection or state at the Skype client.
+     */
+    private static Chat[] getAllChats(String type) throws SkypeException {
         try {
             String responseHeader = "CHATS ";
-            String response = Connector.getInstance().execute("SEARCH RECENTCHATS", responseHeader);
+            String response = Connector.getInstance().execute("SEARCH " + type, responseHeader);
             String data = response.substring(responseHeader.length());
             String[] ids = Utils.convertToArray(data);
             Chat[] chats = new Chat[ids.length];
