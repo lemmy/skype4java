@@ -36,11 +36,11 @@ public final class SampleTest extends TestCaseByCSVFile {
         Thread.sleep(5000);
         call.finish();
 
-        String data = call.getDuration() + "," + call.getId() + "," + call.getPartnerId() + "," + call.getType();
+        String result = call.getDuration() + "," + call.getId() + "," + call.getPartnerId() + "," + call.getType();
         if (isRecordingMode()) {
-            System.out.println(data);
+            System.out.println(result);
         } else {
-            assertEquals("2,8345,echo123,OUTGOING_P2P", data);
+            assertEquals("2,8345,echo123,OUTGOING_P2P", result);
         }
     }
 }
