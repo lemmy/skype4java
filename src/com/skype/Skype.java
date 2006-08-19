@@ -11,7 +11,7 @@
  * 
  * Contributors:
  * Koji Hisano - initial API and implementation
- * Bart Lamot - good ideas for APIs and javadocs
+ * Bart Lamot - good ideas for API and initial javadoc
  ******************************************************************************/
 package com.skype;
 
@@ -19,11 +19,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.skype.connector.AbstractConnectorListener;
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
-import com.skype.connector.AbstractConnectorListener;
-import com.skype.connector.ConnectorMessageEvent;
 import com.skype.connector.ConnectorListener;
+import com.skype.connector.ConnectorMessageEvent;
 
 /**
  * Main model (not view) class of the Skype Java API.
@@ -51,6 +51,13 @@ public final class Skype {
     private static ConnectorListener callListener;
     /** Collection of all CALL listeners. */
     private static List<CallListener> callListeners = Collections.synchronizedList(new ArrayList<CallListener>());
+
+    /** voiceMailListener lock object. */
+    private static Object voiceMailListenerMutex = new Object();
+    /** VOICEMAIL listener. */
+    private static ConnectorListener voiceMailListener;
+    /** Collection of all VOICEMAIL listeners. */
+    private static List<VoiceMailListener> voiceMailListeners = Collections.synchronizedList(new ArrayList<VoiceMailListener>());
 
     /** User thread. */
     private static Thread userThread;
@@ -369,7 +376,7 @@ public final class Skype {
     private SMS[] getAllSMSs(String type) throws SkypeException {
         try {
             String command = "SEARCH " + type;
-            String responseHeader = type + " ";
+            String responseHeader = "SMSS ";
             String response = Connector.getInstance().execute(command, responseHeader);
             String data = response.substring(responseHeader.length());
             String[] ids = Utils.convertToArray(data);
@@ -390,15 +397,38 @@ public final class Skype {
      * @return The new Voicemail object.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static VoiceMail leaveVoiceMail(String skypeId) throws SkypeException {
+    public static VoiceMail voiceMail(String skypeId) throws SkypeException {
         try {
             String responseHeader = "VOICEMAIL ";
-            String response = Connector.getInstance().execute("VOICEMAIL " + skypeId, responseHeader);
+            String response = Connector.getInstance().executeWithId("VOICEMAIL " + skypeId, responseHeader);
             Utils.checkError(response);
             String id = response.substring(responseHeader.length(), response.indexOf(' ', responseHeader.length()));
             return VoiceMail.getInstance(id);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
+            return null;
+        }
+    }
+
+    /**
+     * Gets the all voice mails.
+     * @return The all voice mails
+     * @throws SkypeException If there is a problem with the connection or state at the Skype client.
+     */
+    public static VoiceMail[] getAllVoiceMails() throws SkypeException {
+        try {
+            String command = "SEARCH VOICEMAILS";
+            String responseHeader = "VOICEMAILS ";
+            String response = Connector.getInstance().execute(command, responseHeader);
+            String data = response.substring(responseHeader.length());
+            String[] ids = Utils.convertToArray(data);
+            VoiceMail[] voiceMails = new VoiceMail[ids.length];
+            for (int i = 0; i < ids.length; ++i) {
+                voiceMails[i] = VoiceMail.getInstance(ids[i]);
+            }
+            return voiceMails;
+        } catch (ConnectorException ex) {
+            Utils.convertToSkypeException(ex);
             return null;
         }
     }
@@ -591,8 +621,9 @@ public final class Skype {
      */
     private static Chat[] getAllChats(String type) throws SkypeException {
         try {
+            String command = "SEARCH " + type;
             String responseHeader = "CHATS ";
-            String response = Connector.getInstance().execute("SEARCH " + type, responseHeader);
+            String response = Connector.getInstance().execute(command, responseHeader);
             String data = response.substring(responseHeader.length());
             String[] ids = Utils.convertToArray(data);
             Chat[] chats = new Chat[ids.length];
@@ -771,6 +802,85 @@ public final class Skype {
             if (callListeners.isEmpty()) {
                 Connector.getInstance().removeConnectorListener(callListener);
                 callListener = null;
+            }
+        }
+    }
+
+    /**
+     * Adds a listener for voice mail events received from the Skype API.
+     * @param listener the added listener
+     * @throws SkypeException if connection is bad or error is returned
+     * @see VoicemaListener
+     */
+    public static void addVoiceMailListener(VoiceMailListener listener) throws SkypeException {
+        Utils.checkNotNull("listener", listener);
+        synchronized (voiceMailListenerMutex) {
+            voiceMailListeners.add(listener);
+            if (voiceMailListener == null) {
+                voiceMailListener = new AbstractConnectorListener() {
+                    public void messageReceived(ConnectorMessageEvent event) {
+                        String message = event.getMessage();
+                        if (message.startsWith("VOICEMAIL ")) {
+                            String data = message.substring("VOICEMAIL ".length());
+                            String id = data.substring(0, data.indexOf(' '));
+                            String propertyNameAndValue = data.substring(data.indexOf(' ') + 1);
+                            String propertyName = propertyNameAndValue.substring(0, propertyNameAndValue.indexOf(' '));
+                            if ("TYPE".equals(propertyName)) {
+                                String propertyValue = propertyNameAndValue.substring(propertyNameAndValue.indexOf(' ') + 1);
+                                VoiceMail.Type type = VoiceMail.Type.valueOf(propertyValue);
+                                VoiceMail voiceMail = VoiceMail.getInstance(id);
+                                VoiceMailListener[] listeners = voiceMailListeners.toArray(new VoiceMailListener[0]);
+                                switch (type) {
+                                    case OUTGOING:
+                                        for (VoiceMailListener listener : listeners) {
+                                            try {
+                                                listener.voiceMailMade(voiceMail);
+                                            } catch (Throwable e) {
+                                                handleUncaughtException(e);
+                                            }
+                                        }
+                                        break;
+                                    case INCOMING:
+                                        for (VoiceMailListener listener : listeners) {
+                                            try {
+                                                listener.voiceMailReceived(voiceMail);
+                                            } catch (Throwable e) {
+                                                handleUncaughtException(e);
+                                            }
+                                        }
+                                        break;
+                                    case DEFAULT_GREETING:
+                                    case CUSTOM_GREETING:
+                                    case UNKNOWN:
+                                    default:
+                                        // do nothing
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                };
+                try {
+                    Connector.getInstance().addConnectorListener(voiceMailListener);
+                } catch (ConnectorException e) {
+                    Utils.convertToSkypeException(e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Remove a listener for VOICEMAIL events.
+     * If listener is already removed nothing happens.
+     * @param listener The listener to add.
+     */
+    public static void removeVoiceMailListener(VoiceMailListener listener) {
+        Utils.checkNotNull("listener", listener);
+        synchronized (voiceMailListenerMutex) {
+            voiceMailListeners.remove(listener);
+            if (voiceMailListeners.isEmpty()) {
+                Connector.getInstance().removeConnectorListener(voiceMailListener);
+                voiceMailListener = null;
             }
         }
     }

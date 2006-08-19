@@ -9,19 +9,20 @@
  * and is available at http://www.eclipse.org/legal/cpl-v10.html
  * 
  * Contributors:
- * Koji Hisano - initial API and implementation
+ * Koji Hisano - initial API, implementation and changed javadoc
+ * Bart Lamot - initial javadoc
  ******************************************************************************/
 package com.skype;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Class to represent the Skype VOICEMAIL object.
+ * Class to represent the Skype VoiceMail object.
  * @see https://developer.skype.com/Docs/ApiDoc/VOICEMAIL_object
  */
 public final class VoiceMail extends SkypeObject {
-   
 	/**
      * Collection of VoiceMail objects.
      */
@@ -29,7 +30,7 @@ public final class VoiceMail extends SkypeObject {
     
     /**
      * Returns the VoiceMail object by the specified id.
-     * @param id whose associated VoiceMail object is to be returned.
+     * @param id the id whose associated VoiceMail object is to be returned.
      * @return VoiceMail object with ID == id.
      */
     static VoiceMail getInstance(final String id) {
@@ -41,23 +42,171 @@ public final class VoiceMail extends SkypeObject {
         }
     }
 
-    /** The ID of this Voicemail object. */
+    /**
+     * Enumeration of VoiceMail types.
+     */
+    public enum Type {
+        /**
+         * INCOMING - voicemail received from partner
+         * OUTGOING - voicemail sent to partner
+         * DEFAULT_GREETING - Skype default greeting from partner
+         * CUSTOM_GREETING - partner's recorded custom greeting
+         * UNKNOWN - unknown type
+         */  
+        INCOMING, OUTGOING, DEFAULT_GREETING, CUSTOM_GREETING, UNKNOWN;
+    }
+    
+    /**
+     * Enumeration of VoiceMail status types.
+     */
+    public enum Status {
+        /**
+         * NOTDOWNLOADED - voicemail is stored on server (has not been downloaded yet)
+         * DOWNLOADING - downloading from server to local machine
+         * UNPLAYED - voicemail has been downloaded but not played back yet
+         * BUFFERING - buffering for playback
+         * PLAYING - currently played back
+         * PLAYED - voicemail has been played back
+         * BLANK - intermediate status when new object is created but recording has not begun
+         * RECORDING - voicemail currently being recorded
+         * RECORDED - voicemail recorded but not yet uploaded to the server
+         * UPLOADING - voicemail object is currently being uploaded to server
+         * UPLOADED - upload to server finished but not yet deleted; object is also locally stored
+         * DELETING - pending delete
+         * FAILED - downloading voicemail/greeting failed
+         * UNKNOWN - unknown status
+         */
+        NOTDOWNLOADED, DOWNLOADING, UNPLAYED, BUFFERING, PLAYING, PLAYED, BLANK, RECORDING, RECORDED, UPLOADING, UPLOADED, DELETING, FAILED, UNKNOWN;
+    }
+    
+    /**
+     * Enumeration of VoiceMail failure reason types
+     */
+    public enum FailureReason {
+        /**
+         * MISC_ERROR
+         * CONNECT_ERROR
+         * NO_VOICEMAIL_PRIVILEGE
+         * NO_SUCH_VOICEMAIL
+         * FILE_READ_ERROR
+         * FILE_WRITE_ERROR
+         * RECORDING_ERROR
+         * PLAYBACK_ERROR
+         * UNKNOWN
+         */
+        MISC_ERROR, CONNECT_ERROR, NO_VOICEMAIL_PRIVILEGE, NO_SUCH_VOICEMAIL, FILE_READ_ERROR, FILE_WRITE_ERROR, RECORDING_ERROR, PLAYBACK_ERROR, UNKNOWN;
+    }
+
+    /** The ID of this VoiceMail object. */
     private final String id;
 
     /**
      * Constructor.
-     * Use getInstance.
-     * @param newId the ID of this voicemail.
+     * @param newId the ID of new VoiceMail object
+     * @see VoiceMail#getInstance(String)
      */
     private VoiceMail(String newId) {
         this.id = newId;
     }
 
     /**
-     * Return the ID of the VOICEMAIL object.
-     * @return ID.
+     * Returns the ID of this VoiceMail object.
+     * @return the ID of this VoiceMail object
      */
     public String getId() {
         return id;
+    }
+
+    /**
+     * Returns the type of this VoiceMail object.
+     * @return call the type of this VoiceMail object
+     * @throws SkypeException if the connection is bad
+     */
+    public Type getType() throws SkypeException {
+        // call Utils#getPropertyWithCommandId(String, String, String) to prevent new event notification
+        return Type.valueOf(Utils.getPropertyWithCommandId("VOICEMAIL", getId(), "TYPE"));
+    }
+
+    /**
+     * Returns the Skype user who is the partner in this voice mail.
+     * @return the partner Skype user
+     * @throws SkypeException if the connection is bad
+     */
+    public User getPartner() throws SkypeException {
+        return User.getInstance(getPartnerId());
+    }
+
+    /**
+     * Returns the Skype ID who is the partner in this voice mail.
+     * @return the partner Skype user
+     * @throws SkypeException if the connection is bad
+     */
+    public String getPartnerId() throws SkypeException {
+        return getProperty("PARTNER_HANDLE");
+    }
+
+    /**
+     * Returns the display name of the Skype user who is the partner in this voice mail.
+     * @return the diplay name of the partner Skype user
+     * @throws SkypeException if the connection is bad
+     */
+    public String getPartnerDisplayName() throws SkypeException {
+        return getProperty("PARTNER_DISPNAME");
+    }
+
+    /**
+     * Returns the current status of this VoiceMail object.
+     * @return the current status of this VoiceMail object
+     * @throws SkypeException if connection is bad
+     */
+    public Status getStatus() throws SkypeException {
+        // call Utils#getPropertyWithCommandId(String, String, String) to prevent new event notification
+        return Status.valueOf(Utils.getPropertyWithCommandId("VOICEMAIL", getId(), "STATUS"));
+    }
+
+    /**
+     * Returns the failure reason of this VoiceMail object.
+     * @return the failure reason of this VoiceMail object
+     * @throws SkypeException if connection is bad
+     */
+    public FailureReason getFailureReason() throws SkypeException {
+        return FailureReason.valueOf(getProperty("FAILUREREASON"));
+    }
+
+    /**
+     * Returns the start time of this VoiceMail object.
+     * @return the start time of this VoiceMail object
+     * @throws SkypeException if connection is bad
+     */
+    public Date getStartTime() throws SkypeException {
+        return Utils.parseUnixTime(getProperty("TIMESTAMP"));
+    }
+
+    /**
+     * Returns the duration of this VoiceMail object in seconds.
+     * @return the duration of this VoiceMail object
+     * @throws SkypeException if connection is bad
+     */
+    public int getDuration() throws SkypeException {
+        return Integer.parseInt(getProperty("DURATION"));
+    }
+
+    /**
+     * Returns the maximum duration of this VoiceMail object in seconds allowed to leave to partner.
+     * @return the maximum duration of this VoiceMail object
+     * @throws SkypeException if connection is bad
+     */
+    public int getAllowedDuration() throws SkypeException {
+        return Integer.parseInt(getProperty("ALLOWED_DURATION"));
+    }
+
+    /**
+     * Returns the property of this VoiceMail object spcified by the name.
+     * @param name the property name
+     * @return The value of the property
+     * @throws SkypeException if the connection is bad
+     */
+    private String getProperty(final String name) throws SkypeException {
+        return Utils.getProperty("VOICEMAIL", getId(), name);
     }
 }

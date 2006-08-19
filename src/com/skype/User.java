@@ -369,8 +369,8 @@ public class User extends SkypeObject {
      * @return new VoiceMail object.
      * @throws SkypeException when connection to Skype client has gone bad.
      */
-    public final VoiceMail leaveVoiceMail() throws SkypeException {
-        return Skype.leaveVoiceMail(getId());
+    public final VoiceMail voiceMail() throws SkypeException {
+        return Skype.voiceMail(getId());
     }
 
     /**
