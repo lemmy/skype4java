@@ -156,10 +156,10 @@ public final class TestConnector extends Connector {
                                     }
                                     break;
                                 case RECEIVED:
-                                    long period = System.currentTimeMillis() - startTime - message.getTime(); 
-                                    if (0 < period) {
+                                    long period = System.currentTimeMillis() - startTime - message.getTime();
+                                    if (period < 0) {
                                         try {
-                                            Thread.sleep(period);
+                                            Thread.sleep(-period);
                                         } catch(InterruptedException e) {
                                             if (playerCleared) {
                                                 return;
