@@ -13,6 +13,10 @@
  ******************************************************************************/
 package com.skype;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.skype.VoiceMail.Status;
 import com.skype.connector.test.TestCaseByCSVFile;
 
 public class AutoVoiceMailAPITest extends TestCaseByCSVFile {
@@ -50,6 +54,31 @@ public class AutoVoiceMailAPITest extends TestCaseByCSVFile {
             System.out.println(result);
         } else {
             assertEquals("2346, OUTGOING, echo123, Skype Test Call, 1156016035000, 0, 600", result);
+        }
+    }
+    
+    public void testVoiceMailStatusChangedListener() throws Exception {
+        VoiceMail voiceMail = Skype.voiceMail("echo123");
+        final List<Status> statuses = new ArrayList<Status>();
+        final Object wait = new Object();
+        voiceMail.addVoiceMailStatusChangedListener(new VoiceMailStatusChangedListener() {
+            public void statusChanged(Status status) throws SkypeException {
+                statuses.add(status);
+                if (status == Status.UPLOADED) {
+                    synchronized(wait) {
+                        wait.notify();
+                    }
+                }
+            }
+        });
+        synchronized(wait) {
+            wait.wait();
+        }
+        String result = statuses.toString();
+        if (isRecordingMode()) {
+            System.out.println(result);
+        } else {
+            assertEquals("[BLANK, RECORDING, UPLOADING, UPLOADED]", result);
         }
     }
 }

@@ -14,9 +14,18 @@
  ******************************************************************************/
 package com.skype;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import com.skype.connector.AbstractConnectorListener;
+import com.skype.connector.Connector;
+import com.skype.connector.ConnectorException;
+import com.skype.connector.ConnectorListener;
+import com.skype.connector.ConnectorMessageEvent;
 
 /**
  * Class to represent the Skype VoiceMail object.
@@ -27,6 +36,16 @@ public final class VoiceMail extends SkypeObject {
      * Collection of VoiceMail objects.
      */
     private static final Map<String, VoiceMail> voiceMails = new HashMap<String, VoiceMail>();
+
+    /**
+     * Mutex of voiceMailStatusChangedListener.
+     */
+    private static final Object voiceMailStatusChangedListenerFieldMutex = new Object();
+
+    /**
+     * Main VoiceMailStatusChangedListener handler.
+     */
+    private static ConnectorListener voiceMailStatusChangedListener;
     
     /**
      * Returns the VoiceMail object by the specified id.
@@ -101,6 +120,21 @@ public final class VoiceMail extends SkypeObject {
     private final String id;
 
     /**
+     * List of listeners for status changed event.
+     */
+    private final List<VoiceMailStatusChangedListener> listeners = Collections.synchronizedList(new ArrayList<VoiceMailStatusChangedListener>());
+    
+    /**
+     * Previous status.
+     */
+    private Status oldStatus;
+
+    /**
+     * Exception handler.
+     */
+    private SkypeExceptionHandler exceptionHandler;
+
+    /**
      * Constructor.
      * @param newId the ID of new VoiceMail object
      * @see VoiceMail#getInstance(String)
@@ -110,11 +144,105 @@ public final class VoiceMail extends SkypeObject {
     }
 
     /**
+     * Returns the hash code value for this VoiceMail object.
+     * The VoiceMail ID is used as the hash code.
+     * @return the hashcode
+     */
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    /**
+     * Indicates whether some other object is "equal to" this VoiceMail object.
+     * VoiceMail IDs are used for equalness checking.
+     * @param compared the object to compare to.
+     * @return  <code>true</code> if this VoiceMail object is the same as the compared argument; <code>false</code> otherwise.
+     */
+    public boolean equals(final Object compared) {
+        if (compared instanceof VoiceMail) {
+            return id.equals(((VoiceMail)compared).id);
+        }
+        return false;
+    }
+
+    /**
      * Returns the ID of this VoiceMail object.
      * @return the ID of this VoiceMail object
      */
     public String getId() {
         return id;
+    }
+    
+    /**
+     * Adds a listener for the status changed event.
+     * The listener will be triggered every time the status of this VoiceMail object is changed.
+     * @param listener the listener to be added
+     * @throws SkypeException 
+     */
+    public void addVoiceMailStatusChangedListener(final VoiceMailStatusChangedListener listener) throws SkypeException {
+        Utils.checkNotNull("listener", listener);
+        synchronized(voiceMailStatusChangedListenerFieldMutex) {
+            listeners.add(listener);
+            if (voiceMailStatusChangedListener == null) {
+                voiceMailStatusChangedListener = new AbstractConnectorListener() {
+                    public void messageReceived(ConnectorMessageEvent event) {
+                        String message = event.getMessage();
+                        if (message.startsWith("VOICEMAIL ")) {
+                            String data = message.substring("VOICEMAIL ".length());
+                            String id = data.substring(0, data.indexOf(' '));
+                            String propertyNameAndValue = data.substring(data.indexOf(' ') + 1);
+                            String propertyName = propertyNameAndValue.substring(0, propertyNameAndValue.indexOf(' '));
+                            if("STATUS".equals(propertyName)) {
+                                VoiceMail voiceMail = VoiceMail.getInstance(id);
+                                String propertyValue = propertyNameAndValue.substring(propertyNameAndValue.indexOf(' ') + 1);
+                                VoiceMail.Status status = VoiceMail.Status.valueOf(propertyValue);
+                                voiceMail.fireStatusChanged(status);
+                            }
+                        }
+                    }
+                };
+                try {
+                    Connector.getInstance().addConnectorListener(voiceMailStatusChangedListener);
+                } catch (ConnectorException e) {
+                    Utils.convertToSkypeException(e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Removes a listener for the status changed event.
+     * If the listener is already removed, nothing happens.
+     * @param listener the listener to be removed
+     */
+    public void removeVoiceMailStatusChangedListener(final VoiceMailStatusChangedListener listener) {
+        Utils.checkNotNull("listener", listener);
+        synchronized(voiceMailStatusChangedListenerFieldMutex) {
+            listeners.remove(listener);
+            if (listeners.isEmpty()) {
+                Connector.getInstance().removeConnectorListener(voiceMailStatusChangedListener);
+                voiceMailStatusChangedListener = null;
+            }
+        }
+    }
+
+    /**
+     * Notifies the status changed event of all listeners.
+     * @param status the new status
+     */
+    private void fireStatusChanged(final Status status) {
+        VoiceMailStatusChangedListener[] listeners = this.listeners.toArray(new VoiceMailStatusChangedListener[0]);
+        if (status == oldStatus) {
+            return;
+        }
+        oldStatus = status;
+        for (VoiceMailStatusChangedListener listener : listeners) {
+            try {
+                listener.statusChanged(status);
+            } catch (Throwable e) {
+                Utils.handleUncaughtException(e, exceptionHandler);
+            }
+        }
     }
 
     /**
