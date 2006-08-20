@@ -186,7 +186,6 @@ public final class Call extends SkypeObject {
         return id;
     }
 
-
     /**
      * Add a listener for the Status field.
      * The listener will be triggered every time the status of this CALL object is changed.
@@ -208,16 +207,16 @@ public final class Call extends SkypeObject {
     }
 
     /**
-     * Trigger all Statuslisteners because the status of this CALL object has changed.
+     * Trigger all Status listeners because the status of this CALL object has changed.
      * @param status the new status.
      */
     void fireStatusChanged(final Status status) {
-        CallStatusChangedListener[] cscListeners = this.listeners.toArray(new CallStatusChangedListener[0]); // イベント通知中にリストが変更される可能性があるため
+        CallStatusChangedListener[] listeners = this.listeners.toArray(new CallStatusChangedListener[0]);
         if (status == oldStatus) {
             return;
         }
         oldStatus = status;
-        for (CallStatusChangedListener listener : cscListeners) {
+        for (CallStatusChangedListener listener : listeners) {
             try {
                 listener.statusChanged(status);
             } catch (Throwable e) {
