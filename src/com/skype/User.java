@@ -310,6 +310,15 @@ public class User extends SkypeObject {
     }
 
     /**
+     * Return the mood message of this user.
+     * @return the mood message of this user.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public String getMoodMessage() throws SkypeException {
+        return getProperty("MOOD_TEXT");
+    }
+
+    /**
      * Return the displayname of this User.
      * @return String with displayname.
      * @throws SkypeException when connection to Skype client has gone bad.
