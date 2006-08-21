@@ -337,4 +337,110 @@ public final class VoiceMail extends SkypeObject {
     private String getProperty(final String name) throws SkypeException {
         return Utils.getProperty("VOICEMAIL", getId(), name);
     }
+    
+    /**
+     * Starts the playback of this VoiceMail object.
+     * @throws SkypeException if the connection is bad
+     */
+    public void startPlayback() throws SkypeException {
+        Utils.executeWithErrorCheck("ALTER VOICEMAIL " + getId() + " " + "STARTPLAYBACK");
+    }
+    
+    /**
+     * Stops the playback of this VoiceMail object.
+     * @throws SkypeException if the connection is bad
+     */
+    public void stopPlayback() throws SkypeException {
+        Utils.executeWithErrorCheck("ALTER VOICEMAIL " + getId() + " " + "STOPPLAYBACK");
+    }
+    
+    /**
+     * Uploads the playback of this VoiceMail object.
+     * @throws SkypeException if the connection is bad
+     */
+    public void upload() throws SkypeException {
+        Utils.executeWithErrorCheck("ALTER VOICEMAIL " + getId() + " " + "UPLOAD");
+    }
+    
+    /**
+     * Downloads the playback of this VoiceMail object.
+     * @throws SkypeException if the connection is bad
+     */
+    public void download() throws SkypeException {
+        Utils.executeWithErrorCheck("ALTER VOICEMAIL " + getId() + " " + "DOWNLOAD");
+    }
+    
+    /**
+     * Starts the recording of this VoiceMail object.
+     * @throws SkypeException if the connection is bad
+     */
+    public void startRecording() throws SkypeException {
+        Utils.executeWithErrorCheck("ALTER VOICEMAIL " + getId() + " " + "STARTRECORDING");
+    }
+    
+    /**
+     * Stops the recording of this VoiceMail object.
+     * @throws SkypeException if the connection is bad
+     */
+    public void stopRecording() throws SkypeException {
+        Utils.executeWithErrorCheck("ALTER VOICEMAIL " + getId() + " " + "STOPRECORDING");
+    }
+    
+    /**
+     * Deletes this VoiceMail object.
+     * @throws SkypeException if the connection is bad
+     */
+    public void dispose() throws SkypeException {
+        Utils.executeWithErrorCheck("ALTER VOICEMAIL " + getId() + " " + "DELETE");
+    }
+    
+    /**
+     * Opens the Skype window and starts playing this VoiceMail object.
+     * @throws SkypeException if the connection is bad
+     */
+    public void openAndStartPlayback() throws SkypeException {
+        Utils.executeWithErrorCheck("OPEN VOICEMAIL " + getId());
+    }
+
+    /**
+     * Waits for finishing.
+     * @throws IllegalStateException if the type is not outgoing
+     * @throws SkypeException if the connection is bad
+     */
+    public void waitForFinishing() throws SkypeException {
+        if (getType() != Type.OUTGOING) {
+            throw new IllegalStateException("The type must be outgoing.");
+        }
+        final Object wait = new Object();
+        VoiceMailStatusChangedListener listener = new VoiceMailStatusChangedListener() {
+            public void statusChanged(Status status) throws SkypeException {
+                synchronized(wait) {
+                    switch (status) {
+                        case UPLOADED:
+                        case UNKNOWN:
+                        case FAILED:
+                            wait.notify();
+                            break;
+                    }
+                }
+            }
+        };
+        synchronized(wait) {
+            switch (getStatus()) {
+                case UPLOADED:
+                case UNKNOWN:
+                case FAILED:
+                    break;
+                default:
+                    addVoiceMailStatusChangedListener(listener);
+                    try {
+                        wait.wait();
+                    } catch(InterruptedException e) {
+                        // do nothing
+                    }
+                    removeVoiceMailStatusChangedListener(listener);
+                    break;
+            }
+        }
+    }
 }
