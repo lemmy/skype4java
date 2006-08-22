@@ -2,7 +2,7 @@ NODEBUG=1
 
 !include <Win32.Mak>
 
-TARGET = JNIConnnector.dll
+TARGET = JNIConnector.dll
 
 OBJS = Win32Connector.obj
 

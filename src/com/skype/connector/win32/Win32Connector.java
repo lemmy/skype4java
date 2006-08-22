@@ -41,7 +41,7 @@ public final class Win32Connector extends Connector {
     /** Status ATTACH_API_AVAILABLE value. */
     private static final int ATTACH_API_AVAILABLE = 0x8001;
     /** Filename of the DLL. */
-    private static final String LIBFILENAME = "JNIConnnector.dll";
+    private static final String LIBFILENAME = "JNIConnector.dll";
     
     /** Singleton instance. */
     private static Win32Connector myInstance_ = null;
@@ -82,7 +82,7 @@ public final class Win32Connector extends Connector {
     protected void initialize(int timeout) {
         // Loading DLL
     	try {
-    		System.loadLibrary("JNIConnnector");
+    		System.loadLibrary("JNIConnector");
     	} catch (Throwable e) {
     		if (!ConnectorUtils.checkLibraryInPath(LIBFILENAME)) {
 	    		ConnectorUtils.extractFromJarToTemp(LIBFILENAME);   	    		
