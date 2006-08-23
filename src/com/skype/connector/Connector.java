@@ -58,6 +58,19 @@ public abstract class Connector {
     }
 
     /**
+     * This method checks if SWT is available in the classpath.
+     * @return true if SWT is found.
+     */
+    private static boolean isSWTAvailable() {
+            try {
+                Class swt = Class.forName("org.eclipse.swt.SWT");
+            } catch(ClassNotFoundException e) {
+                return false;
+            }
+        return true;
+    }
+    
+    /**
      * Initialize a platform specific connection.
      * This method will select a connector based on the os.name.
      * Windows has two versions see useJNIConnector.
@@ -67,6 +80,9 @@ public abstract class Connector {
         if (instance == null) {
             String osName = System.getProperty("os.name");
             String connectorClassName = null;
+            if (!useJNIConnector && !isSWTAvailable()) {
+                useJNIConnector = true;
+            }
             if (osName.startsWith("Windows")) {
             	//Todo: add a check to see if swt is in the classpath, if not use the other connector.
                 if (useJNIConnector) {
