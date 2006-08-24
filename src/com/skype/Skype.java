@@ -175,7 +175,7 @@ public final class Skype {
      * @return The started Call.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static Call call(String[] skypeIds) throws SkypeException {
+    public static Call call(String... skypeIds) throws SkypeException {
         Utils.checkNotNull("skypeIds", skypeIds);
         return call(Utils.convertToCommaSeparatedString(skypeIds));
     }
