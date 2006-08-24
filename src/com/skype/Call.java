@@ -109,6 +109,27 @@ public final class Call extends SkypeObject {
     	 */
         NOT_AVAILABLE, AVAILABLE, STARTING, REJECTED, RUNNING, STOPPING, PAUSED
     }
+    
+    /**
+     * Enumeration of DTMF types.
+     */
+    public enum DTMF {
+        TYPE_0, TYPE_1, TYPE_2, TYPE_3, TYPE_4, TYPE_5, TYPE_6, TYPE_7, TYPE_8, TYPE_9, TYPE_SHARP('#'), TYPE_ASTERISK('*');
+        
+        private final char type;
+        
+        DTMF() {
+            type = name().charAt("TYPE_".length());
+        }
+        
+        DTMF(char type) {
+            this.type = type;
+        }
+        
+        char getType() {
+            return type;
+        }
+    }
 
     /**
      * Enumeration of video enabled status types.
@@ -284,13 +305,23 @@ public final class Call extends SkypeObject {
      * @throws SkypeException when connection is bad.
      */
     public void forward() throws SkypeException {
-        try {
-            Connector.getInstance().setDebug(true);
-            String response = Connector.getInstance().execute("ALTER CALL " + getId() + " END FORWARD_CALL");
-            Utils.checkError(response);
-        } catch (ConnectorException e) {
-            Utils.convertToSkypeException(e);
-        }
+        Utils.executeWithErrorCheck("ALTER CALL " + getId() + " END FORWARD_CALL");
+    }
+    
+    /**
+     * Redirect a ringing CALL to a voice mail.
+     * @throws SkypeException when connection is bad.
+     */
+    public void redirectToVoiceMail() throws SkypeException {
+        Utils.executeWithErrorCheck("ALTER CALL " + getId() + " END FORWARD_CALL");
+    }
+    
+    /**
+     * Send a DTMF command.
+     * @throws SkypeException when connection is bad.
+     */
+    public void send(DTMF command) throws SkypeException {
+        Utils.executeWithErrorCheck("SET CALL " + getId() + " DTMF " + command.getType());
     }
 
     /**
@@ -450,6 +481,19 @@ public final class Call extends SkypeObject {
      */
     public VideoStatus getSendVideoStatus() throws SkypeException {
         return VideoStatus.valueOf(getProperty("VIDEO_SEND_STATUS"));
+    }
+    
+    /**
+     * Return the conference ID of this CALL.
+     * @return The conference ID
+     * @throws SkypeException when connection is bad.
+     */
+    public String getConferenceId() throws SkypeException {
+        return getProperty("CONF_ID");
+    }
+    
+    public String getParticipantsCount() throws SkypeException {
+        return getProperty("CONF_PARTICIPANTS_COUNT");
     }
 
     /**
