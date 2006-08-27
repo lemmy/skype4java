@@ -63,7 +63,7 @@ public abstract class Connector {
      */
     private static boolean isSWTAvailable() {
             try {
-                Class swt = Class.forName("org.eclipse.swt.SWT");
+                Class.forName("org.eclipse.swt.SWT");
             } catch(ClassNotFoundException e) {
                 return false;
             }
