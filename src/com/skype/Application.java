@@ -425,7 +425,7 @@ public final class Application extends SkypeObject {
                     }
                 }
             } catch(Exception e) {
-                throw new IllegalStateException("can't handle data", e);
+                Utils.handleUncaughtException(e, exceptionHandler);
             }
         }
 
