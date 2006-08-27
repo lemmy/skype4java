@@ -17,11 +17,10 @@ package com.skype.connector;
  * This event will be raised when the connector instance has a change in status.
  */
 public final class ConnectorStatusEvent extends ConnectorEvent {
-	
     /**
 	 * Needed for serialisation.
 	 */
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -7285732323922562464L;
 	
 	/**
 	 * The new status that caused this event.

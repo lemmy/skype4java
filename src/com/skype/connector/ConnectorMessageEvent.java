@@ -17,11 +17,10 @@ package com.skype.connector;
  * Event object a connector will use when it fires a message received or sent event.
  */
 public final class ConnectorMessageEvent extends ConnectorEvent {
-	
     /**
 	 * Needed for serialisation.
 	 */
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -8610258526127376241L;
 	
 	/**
 	 * The message that triggered the event.

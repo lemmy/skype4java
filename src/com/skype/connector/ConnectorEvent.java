@@ -23,7 +23,7 @@ class ConnectorEvent extends EventObject {
     /**
 	 * Needed for all serialization classes. 
 	 */
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -4743437008394579910L;
 	
 	/** Time. */
 	private final long time;

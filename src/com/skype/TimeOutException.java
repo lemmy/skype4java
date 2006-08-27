@@ -20,7 +20,7 @@ public class TimeOutException extends SkypeException {
     /**
 	 * serialVersionUID needed for serialisation.
 	 */
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -5760422025501667771L;
 
 	/**
 	 * Constructor.
