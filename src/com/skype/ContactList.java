@@ -53,6 +53,29 @@ public final class ContactList {
     }
 
     /**
+     * Get all users waiting for AUTHORIZATION.
+     * @return array of users.
+     * @throws SkypeException when the connection has gone bad.
+     */
+    public Friend[] getAllUserWaitingForAuthorization() throws SkypeException {
+        try {
+            String responseHeader = "USERS ";
+            String response = Connector.getInstance().execute("SEARCH USERSWAITINGMYAUTHORIZATION", responseHeader);
+            Utils.checkError(response);
+            String data = response.substring(responseHeader.length());
+            String[] ids = Utils.convertToArray(data);
+            Friend[] users = new Friend[ids.length];
+            for (int i = 0; i < ids.length; i++) {
+                users[i] = User.getFriendInstance(ids[i]);
+            }
+            return users;
+        } catch (ConnectorException e) {
+            Utils.convertToSkypeException(e);
+            return null;
+        }
+    }
+    
+    /**
      * Get the Friend object for one of the authorized users.
      * @param skypeId Skype ID of the friend.
      * @return the friend or null if friend isn't found.
