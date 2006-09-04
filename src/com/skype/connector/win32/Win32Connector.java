@@ -85,8 +85,12 @@ public final class Win32Connector extends Connector {
     		System.loadLibrary("JNIConnector");
     	} catch (Throwable e) {
     		if (!ConnectorUtils.checkLibraryInPath(LIBFILENAME)) {
-	    		ConnectorUtils.extractFromJarToTemp(LIBFILENAME);   	    		
-	    		System.load(System.getProperty("java.io.tmpdir")+File.separatorChar+LIBFILENAME);
+	    		ConnectorUtils.extractFromJarToTemp(LIBFILENAME);
+                String tmpDir = System.getProperty("java.io.tmpdir");
+                if (! tmpDir.endsWith(""+File.separatorChar)) {
+                    tmpDir = tmpDir+File.separatorChar;
+                }
+	    		System.load(tmpDir+LIBFILENAME);
 			}
     	}
         // Initializing JNI
