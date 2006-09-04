@@ -330,11 +330,35 @@ public class User extends SkypeObject {
     /**
      * Check if this User has a Skype client that can do video chats.
      * @return true if User can do videochats.
+     * @throws SkypeException when connection to Skype client has gone bad. 
      */
-    public final boolean isVideoCapable() {
-        return Boolean.parseBoolean("IS_VIDEO_CAPABLE");
+    public final boolean isVideoCapable() throws SkypeException {
+        return Boolean.parseBoolean(getProperty("IS_VIDEO_CAPABLE"));
     }
 
+    /**
+     * Check if this User is authorized in your contactlist.
+     * @return true if User is authorized.
+     * @throws SkypeException when connection to Skype client has gone bad. 
+     */
+    public final boolean isAuthorized() throws SkypeException {
+        return Boolean.parseBoolean(getProperty("ISAUTHORIZED"));
+    }
+    
+    /**
+     * Set the authorization of this user.
+     * @param authorized TRUE will authorize the user.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final void setAuthorized(boolean authorized) throws SkypeException {
+        if (authorized) {
+            getProperty("ISAUTHORIZED TRUE");
+        } else {
+            getProperty("ISAUTHORIZED FALSE");
+        }
+        
+    }
+    
     /**
      * Method used by other methods to retrieve a property value from Skype client.
      * @param name name of the property.
