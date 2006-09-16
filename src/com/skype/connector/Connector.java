@@ -17,6 +17,10 @@ package com.skype.connector;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.event.EventListenerList;
 
@@ -152,10 +156,12 @@ public abstract class Connector {
 
     /** Command counter, can be used to identify message and reply pairs. */
     private int commandCount;
+    
+    /** Thread pooled executor */
+    private ExecutorService executor = new ThreadPoolExecutor(2, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
 
     /**
      * Because this object should be a singleton the constructor is protected.
-     *
      */
     protected Connector() {
     }
@@ -608,7 +614,7 @@ public abstract class Connector {
      */
     protected final void fireMessageReceived(final String message) {
         ConnectorUtils.checkNotNull("message", message);
-        new Thread("MessageSender") {
+        executor.execute(new Runnable() {
             public void run() {
                 ConnectorListener[] fireListeners = Connector.this.listeners.getListeners(ConnectorListener.class);
                 if (fireListeners.length == 0) {
@@ -618,8 +624,8 @@ public abstract class Connector {
                 for (int i = fireListeners.length - 1; 0 <= i; i--) {
                     fireListeners[i].messageReceived(event);
                 }
-            };
-        }.start();
+            }
+        });
     }
 
     /**
@@ -628,7 +634,7 @@ public abstract class Connector {
      */
     protected final void fireStatusChanged(final Status newStatus) {
         ConnectorUtils.checkNotNull("status", newStatus);
-        new Thread("StatusSender") {
+        executor.execute(new Runnable() {
             public void run() {
                 ConnectorListener[] fireListeners = Connector.this.listeners.getListeners(ConnectorListener.class);
                 if (fireListeners.length == 0) {
@@ -639,6 +645,6 @@ public abstract class Connector {
                     fireListeners[i].statusChanged(event);
                 }
             };
-        }.start();
+        });
     }
 }
