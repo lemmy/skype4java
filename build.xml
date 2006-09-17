@@ -37,8 +37,8 @@
     	<copy todir="${build.dir}/osx">
     		<fileset dir="${lib.dir}/osx"/>
     	</copy>
-    	<copy todir="${build.dir}/win32">
-    		<fileset dir="${lib.dir}/win32"/>
+    	<copy todir="${build.dir}/linux">
+    		<fileset dir="${lib.dir}/linux"/>
     	</copy>
     	<copy todir="${build.dir}/win32">
     		<fileset dir="${lib.dir}/win32"/>
