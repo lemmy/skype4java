@@ -31,7 +31,6 @@ import java.util.zip.ZipInputStream;
  * Generic helper methods for all connectors.
  */
 public final class ConnectorUtils {
-	
 	/**
 	 * Check an object if its not null.
 	 * If it is a NullPointerException will be thrown.
@@ -228,7 +227,7 @@ public final class ConnectorUtils {
 	 * Return the extended library path on which the JVM looks for lib files.
 	 * @return String with extended lib path.
 	 */
-    protected static String getLibrarySearchPath() {
+    private static String getLibrarySearchPath() {
     	return System.getProperty("java.library.path")+File.pathSeparatorChar+System.getProperty("user.dir")+File.pathSeparatorChar;
     }
     
@@ -237,7 +236,7 @@ public final class ConnectorUtils {
      * It adds the jar files in the application directory, even when not set in the classpath.
      * @return String with extended lib path.
      */
-    protected static String getExtendedClasspath() {
+    private static String getExtendedClasspath() {
         String classpath = System.getProperty("java.class.path")+File.pathSeparatorChar;
         String userDirStr = System.getProperty("user.dir");
         File userDir = new File(userDirStr);
