@@ -1,6 +1,8 @@
 package com.skype.connector.osx;
 
 import java.io.File;
+import java.lang.reflect.Method;
+
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorUtils;
 
@@ -175,6 +177,19 @@ public final class OSXConnector extends Connector implements Runnable {
 		return getStatus();
 	}
 
+   /**
+     * This method checks if SWT is available in the classpath.
+     * @return true if SWT is found.
+     */
+    private static boolean isSWTAvailable() {
+            try {
+                Class.forName("org.eclipse.swt.SWT");
+            } catch(ClassNotFoundException e) {
+                return false;
+            }
+        return true;
+    }
+    
 	/**
 	 * Initialize the connection to Skype API.
 	 * 
@@ -187,8 +202,31 @@ public final class OSXConnector extends Connector implements Runnable {
 		// start ***************").toString());
 		if (!inited) {
 			inited = true;
-			(new Thread(this)).start();
-			setStatus(com.skype.connector.Connector.Status.PENDING_AUTHORIZATION);
+            //Check if SWT is being used, if not just run the thread, else run it SWT like.
+			if (isSWTAvailable()) {
+                // The next line is the actual line needed for SWT to start the Thread.
+                //Display.getCurrent().asyncExec(this);
+                //But I don't want SWT in the import statements and in the classpath I will need this whole reflection part.
+                try {
+                    Class displayClass = Class.forName("org.eclipse.swt.widgets.Display");
+                    Method getCurrentMethod = displayClass.getMethod("getCurrent", null);
+                    Class[] params = new Class[1];                    
+                    params[0] = Class.forName("java.lang.Runnable");                    
+                    Method asyncExecMethod = displayClass.getMethod("asyncExec", params);
+                    Object display = getCurrentMethod.invoke(null, null);
+                    Object[] args = new Object[1];
+                    args[0] = this;
+                    asyncExecMethod.invoke(display, args);
+                } catch(Throwable e) {
+                    //Something went wrong in the fragile reflection, now just try to start the thread the normal way.
+                    //display can be null if SWT is found but not used.
+                    (new Thread(this)).start();
+                }
+            } else {
+                (new Thread(this)).start();
+            }
+			
+            setStatus(com.skype.connector.Connector.Status.PENDING_AUTHORIZATION);
 			fireMessageReceived("ConnectorStatusChanged");
 			setDebugPrinting(false);
 			init(getApplicationName());
