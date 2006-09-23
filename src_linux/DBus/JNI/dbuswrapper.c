@@ -33,6 +33,7 @@ DBusWatch      *g_watch = NULL;
   * Called when a watch is added to this connection.
   **/
   dbus_bool_t dbusAddWatchFunction( DBusWatch *watch, void *data ){
+     (void) data;
      g_watch = watch;
      return TRUE;
  }
@@ -42,6 +43,8 @@ DBusWatch      *g_watch = NULL;
   * Called when a watch is removed from this connection.
   **/
  void dbusRemoveWatchFunction( DBusWatch *watch, void *data ){
+     (void) watch;
+     (void) data;
  }
  
  /**
@@ -49,6 +52,8 @@ DBusWatch      *g_watch = NULL;
   * Called when a watch is toggled.
   **/
  void dbusWatchToggleFunction( DBusWatch *watch, void *data ){
+     (void) watch;
+     (void) data;
  }
 
  /**
@@ -56,6 +61,7 @@ DBusWatch      *g_watch = NULL;
   * Called when memory is freed.
   **/
  void dbusFreeFunction( void *memory ){
+     (void) memory;
  }
 
  /**
@@ -63,6 +69,8 @@ DBusWatch      *g_watch = NULL;
   * Called when a handler is unregistred.
   **/
  static void nm_unregister_handler( DBusConnection * connection, void *user_data ){
+     (void) connection;
+     (void) user_data;
  }
 
  /**
@@ -72,7 +80,7 @@ DBusWatch      *g_watch = NULL;
  static DBusHandlerResult nm_message_handler(
              DBusConnection * connection, DBusMessage * message, void *user_data )
  {
- 
+     (void) user_data; 
      DBusMessage *tmpmsg;
      DBusMessageIter iter;
      //API Message pointer.
@@ -107,7 +115,7 @@ DBusWatch      *g_watch = NULL;
   * Function called by the javawrapper to initialize the DBus connection.
   * Returns the Status value.
   **/
- int initSkypeConnection() {
+ int dbusInitSkypeConnection() {
      DBusError error;
      dbus_error_init (&error);
      //Connect to DBus
@@ -152,10 +160,39 @@ DBusWatch      *g_watch = NULL;
 	return 0;
 }
 
+/**
+ * Detect Skype on DBus.
+ * Returns 0 when Skype is not found.
+ * Returns 1 when Skype is found.
+**/
+int dbusDetectSkype() {
+     DBusError error;
+     dbus_error_init (&error);
+     //Connect to DBus
+     connection = dbus_bus_get (DBUS_BUS_SESSION, &error);
+     if (connection == NULL){
+        dbus_error_free (&error);
+        return 0;
+     }
+     //Test if the service is around....
+     //Service can be on SYSTEM bus if there is no SESSION bus.
+     if (!dbus_bus_service_exists(connection,"com.Skype.API",&error)) {
+       connection = dbus_bus_get (DBUS_BUS_SYSTEM, &error);
+       if (connection == NULL){
+         dbus_error_free (&error);
+         return 0;
+       }
+       if (!dbus_bus_service_exists(connection,"com.Skype.API",&error)) {
+	 return 0;
+       }
+     }
+     return 1;
+}
+
  /**********************************
   * Stops the main loop and kills the DBus connection
   **********************************/
- void stopMainloop() {
+ void dbusStopMainloop() {
  	runmainloopBool = 1; 
 	// Current DBus documentation says that disconnect is deprecated, but version .22 doesn't support close() yet.
 	//dbus_connection_close(connection);
@@ -167,8 +204,9 @@ DBusWatch      *g_watch = NULL;
   * By using select() we just wait for a flag on the Connection file descriptor.
   * 
   **********************************/
- void *mainloop(void *args) {
-	//SELECT preparations
+ void *dbusMainloop(void *args) {
+       (void) args;	
+       //SELECT preparations
 	fd_set rfds;
 	int retval=-1;
         FD_ZERO(&rfds);
@@ -207,9 +245,9 @@ DBusWatch      *g_watch = NULL;
   *  those methods shouldn't know anything about Connection.
   * Returns a replystring.
   **********************************/
- char *sendToSkype(const char *msg) {
+ char *dbusSendToSkype(const char *msg) {
 	if (connection != NULL ){
-		return sendToSkypeConnection(connection, msg);
+		return dbusSendToSkypeConnection(connection, msg);
 	}
 	return NULL; 
  } 
@@ -218,7 +256,7 @@ DBusWatch      *g_watch = NULL;
   * Sends a message to the Skype client using DBus.
   * Returns a replystring.
   **********************************/
- char *sendToSkypeConnection( DBusConnection * connection,const char *msg){
+ char *dbusSendToSkypeConnection( DBusConnection * connection,const char *msg){
      sendingMessage = 1;
      while (receivingMessage != 0) {
         usleep(200);

@@ -12,8 +12,8 @@ CFLAGS   = -pipe -Wall -W -g  -DQT_SHARED -DQT_NO_DEBUG -DQT_THREAD_SUPPORT -D_R
 CXXFLAGS = -pipe -Wall -W -g -DDBUS_API_SUBJECT_TO_CHANGE -ggdb  -DQT_SHARED -DQT_NO_DEBUG -DQT_THREAD_SUPPORT -D_REENTRANT
 INCPATH  = -I. -I/usr/include/dbus-1.0 -I/usr/lib/dbus-1.0/include 
 LINK     = g++
-LFLAGS   =  -shared
-LIBS     = $(SUBLIBS) -ldbus-1 -lpthread
+LFLAGS   =  -shared -L/usr/X11R6/lib
+LIBS     = $(SUBLIBS) -ldbus-1 -lpthread -lX11
 AR       = ar cqs
 RANLIB   = 
 TAR      = tar -cf
@@ -37,11 +37,14 @@ OBJECTS_DIR = .obj/
 ####### Files
 
 HEADERS = javawrapper.h \
-		dbuswrapper.h 
+		dbuswrapper.h \
+		x11wrapper.h 
 SOURCES = javawrapper.c \
-		dbuswrapper.c
+		dbuswrapper.c \
+		x11wrapper.c 
 OBJECTS = .obj/javawrapper.o \
-		.obj/dbuswrapper.o
+		.obj/dbuswrapper.o \
+		.obj/x11wrapper.o
 
 MAKE_TARGET = javawrapper
 DESTDIR  = 
@@ -98,6 +101,8 @@ FORCE:
 .obj/dbuswrapper.o: dbuswrapper.c
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o .obj/dbuswrapper.o dbuswrapper.c
 
+.obj/x11wrapper.o: x11wrapper.c
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o .obj/x11wrapper.o x11wrapper.c
 ####### Install
 
 install:  
