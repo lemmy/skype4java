@@ -226,11 +226,7 @@ final class Utils {
         if ("".equals(listString)) {
             return new String[0];
         }
-        String[] array = listString.split(",");
-        for (int i = 0, length = array.length; i < length; i++) {
-            array[i] = array[i].trim();
-        }
-        return array;
+        return listString.split(", ");
     }
 
     /**
