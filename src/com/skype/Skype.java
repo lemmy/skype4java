@@ -32,8 +32,8 @@ import com.skype.connector.ConnectorMessageEvent;
  * @author Koji Hisano
  */
 public final class Skype {
-    /** version string. **/
-    private static final String VERSION = "1.0.0.0";
+    /** library version. **/
+    public static final String LIBRARY_VERSION = "1.0.0.0";
 
     /** contactList instance. */
     private static ContactList contactList;
