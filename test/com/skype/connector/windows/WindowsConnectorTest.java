@@ -47,7 +47,7 @@ public final class WindowsConnectorTest extends TestCase {
                 }
             }
         };
-        WindowsConnector.getInstance().addConnectorListener(listener);
+        WindowsConnector.getInstance().addConnectorListener(listener, false);
         TestUtils.showMessageDialog("Sign in Skype, please.");
         assertTrue(available[0]);
     }

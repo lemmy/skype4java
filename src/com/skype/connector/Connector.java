@@ -19,8 +19,10 @@ import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.event.EventListenerList;
 
@@ -158,7 +160,15 @@ public abstract class Connector {
     private int commandCount;
     
     /** Thread pooled executor */
-    private ExecutorService executor = new ThreadPoolExecutor(2, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
+    private ExecutorService executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 20, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+        private final AtomicInteger threadNumber = new AtomicInteger();
+
+        public Thread newThread(Runnable r) {
+            Thread thread = new Thread(r, "SkypeMessageSender-" + threadNumber.getAndIncrement());
+            thread.setDaemon(true);
+            return thread;
+        }
+    });
 
     /**
      * Because this object should be a singleton the constructor is protected.
@@ -263,10 +273,8 @@ public abstract class Connector {
      * @param newValue The new status.
      */
     protected final void setStatus(final Status newValue) {
-        if (status != newValue) {
-            status = newValue;
-            fireStatusChanged(newValue);
-        }
+        status = newValue;
+        fireStatusChanged(newValue);
     }
 
     /**
@@ -568,9 +576,7 @@ public abstract class Connector {
         Status attachedStatus = getStatus();
         if (attachedStatus != Status.ATTACHED) {
             attachedStatus = connect();
-            attachedStatus = getStatus();
             if (attachedStatus != Status.ATTACHED) {
-            	System.err.println("Connector.assureAttached() status="+attachedStatus);
                 throw new NotAttachedException(attachedStatus);
             }
         }
@@ -591,7 +597,7 @@ public abstract class Connector {
      * @param checkAttached if true check if connector is attached.
      * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
      */
-    protected final void addConnectorListener(final ConnectorListener listener, boolean checkAttached) throws ConnectorException {
+    public final void addConnectorListener(final ConnectorListener listener, boolean checkAttached) throws ConnectorException {
         ConnectorUtils.checkNotNull("listener", listener);
         listeners.add(ConnectorListener.class, listener);
         if (checkAttached) {
