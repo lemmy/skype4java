@@ -10,7 +10,7 @@
     </target>
 
     <target name="compile" depends="prepare">
-        <javac srcdir="${src.dir}" destdir="${build.dir}" classpath="${lib.dir}/lib/swt.jar"/>
+        <javac srcdir="${src.dir}" destdir="${build.dir}" classpath="${lib.dir}/swt/swt.jar"/>
     </target>
 
     <target name="jar" depends="compile">
