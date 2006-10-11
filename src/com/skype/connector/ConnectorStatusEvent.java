@@ -34,7 +34,7 @@ public final class ConnectorStatusEvent extends ConnectorEvent {
 	 */
     ConnectorStatusEvent(Object source, Connector.Status newStatus) {
         super(source);
-        assert newStatus != newStatus;
+        assert newStatus != null;
         this.status = newStatus;
     }
     
