@@ -29,10 +29,10 @@ import org.eclipse.swt.widgets.Text;
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
 
-public class TestClient extends Shell {
+public class SkypeTracer extends Shell {
     public static void main(String args[]) throws Exception {
         Display display = Display.getDefault();
-        TestClient shell = new TestClient(display, SWT.SHELL_TRIM);
+        SkypeTracer shell = new SkypeTracer(display, SWT.SHELL_TRIM);
         shell.open();
         shell.layout();
         while (!shell.isDisposed()) {
@@ -42,16 +42,15 @@ public class TestClient extends Shell {
     }
 
     private Text toSkype;
-
     private Text fromSkype;
 
-    public TestClient(Display display, int style) throws ConnectorException {
+    public SkypeTracer(Display display, int style) throws ConnectorException {
         super(display, style);
         createContents();
     }
 
     protected void createContents() throws ConnectorException {
-        setText("Test Client");
+        setText("Skype Tracer");
         setSize(400, 300);
         final GridLayout gridLayout = new GridLayout();
         gridLayout.numColumns = 2;
