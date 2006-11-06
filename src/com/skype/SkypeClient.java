@@ -17,6 +17,9 @@ package com.skype;
 
 import java.io.File;
 
+import com.skype.connector.Connector;
+import com.skype.connector.ConnectorException;
+
 /**
  * Main view (not model) class of the Skype Java API.
  * Use this class staticly to do view actions (show option dialogs or switch tabs, etc).
@@ -379,5 +382,26 @@ public final class SkypeClient {
      */
     public static void openVideoOptionsWindow() throws SkypeException {
         Utils.executeWithErrorCheck("OPEN OPTIONS VIDEO");
+    }
+
+    /**
+     * Sets the Skype silent mode.
+     * @param on if true turn on the silent mode.
+     * @return true if the user responds ok.
+     * @throws SkypeException when connection has gone bad or ERROR reply.
+     * @since 2.6.0.84
+     */
+    public static boolean setSilentMode(boolean on) throws SkypeException {
+        try {
+            String command = "SET SILENT_MODE " + (on? "ON": "OFF");
+            String responseHeader = "SILENT_MODE ";
+            String response = Connector.getInstance().executeWithoutTimeout(command, responseHeader);
+            Utils.checkError(response);
+            String responseValue = response.substring(responseHeader.length());
+            return "ON".equals(responseValue);
+        } catch (ConnectorException e) {
+            Utils.convertToSkypeException(e);
+            return false;
+        }
     }
 }
