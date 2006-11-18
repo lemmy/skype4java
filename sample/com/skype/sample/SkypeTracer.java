@@ -30,33 +30,31 @@ import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
 
 public class SkypeTracer extends Shell {
-    public static void main(String args[]) throws Exception {
-        Display display = Display.getDefault();
-        SkypeTracer shell = new SkypeTracer(display, SWT.SHELL_TRIM);
+    public static void main(final String args[]) throws Exception {
+        final Display display = Display.getDefault();
+        final SkypeTracer shell = new SkypeTracer(display, SWT.SHELL_TRIM);
         shell.open();
         shell.layout();
         while (!shell.isDisposed()) {
-            if (!display.readAndDispatch())
+            if (!display.readAndDispatch()) {
                 display.sleep();
+            }
         }
     }
-
-    private Text toSkype;
-    private Text fromSkype;
 
     public SkypeTracer(Display display, int style) throws ConnectorException {
         super(display, style);
         createContents();
     }
 
-    protected void createContents() throws ConnectorException {
+    private void createContents() throws ConnectorException {
         setText("Skype Tracer");
         setSize(400, 300);
         final GridLayout gridLayout = new GridLayout();
         gridLayout.numColumns = 2;
         setLayout(gridLayout);
 
-        fromSkype = new Text(this, SWT.V_SCROLL | SWT.MULTI | SWT.READ_ONLY | SWT.BORDER);
+        final Text fromSkype = new Text(this, SWT.V_SCROLL | SWT.MULTI | SWT.READ_ONLY | SWT.BORDER);
         fromSkype.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true, 2, 1));
         Connector.getInstance().setDebugOut(new PrintWriter(new Writer() {
             @Override
@@ -71,15 +69,17 @@ public class SkypeTracer extends Shell {
 
             @Override
             public void flush() throws IOException {
+                // Do nothing
             }
 
             @Override
             public void close() throws IOException {
+                // Do nothing
             }
         }));
         Connector.getInstance().setDebug(true);
 
-        toSkype = new Text(this, SWT.BORDER);
+        final Text toSkype = new Text(this, SWT.BORDER);
         toSkype.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
 
         final Button send = new Button(this, SWT.NONE);
