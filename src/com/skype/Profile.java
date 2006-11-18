@@ -135,7 +135,7 @@ public final class Profile {
         @Override
         public boolean equals(Object compared) {
             if (compared instanceof CallForwardingRule) {
-                return toString().equals(((Profile)compared).toString());
+                return toString().equals(((CallForwardingRule)compared).toString());
             }
             return false;
         }
