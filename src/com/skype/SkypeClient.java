@@ -391,6 +391,18 @@ public final class SkypeClient {
     public static void setUILanguageByISOCode(final String newValue) throws SkypeException {
         Utils.setProperty("UI_LANGUAGE", newValue);
     }
+    
+    public static File getWallPaper() throws SkypeException {
+        return new File(Utils.getProperty("WALLPAPER"));
+    }
+
+    public static void setWallPaper(final File newValue) throws SkypeException {
+        if (newValue != null) {
+            Utils.setProperty("WALLPAPER", newValue.getAbsolutePath());
+        } else {
+            Utils.setProperty("WALLPAPER", "");
+        }
+    }
 
     /**
      * Sets the Skype silent mode.
