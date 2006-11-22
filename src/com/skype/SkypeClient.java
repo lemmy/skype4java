@@ -404,4 +404,28 @@ public final class SkypeClient {
             return false;
         }
     }
+
+    public static EventMessage addEventMessage(String caption) throws SkypeException {
+        return addEventMessage(caption, caption);
+    }
+    
+    public static EventMessage addEventMessage(String caption, String hint) throws SkypeException {
+        Utils.checkNotNull("caption", caption);
+        Utils.checkNotNull("hint", hint);
+        try {
+            EventMessage eventMessage = EventMessage.addEventMessage(caption, hint);
+            String command = "CREATE EVENT " + eventMessage.getId() + " CAPTION \"" + caption + "\" HINT \"" + hint + "\"";
+            String responseHeader = "EVENT " + eventMessage.getId() + " CREATED";
+            String response = Connector.getInstance().execute(command, responseHeader);
+            Utils.checkError(response);
+            return eventMessage;
+        } catch (ConnectorException e) {
+            Utils.convertToSkypeException(e);
+            return null;
+        }
+    }
+    
+    public static void removeEventMessage(EventMessage eventMessage) throws SkypeException {
+        eventMessage.dispose();
+    }
 }
