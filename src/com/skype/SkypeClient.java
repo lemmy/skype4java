@@ -383,6 +383,14 @@ public final class SkypeClient {
     public static void openVideoOptionsWindow() throws SkypeException {
         Utils.executeWithErrorCheck("OPEN OPTIONS VIDEO");
     }
+    
+    public static String getUILanguageByISOCode() throws SkypeException {
+        return Utils.getProperty("UI_LANGUAGE");
+    }
+
+    public static void setUILanguageByISOCode(final String newValue) throws SkypeException {
+        Utils.setProperty("UI_LANGUAGE", newValue);
+    }
 
     /**
      * Sets the Skype silent mode.
