@@ -141,7 +141,7 @@ public abstract class Connector {
     private Object debugFieldMutex = new Object();
     
     /** application name to send to Skype client. */
-    private String applicationName = "SkypeAPI4Java";
+    private String applicationName = "Skype4Java";
 
     /** Initialize the status of the connector. */
     private Status status = Status.NOT_RUNNING;
