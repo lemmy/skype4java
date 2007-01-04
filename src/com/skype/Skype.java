@@ -639,7 +639,34 @@ public final class Skype {
             return null;
         }
     }
-    
+
+    /**
+     * Clears all call history.
+     *
+     * @throws SkypeException If there is a problem with the connection or state at the Skype client.
+     */
+    public static void clearCallHistory() throws SkypeException {
+        Utils.executeWithErrorCheck("CLEAR CALLHISTORY ALL"); // in doc, there is without "ALL", but only this works (protocol 5)
+    }
+
+    /**
+     * Clears all chat history.
+     *
+     * @throws SkypeException If there is a problem with the connection or state at the Skype client.
+     */
+    public static void clearChatHistory() throws SkypeException {
+        Utils.executeWithErrorCheck("CLEAR CHATHISTORY");
+    }    
+
+    /**
+     * Clears all voice mail history.
+     *
+     * @throws SkypeException If there is a problem with the connection or state at the Skype client.
+     */
+    public static void clearVoiceMailHistory() throws SkypeException {
+        Utils.executeWithErrorCheck("CLEAR VOICEMAILHISTORY");
+    }    
+
     /**
      * Return User based on ID.
      * @param id ID of the User.
