@@ -224,7 +224,17 @@ public class User extends SkypeObject {
      * @return Status of this User.
      * @throws SkypeException when connection to Skype client has gone bad.
      */
+    @Deprecated
     public final Status getOnlineStatus() throws SkypeException {
+        return getStatus();
+    }
+
+    /**
+     * Return the online status of this User.
+     * @return Status of this User.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final Status getStatus() throws SkypeException {
         return Status.valueOf((getProperty("ONLINESTATUS")));
     }
 
