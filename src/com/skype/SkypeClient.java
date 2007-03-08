@@ -448,4 +448,37 @@ public final class SkypeClient {
     public static void removeEventMessage(EventMessage eventMessage) throws SkypeException {
         eventMessage.dispose();
     }
+    
+    public static MenuItem addMenuItem(MenuItem.Context context, String caption, String hint, File iconFile, boolean enabled, String targetSkypeId, boolean multipleContactsEnabled) throws SkypeException {
+        try {
+            MenuItem menuItem = MenuItem.addMenuItem(context, caption, hint, iconFile, enabled, targetSkypeId, multipleContactsEnabled);
+            String command = "CREATE MENU_ITEM " + menuItem.getId() + " CONTEXT " + context.name().toLowerCase() + " CAPTION \"" + caption + "\"";
+            if (hint != null) {
+                command += " HINT \"" + hint + "\"";
+            }
+            if (iconFile != null) {
+                command += " ICON \"" + iconFile.getAbsolutePath() + "\"";
+            }
+            if (!enabled) {
+                command += " ENABLED false";
+            }
+            if (targetSkypeId != null) {
+                command += " CONTACT_TYPE_FILTER \"" + targetSkypeId + "\"";
+            }
+            if (!multipleContactsEnabled) {
+                command += " ENABLE_MULTIPLE_CONTACTS false";
+            }
+            String responseHeader = "MENU_ITEM " + menuItem.getId() + " CREATED";
+            String response = Connector.getInstance().execute(command, responseHeader);
+            Utils.checkError(response);
+            return menuItem;
+        } catch (ConnectorException e) {
+            Utils.convertToSkypeException(e);
+            return null;
+        }
+    }
+    
+    public static void removeMenuItem(MenuItem menuItem) throws SkypeException {
+        menuItem.dispose();
+    }
 }
