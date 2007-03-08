@@ -17,21 +17,23 @@ package com.skype.connector;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.swing.event.EventListenerList;
-
 /**
  * Base class for all platform specific connectors.
  * A connector connects the Skype Java API with a running Skype client.
  */
 public abstract class Connector {
-
 	/**
 	 * Enumeration of the connector status.
 	 */
@@ -48,32 +50,19 @@ public abstract class Connector {
     }
 
 	/** useJNIConnector if this is true on windows the connection will be made using a dll instead of using swt library. */
-    private static boolean useJNIConnector;
+    private static boolean _useJNIConnector;
     /** Singleton instance of this class. */
-    private static Connector instance;
+    private static Connector _instance;
 
     /**
      * To use the win32 dll instead of the SWT library please use this method.
      * @param on If true the win32 connector will be used.
      */
     public static synchronized void useJNIConnector(final boolean on) {
-        if (instance != null) {
-            throw new IllegalStateException("You should call this method before calling Connector#getInstance().");
+        if (_instance != null) {
+            throw new IllegalStateException("You should call Connector#useJNIConnector(boolean) before calling Connector#getInstance().");
         }
-        useJNIConnector = on;
-    }
-
-    /**
-     * This method checks if SWT is available in the classpath.
-     * @return true if SWT is found.
-     */
-    private static boolean isSWTAvailable() {
-            try {
-                Class.forName("org.eclipse.swt.SWT");
-            } catch(ClassNotFoundException e) {
-                return false;
-            }
-        return true;
+        _useJNIConnector = on;
     }
     
     /**
@@ -83,15 +72,14 @@ public abstract class Connector {
      * @return an initialized connection.
      */
     public static synchronized Connector getInstance() {
-        if (instance == null) {
-            String osName = System.getProperty("os.name");
+        if (_instance == null) {
             String connectorClassName = null;
-            if (!useJNIConnector && !isSWTAvailable()) {
-                useJNIConnector = true;
-            }
+            String osName = System.getProperty("os.name");
             if (osName.startsWith("Windows")) {
-            	//Todo: add a check to see if swt is in the classpath, if not use the other connector.
-                if (useJNIConnector) {
+                if (!isSWTAvailable()) {
+                    _useJNIConnector = true;
+                }
+                if (_useJNIConnector) {
                     connectorClassName = "com.skype.connector.win32.Win32Connector";
                 } else {
                     connectorClassName = "com.skype.connector.windows.WindowsConnector";
@@ -102,29 +90,42 @@ public abstract class Connector {
                 connectorClassName = "com.skype.connector.osx.OSXConnector";
             }
             if (connectorClassName == null) {
-                throw new IllegalStateException("This platform is not supported by Skype API for Java.");
+                throw new IllegalStateException("This platform is not supported by Skype4Java.");
             }
             try {
                 Class connectorClass = Class.forName(connectorClassName);
                 Method getInstance = connectorClass.getMethod("getInstance");
-                instance = (Connector) getInstance.invoke(null);
+                _instance = (Connector) getInstance.invoke(null);
             } catch (Exception e) {
                 throw new IllegalStateException("The connector couldn't be initialized.", e);
             }
         }
-        return instance;
+        return _instance;
+    }
+
+    /**
+     * This method checks if SWT is available in the classpath.
+     * @return true if SWT is found.
+     */
+    private static boolean isSWTAvailable() {
+        try {
+            Class.forName("org.eclipse.swt.SWT");
+        } catch(ClassNotFoundException e) {
+            return false;
+        }
+        return true;
     }
     
     /**
-     * Set the instance of the connector.
+     * Set the instance of the connector for testcases.
      * @param newInstance The new instance.
      * @throws ConnectorException thrown when instance is not valid.
      */
     protected static synchronized void setInstance(final Connector newInstance) throws ConnectorException {
-        if (Connector.instance != null) {
-            Connector.instance.dispose();
+        if (_instance != null) {
+            _instance.dispose();
         }
-        Connector.instance = newInstance;
+        _instance = newInstance;
     }
 
     /**
@@ -134,37 +135,50 @@ public abstract class Connector {
      * <code>new PrintWriter(System.out, true)</code>.
      * </p>
      */
-    private PrintWriter debugOut = new PrintWriter(System.out, true);
+    private PrintWriter _debugOut = new PrintWriter(System.out, true);
     /** debugListener. */
-    private ConnectorListener debugListener;
+    private ConnectorListener _debugListener;
     /** debug printer lock object. */
-    private Object debugFieldMutex = new Object();
+    private Object _debugFieldMutex = new Object();
     
     /** application name to send to Skype client. */
-    private String applicationName = "Skype4Java";
+    private String _applicationName = "Skype4Java";
 
     /** Initialize the status of the connector. */
-    private Status status = Status.NOT_RUNNING;
+    private Status _status = Status.NOT_RUNNING;
+    
     /** Boolean to check if the connector is already initialized. */
-    private boolean isInitialized;
+    private boolean _isInitialized;
+    /** initialization field mutex. */
+    private Object _isInitializedMutex = new Object();
 
     /** global connector timeout. */
-    private int connectTimeout = 10000;
+    private int _connectTimeout = 10000;
     /** global command-reply timeout. */
-    private int commandTimeout = 10000;
+    private int _commandTimeout = 10000;
 
-    /** Collection of event listeners for the connector. */
-    private EventListenerList listeners = new EventListenerList();
+    /** Collection of asynchronous event listeners for the connector. */
+    private ConnectorListener[] _asyncListeners = new ConnectorListener[0];
+    /** Collection of synchronous event listeners for the connector. */
+    private ConnectorListener[] _syncListeners = new ConnectorListener[0];
 
     /** Command counter, can be used to identify message and reply pairs. */
-    private int commandCount;
+    private int _commandCount;
     
-    /** Thread pooled executor */
-    private ExecutorService executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 20, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+    /** Asynchronous message sender */
+    private ExecutorService _asyncSender = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 20, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
         private final AtomicInteger threadNumber = new AtomicInteger();
 
         public Thread newThread(Runnable r) {
-            Thread thread = new Thread(r, "SkypeMessageSender-" + threadNumber.getAndIncrement());
+            Thread thread = new Thread(r, "AsyncSkypeMessageSender-" + threadNumber.getAndIncrement());
+            thread.setDaemon(true);
+            return thread;
+        }
+    });
+    /** Synchronous message sender */
+    private Executor _syncSender = Executors.newSingleThreadExecutor(new ThreadFactory() {
+        public Thread newThread(Runnable r) {
+            Thread thread = new Thread(r, "SyncSkypeMessageSender");
             thread.setDaemon(true);
             return thread;
         }
@@ -192,10 +206,10 @@ public abstract class Connector {
      * @throws ConnectorException thrown when connection to Skype Client has gone bad.
      */
     public final void setDebug(final boolean on) throws ConnectorException {
-        synchronized (debugFieldMutex) {
+        synchronized (_debugFieldMutex) {
             if (on) {
-                if (debugListener == null) {
-                    debugListener = new AbstractConnectorListener() {
+                if (_debugListener == null) {
+                    _debugListener = new AbstractConnectorListener() {
                         @Override
                         public void messageReceived(final ConnectorMessageEvent event) {
                             getDebugOut().println("<- " + event.getMessage());
@@ -206,11 +220,11 @@ public abstract class Connector {
                             getDebugOut().println("-> " + event.getMessage());
                         }
                     };
-                    addConnectorListener(debugListener);
+                    addConnectorListener(_debugListener, true, true);
                 }
             } else {
-                if (debugListener != null) {
-                    removeConnectorListener(debugListener);
+                if (_debugListener != null) {
+                    removeConnectorListener(_debugListener);
                 }
             }
         }
@@ -225,7 +239,7 @@ public abstract class Connector {
      */
     public final void setDebugOut(final PrintWriter newDebugOut) {
         ConnectorUtils.checkNotNull("debugOut", newDebugOut);
-        this.debugOut = newDebugOut;
+        this._debugOut = newDebugOut;
     }
 
     /**
@@ -247,7 +261,7 @@ public abstract class Connector {
      * @see #setDebugOut(PrintStream)
      */
     public final PrintWriter getDebugOut() {
-        return debugOut;
+        return _debugOut;
     }
 
     /**
@@ -257,7 +271,7 @@ public abstract class Connector {
      */
     public final void setApplicationName(final String newApplicationName) {
         ConnectorUtils.checkNotNull("applicationName", newApplicationName);
-        this.applicationName = newApplicationName;
+        _applicationName = newApplicationName;
     }
 
     /**
@@ -265,7 +279,7 @@ public abstract class Connector {
      * @return applicationName.
      */
     public final String getApplicationName() {
-        return applicationName;
+        return _applicationName;
     }
 
     /**
@@ -273,8 +287,43 @@ public abstract class Connector {
      * @param newValue The new status.
      */
     protected final void setStatus(final Status newValue) {
-        status = newValue;
+        ConnectorUtils.checkNotNull("newValue", newValue);
+        _status = newValue;
         fireStatusChanged(newValue);
+    }
+
+    /**
+     * Fire a status change event.
+     * @param newStatus the new status that triggered this event.
+     */
+    private void fireStatusChanged(final Status newStatus) {
+        assert newStatus != null;
+        if (_syncListeners.length != 0) {
+            _syncSender.execute(new Runnable() {
+                public void run() {
+                    fireStatusChanged(_syncListeners, newStatus);
+                }
+            });
+        }
+        if (_asyncListeners.length != 0) {
+            _asyncSender.execute(new Runnable() {
+                public void run() {
+                    fireStatusChanged(_asyncListeners, newStatus);
+                }
+            });
+        }
+    }
+
+    /**
+     * Fire a status changed event.
+     * @param listenerList the event listener list
+     * @param status the new status.
+     */
+    private void fireStatusChanged(final ConnectorListener[] listeners, final Status status) {
+        ConnectorStatusEvent event = new ConnectorStatusEvent(this, status);
+        for (int i = listeners.length - 1; 0 <= i; i--) {
+            listeners[i].statusChanged(event);
+        }
     }
 
     /**
@@ -282,7 +331,7 @@ public abstract class Connector {
      * @return status.
      */
     public final Status getStatus() {
-        return status;
+        return _status;
     }
 
     /**
@@ -290,7 +339,7 @@ public abstract class Connector {
      * @param newValue the new timeout value in milliseconds.
      */
     public final void setConnectTimeout(final int newValue) {
-        connectTimeout = newValue;
+        _connectTimeout = newValue;
     }
 
     /**
@@ -298,7 +347,7 @@ public abstract class Connector {
      * @return current connect timeout.
      */
     public final int getConnectTimeout() {
-        return connectTimeout;
+        return _connectTimeout;
     }
 
     /**
@@ -306,7 +355,7 @@ public abstract class Connector {
      * @param newValue The new timeout value in milliseconds.
      */
     public final void setCommandTimeout(final int newValue) {
-        commandTimeout = newValue;
+        _commandTimeout = newValue;
     }
 
     /**
@@ -314,7 +363,7 @@ public abstract class Connector {
      * @return command timeout value.
      */
     public final int getCommandTimeout() {
-        return commandTimeout;
+        return _commandTimeout;
     }
 
     /**
@@ -322,22 +371,24 @@ public abstract class Connector {
      * @return the status after connecting.
      * @throws ConnectorException thrown when a connection could not be made due to technical problems.
      */
-    public final synchronized Status connect() throws ConnectorException {
+    public final Status connect() throws ConnectorException {
         int timeout = getConnectTimeout();
-        if (!isInitialized) {
-            initialize(timeout);
-            isInitialized = true;
+        synchronized(_isInitializedMutex) {
+            if (!_isInitialized) {
+                initialize();
+                _isInitialized = true;
+            }
         }
-        Status tmpStatus = connect(timeout);
-        if (tmpStatus == Status.ATTACHED) {
+        Status status = connect(timeout);
+        if (status == Status.ATTACHED) {
             try {
                 sendApplicationName(getApplicationName());
                 execute("PROTOCOL 9999", new String[] {"PROTOCOL "}, false);
             } catch (TimeOutException e) {
-                tmpStatus = Status.NOT_RUNNING;
+                status = Status.NOT_RUNNING;
             }
         }
-        return tmpStatus;
+        return status;
     }
     
     /**
@@ -345,7 +396,7 @@ public abstract class Connector {
      * @param timeout Timeout in milliseconds to use while initializing.
      * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
      */
-    protected abstract void initialize(int timeout) throws ConnectorException;
+    protected abstract void initialize() throws ConnectorException;
     
     /**
      * Platform specific connector needs to implement it's own connect method. 
@@ -362,7 +413,6 @@ public abstract class Connector {
     
     /**
      * Send the application name to the Skype client.
-     * todo: should this be abstract?
      * @param newApplicationName new application name.
      * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
      */
@@ -375,12 +425,14 @@ public abstract class Connector {
      * This allows all native code to clean up and disconnect in a nice way.
      * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
      */
-    public final synchronized void dispose() throws ConnectorException {
-        if (!isInitialized) {
-            return;
+    public final void dispose() throws ConnectorException {
+        synchronized(_isInitializedMutex) {
+            if (!_isInitialized) {
+                return;
+            }
+            disposeImpl();
+            _isInitialized = false;
         }
-        disposeImpl();
-        isInitialized = false;
     }
 
     
@@ -393,9 +445,7 @@ public abstract class Connector {
         try {
             assureAttached();
             return true;
-        } catch (TimeOutException e) {
-            return false;
-        } catch (NotAttachedException e) {
+        } catch (ConnectorException e) {
             return false;
         }
     }
@@ -413,24 +463,24 @@ public abstract class Connector {
         ConnectorUtils.checkNotNull("command", command);
         ConnectorUtils.checkNotNull("processor", processor);
         assureAttached();
-        final Object lock = new Object();
+        final Object wait = new Object();
         ConnectorListener listener = new AbstractConnectorListener() {
             public void messageReceived(ConnectorMessageEvent event) {
                 processor.messageReceived(event.getMessage());
             }
         };
-        processor.init(lock, listener);
+        processor.init(wait, listener);
         addConnectorListener(listener, false);
         fireMessageSent(command);
-        synchronized (lock) {
+        synchronized (wait) {
             try {
                 sendCommand(command);
                 long start = System.currentTimeMillis();
                 long commandResponseTime = getCommandTimeout();
-                lock.wait(commandResponseTime);
+                wait.wait(commandResponseTime);
                 if (commandResponseTime <= System.currentTimeMillis() - start) {
                     setStatus(Status.NOT_RUNNING);
-                    throw new TimeOutException("The '" + command + "' command failed by timeout.");
+                    throw new NotAttachedException(Status.NOT_RUNNING);
                 }
             } catch (InterruptedException e) {
                 throw new ConnectorException("The '" + command + "' command was interrupted.", e);
@@ -464,7 +514,7 @@ public abstract class Connector {
     public final String executeWithId(final String command, final String responseHeader) throws ConnectorException {
         ConnectorUtils.checkNotNull("command", command);
         ConnectorUtils.checkNotNull("responseHeader", responseHeader);
-        String header = "#" + (commandCount++) + " ";
+        String header = "#" + (_commandCount++) + " ";
         String response = execute(header + command, new String[] { header + responseHeader, header + "ERROR " }, true);
         return response.substring(header.length());
     }
@@ -535,7 +585,7 @@ public abstract class Connector {
         if (checkAttached) {
             assureAttached();
         }
-        final Object lock = new Object();
+        final Object wait = new Object();
         final String[] response = new String[1];
         ConnectorListener listener = new AbstractConnectorListener() {
             public void messageReceived(ConnectorMessageEvent event) {
@@ -543,8 +593,8 @@ public abstract class Connector {
                 for (String responseHeader : responseHeaders) {
                     if (message.startsWith(responseHeader)) {
                         response[0] = message;
-                        synchronized (lock) {
-                            lock.notify();
+                        synchronized (wait) {
+                            wait.notify();
                         }
                         return;
                     }
@@ -553,18 +603,18 @@ public abstract class Connector {
         };
         addConnectorListener(listener, false);
         fireMessageSent(command);
-        synchronized (lock) {
+        synchronized (wait) {
             try {
                 sendCommand(command);
                 if (withoutTimeout) {
-                    lock.wait();
+                    wait.wait();
                 } else {
                     long start = System.currentTimeMillis();
                     long commandResponseTime = getCommandTimeout();
-                    lock.wait(commandResponseTime);
+                    wait.wait(commandResponseTime);
                     if (commandResponseTime <= System.currentTimeMillis() - start) {
                         setStatus(Status.NOT_RUNNING);
-                        throw new TimeOutException("The '" + command + "' command failed by timeout.");
+                        throw new NotAttachedException(Status.NOT_RUNNING);
                     }
                 }
             } catch (InterruptedException e) {
@@ -581,15 +631,7 @@ public abstract class Connector {
      * @param message the message that has been send.
      */
     private void fireMessageSent(final String message) {
-        assert message != null;
-        ConnectorListener[] fireListeners = Connector.this.listeners.getListeners(ConnectorListener.class);
-        if (fireListeners.length == 0) {
-            return;
-        }
-        ConnectorMessageEvent event = new ConnectorMessageEvent(this, message);
-        for (ConnectorListener listener : fireListeners) {
-            listener.messageSent(event);
-        }
+        fireMessageEvent(message, false);
     }
 
     /**
@@ -628,9 +670,30 @@ public abstract class Connector {
      * @param checkAttached if true check if connector is attached.
      * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
      */
-    public final void addConnectorListener(final ConnectorListener listener, boolean checkAttached) throws ConnectorException {
+    public final void addConnectorListener(final ConnectorListener listener, final boolean checkAttached) throws ConnectorException {
+        addConnectorListener(listener, checkAttached, false);
+    }
+
+    /**
+     * Add a listener to this connector if the connector is attached.
+     * @param listener The listener to add.
+     * @param checkAttached if true check if connector is attached.
+     * @param isSynchronous if true the listener is handled synchronously.
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
+    public final void addConnectorListener(final ConnectorListener listener, final boolean checkAttached, final boolean isSynchronous) throws ConnectorException {
         ConnectorUtils.checkNotNull("listener", listener);
-        listeners.add(ConnectorListener.class, listener);
+        if (isSynchronous) {
+            List<ConnectorListener> listeners = new ArrayList(Arrays.asList(_syncListeners));
+            if (listeners.add(listener)) {
+                _syncListeners = listeners.toArray(new ConnectorListener[0]);
+            }
+        } else {
+            List<ConnectorListener> listeners = new ArrayList(Arrays.asList(_asyncListeners));
+            if (listeners.add(listener)) {
+                _asyncListeners = listeners.toArray(new ConnectorListener[0]);
+            }
+        }
         if (checkAttached) {
             assureAttached();
         }
@@ -642,7 +705,18 @@ public abstract class Connector {
      */
     public final void removeConnectorListener(final ConnectorListener listener) {
         ConnectorUtils.checkNotNull("listener", listener);
-        listeners.remove(ConnectorListener.class, listener);
+        {
+            List<ConnectorListener> listeners = new ArrayList(Arrays.asList(_syncListeners));
+            if (listeners.remove(listener)) {
+                _syncListeners = listeners.toArray(new ConnectorListener[0]);
+            }
+        }
+        {
+            List<ConnectorListener> listeners = new ArrayList(Arrays.asList(_asyncListeners));
+            if (listeners.remove(listener)) {
+                _asyncListeners = listeners.toArray(new ConnectorListener[0]);
+            }
+        }
     }
 
     /**
@@ -650,38 +724,47 @@ public abstract class Connector {
      * @param message the message that triggered the event.
      */
     protected final void fireMessageReceived(final String message) {
-        ConnectorUtils.checkNotNull("message", message);
-        executor.execute(new Runnable() {
-            public void run() {
-                ConnectorListener[] fireListeners = Connector.this.listeners.getListeners(ConnectorListener.class);
-                if (fireListeners.length == 0) {
-                    return;
-                }
-                ConnectorMessageEvent event = new ConnectorMessageEvent(this, message);
-                for (int i = fireListeners.length - 1; 0 <= i; i--) {
-                    fireListeners[i].messageReceived(event);
-                }
-            }
-        });
+        fireMessageEvent(message, true);
     }
 
     /**
-     * Fire a status change event.
-     * @param newStatus the new status that triggered this event.
+     * Fire a message event.
+     * @param message the message that triggered the event.
+     * @param isReceived the message is a received type or not.
      */
-    protected final void fireStatusChanged(final Status newStatus) {
-        ConnectorUtils.checkNotNull("status", newStatus);
-        executor.execute(new Runnable() {
-            public void run() {
-                ConnectorListener[] fireListeners = Connector.this.listeners.getListeners(ConnectorListener.class);
-                if (fireListeners.length == 0) {
-                    return;
+    private void fireMessageEvent(final String message, final boolean isReceived) {
+        ConnectorUtils.checkNotNull("message", message);
+        if (_syncListeners.length != 0) {
+            _syncSender.execute(new Runnable() {
+                public void run() {
+                    fireMessageEvent(_syncListeners, message, isReceived);
                 }
-                ConnectorStatusEvent event = new ConnectorStatusEvent(this, newStatus);
-                for (int i = fireListeners.length - 1; 0 <= i; i--) {
-                    fireListeners[i].statusChanged(event);
+            });
+        }
+        if (_asyncListeners.length != 0) {
+            _asyncSender.execute(new Runnable() {
+                public void run() {
+                    fireMessageEvent(_asyncListeners, message, isReceived);
                 }
-            };
-        });
+            });
+        }
+    }
+
+    /**
+     * Fire a message event.
+     * @param listenerList the event listener list
+     * @param message the message that triggered the event.
+     * @param isReceived the message is a received type or not.
+     */
+    private void fireMessageEvent(final ConnectorListener[] listeners, final String message, final boolean isReceived) {
+        ConnectorMessageEvent event = new ConnectorMessageEvent(this, message);
+        boolean fireMessageReceived = isReceived;
+        for (int i = listeners.length - 1; 0 <= i; i--) {
+            if (fireMessageReceived) {
+                listeners[i].messageReceived(event);
+            } else {
+                listeners[i].messageSent(event);
+            }
+        }
     }
 }

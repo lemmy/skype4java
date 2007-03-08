@@ -196,7 +196,7 @@ public final class TestConnector extends Connector {
     }
 
     @Override
-    protected void initialize(int timeout) throws ConnectorException {
+    protected void initialize() throws ConnectorException {
         setStatus(Status.ATTACHED);
     }
 

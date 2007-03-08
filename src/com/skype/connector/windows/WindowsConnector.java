@@ -17,7 +17,6 @@ package com.skype.connector.windows;
 
 import java.io.UnsupportedEncodingException;
 
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.internal.Callback;
 import org.eclipse.swt.internal.win32.OS;
 import org.eclipse.swt.internal.win32.TCHAR;
@@ -31,26 +30,25 @@ import com.skype.connector.ConnectorListener;
 import com.skype.connector.ConnectorStatusEvent;
 
 /**
- * Implementation of the windows connector based on the SWT libraries.
- * Please use win32Connector if SWT is not an option for you.
- *
+ * Implementation of the Windows connector based on the SWT libraries.
+ * Please, use Win32Connector if SWT is not an option for you.
  */
 public final class WindowsConnector extends Connector {
     /**
      * The singleton instance of the WindowsConnector class.
      */
-    private static WindowsConnector instance;
+    private static class Instance {
+        static WindowsConnector instance = new WindowsConnector();
+    }
 
     /**
      * Gets the singleton instance of the WindowsConnector class.
      * 
      * @return the singleton instance of the WindowsConnector class
      */
-    public static synchronized WindowsConnector getInstance() {
-        if (instance == null) {
-            instance = new WindowsConnector();
-        }
-        return instance;
+    public static WindowsConnector getInstance() {
+        // Using 'Initialization On Demand Holder' Pattern
+        return Instance.instance;
     }
 
     /**
@@ -137,7 +135,6 @@ public final class WindowsConnector extends Connector {
 
     /**
      * Constructor.
-     *
      */
     private WindowsConnector() {
     }
@@ -203,30 +200,60 @@ public final class WindowsConnector extends Connector {
      * @param timeout Maximum amout of time in millieseconds to initialize.
      * @throws ConnectorException when initialization cannot be completed.
      */
-    protected void initialize(final int timeout) throws ConnectorException {
-        final Object object = new Object();
+    @Override
+    protected void initialize() throws ConnectorException {
+        final Object wait = new Object();
+        final String[] errorMessage = new String[1];
         Thread thread = new Thread("SkypeEventDispatcher") {
+            @Override
             public void run() {
-                display = new Display();
-                windowClass = new TCHAR(0, "" + System.currentTimeMillis() + (int) (Math.random() * 1000), true);
-                int messageReceived = new Callback(WindowsConnector.this, "messageReceived", 4).getAddress();
-                if (messageReceived == 0) {
-                    SWT.error(SWT.ERROR_NO_MORE_CALLBACKS);
-                }
-                int hHeap = OS.GetProcessHeap();
-                int hInstance = OS.GetModuleHandle(null);
-                WNDCLASS lpWndClass = new WNDCLASS();
-                lpWndClass.hInstance = hInstance;
-                lpWndClass.lpfnWndProc = messageReceived;
-                lpWndClass.style = OS.CS_BYTEALIGNWINDOW | OS.CS_DBLCLKS;
-                lpWndClass.hCursor = OS.LoadCursor(0, OS.IDC_ARROW);
-                int byteCount = windowClass.length() * TCHAR.sizeof;
-                lpWndClass.lpszClassName = OS.HeapAlloc(hHeap, OS.HEAP_ZERO_MEMORY, byteCount);
-                OS.MoveMemory(lpWndClass.lpszClassName, windowClass, byteCount);
-                OS.RegisterClass(lpWndClass);
-                windowHandle = OS.CreateWindowEx(0, windowClass, null, OS.WS_OVERLAPPED, 0, 0, 0, 0, 0, 0, hInstance, null);
-                synchronized (object) {
-                    object.notify();
+                try {
+                    display = new Display();
+                    windowClass = new TCHAR(0, "" + System.currentTimeMillis() + (int) (Math.random() * 1000), true);
+                    int messageReceived = new Callback(WindowsConnector.this, "messageReceived", 4).getAddress();
+                    if (messageReceived == 0) {
+                        setErrorMessage("The Windows connector couldn't get a callback resource.");
+                        return;
+                    }
+                    int hHeap = OS.GetProcessHeap();
+                    if (hHeap == 0) {
+                        setErrorMessage("The Windows connector couldn't get the heap handle.");
+                        return;
+                    }
+                    int hInstance = OS.GetModuleHandle(null);
+                    if (hInstance == 0) {
+                        setErrorMessage("The Windows connector couldn't get the module handle.");
+                        return;
+                    }
+                    WNDCLASS lpWndClass = new WNDCLASS();
+                    lpWndClass.hInstance = hInstance;
+                    lpWndClass.lpfnWndProc = messageReceived;
+                    lpWndClass.style = OS.CS_BYTEALIGNWINDOW | OS.CS_DBLCLKS;
+                    lpWndClass.hCursor = OS.LoadCursor(0, OS.IDC_ARROW);
+                    if (lpWndClass.hCursor == 0) {
+                        setErrorMessage("The Windows connector couldn't get a cursor handle.");
+                        return;
+                    }
+                    int byteCount = windowClass.length() * TCHAR.sizeof;
+                    lpWndClass.lpszClassName = OS.HeapAlloc(hHeap, OS.HEAP_ZERO_MEMORY, byteCount);
+                    if (lpWndClass.lpszClassName == 0) {
+                        setErrorMessage("The Windows connector couldn't get a resource.");
+                        return;
+                    }
+                    OS.MoveMemory(lpWndClass.lpszClassName, windowClass, byteCount);
+                    if (OS.RegisterClass(lpWndClass) == 0) {
+                        setErrorMessage("The Windows connector couldn't register a window class.");
+                        return;
+                    }
+                    windowHandle = OS.CreateWindowEx(0, windowClass, null, OS.WS_OVERLAPPED, 0, 0, 0, 0, 0, 0, hInstance, null);
+                    if (windowHandle == 0) {
+                        setErrorMessage("The Windows connector couldn't create a window.");
+                        return;
+                    }
+                } finally {
+                    synchronized (wait) {
+                        wait.notify();
+                    }
                 }
                 while (true) {
                     if (!display.readAndDispatch()) {
@@ -234,15 +261,18 @@ public final class WindowsConnector extends Connector {
                     }
                 }
             };
+
+            private void setErrorMessage(String message) {
+                errorMessage[0] = message;
+            }
         };
         thread.setDaemon(true);
-        thread.start();
-        synchronized (object) {
+        synchronized (wait) {
             try {
-                long start = System.currentTimeMillis();
-                object.wait(timeout);
-                if (timeout <= System.currentTimeMillis() - start) {
-                    throw new ConnectorException("The Windows connector couldn't be initialized by timeout.");
+                thread.start();
+                wait.wait();
+                if (errorMessage[0] != null) {
+                    throw new ConnectorException(errorMessage[0]);
                 }
             } catch (InterruptedException e) {
                 throw new ConnectorException("The Windows connector initialization was interrupted.", e);
@@ -257,26 +287,22 @@ public final class WindowsConnector extends Connector {
      * @throws ConnectorException when connection could not be established.
      */
     protected Status connect(final int timeout) throws ConnectorException {
-        final Object object = new Object();
+        final Object wait = new Object();
         ConnectorListener listener = new AbstractConnectorListener() {
             @Override
             public void statusChanged(ConnectorStatusEvent event) {
-                synchronized (object) {
-                    object.notify();
+                synchronized (wait) {
+                    wait.notify();
                 }
             }
         };
-        try {
-            addConnectorListener(listener, false);
-        } catch (ConnectorException e) {
-            throw new InternalError("The listener couldn't be added.");
-        }
-        synchronized (object) {
+        addConnectorListener(listener, false);
+        synchronized (wait) {
             try {
                 while (true) {
                     OS.SendMessage(HWND_BROADCAST, DISCOVER_MESSAGE_ID, windowHandle, 0);
                     long start = System.currentTimeMillis();
-                    object.wait(timeout);
+                    wait.wait(timeout);
                     if (timeout <= System.currentTimeMillis() - start) {
                         setStatus(Status.NOT_RUNNING);
                     }
@@ -312,32 +338,33 @@ public final class WindowsConnector extends Connector {
      * @param lParam The lparam.
      * @return Status value.
      */
-    int messageReceived(final int hwnd, final int msg, final int wParam, final int lParam) {
-        if (msg == ATTACH_MESSAGE_ID) {
-            switch (lParam) {
-            case ATTACH_PENDING_AUTHORIZATION:
-                setStatus(Status.PENDING_AUTHORIZATION);
-                break;
-            case ATTACH_SUCCESS:
-                skypeWindowHandle = wParam;
-                setStatus(Status.ATTACHED);
-                break;
-            case ATTACH_REFUSED:
-                setStatus(Status.REFUSED);
-                break;
-            case ATTACH_NOT_AVAILABLE:
-                setStatus(Status.NOT_AVAILABLE);
-                break;
-            case ATTACH_API_AVAILABLE:
-                setStatus(Status.API_AVAILABLE);
-                break;
-            default:
-                setStatus(Status.NOT_RUNNING);
-                break;
+    private int messageReceived(final int hwnd, final int msg, final int wParam, final int lParam) {
+        // Using 'if' statement because ATTACH_MESSAGE_ID is not a compile time constant
+        if(msg == ATTACH_MESSAGE_ID) {
+            switch(lParam) {
+                case ATTACH_PENDING_AUTHORIZATION:
+                    setStatus(Status.PENDING_AUTHORIZATION);
+                    break;
+                case ATTACH_SUCCESS:
+                    skypeWindowHandle = wParam;
+                    setStatus(Status.ATTACHED);
+                    break;
+                case ATTACH_REFUSED:
+                    setStatus(Status.REFUSED);
+                    break;
+                case ATTACH_NOT_AVAILABLE:
+                    setStatus(Status.NOT_AVAILABLE);
+                    break;
+                case ATTACH_API_AVAILABLE:
+                    setStatus(Status.API_AVAILABLE);
+                    break;
+                default:
+                    setStatus(Status.NOT_RUNNING);
+                    break;
             }
             return 1;
-        } else if (msg == WM_COPYDATA) {
-            if (wParam == skypeWindowHandle) {
+        } else if(msg == WM_COPYDATA) {
+            if(wParam == skypeWindowHandle) {
                 int[] data = new int[3];
                 OS.MoveMemory(data, lParam, 12);
                 int cbData = data[1];
@@ -351,7 +378,7 @@ public final class WindowsConnector extends Connector {
                     String message = new String(string, "UTF-8");
                     fireMessageReceived(message);
                     return 1;
-                } catch (UnsupportedEncodingException e) {
+                } catch(UnsupportedEncodingException e) {
                 }
             }
         }

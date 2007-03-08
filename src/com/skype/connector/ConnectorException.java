@@ -17,14 +17,10 @@ package com.skype.connector;
  * Exception class which connectors can throw.
  */
 public class ConnectorException extends Exception {
-    /**
-	 * Needed for all serialisationable objects.
-	 */
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = -764987191989792842L;
 
-	/**
+    /**
      * Constructor.
-     *
      */
 	public ConnectorException() {
     }

@@ -196,7 +196,7 @@ public final class OSXConnector extends Connector implements Runnable {
 	 * @param timeout
 	 *            Wait for this amout of millisecs to initialize.
 	 */
-	protected void initialize(int timeout) {
+	protected void initialize() {
 		// System.out.println((new
 		// StringBuilder()).append("OSXConnector.initialize(").append(timeout).append(")
 		// start ***************").toString());

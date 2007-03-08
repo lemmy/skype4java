@@ -22,9 +22,9 @@ public final class NotAttachedException extends ConnectorException {
     /**
 	 * Needed for serialisation.
 	 */
-	private static final long serialVersionUID = 1L;
-	
-	/**
+	private static final long serialVersionUID = 8424409627819350472L;
+
+    /**
 	 * The actual current status (Not attached).
 	 */
 	private final Status status;

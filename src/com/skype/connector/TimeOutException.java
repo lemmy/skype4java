@@ -18,11 +18,10 @@ package com.skype.connector;
  * Like initializing and connecting.
  */
 public final class TimeOutException extends ConnectorException {
-	
     /**
 	 * Needed for serialisation.
 	 */
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -8283931255668558270L;
 
 	/**
 	 * Constructor.

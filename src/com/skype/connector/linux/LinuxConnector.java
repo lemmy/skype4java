@@ -110,7 +110,7 @@ public final class LinuxConnector extends com.skype.connector.Connector {
 	 * overriden method to initialize.
 	 * @param timeout the maximum time in milliseconds to initialize.
 	 */
-	protected void initialize(int timeout) {
+	protected void initialize() {
 		init();
 	}
 	
