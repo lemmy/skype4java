@@ -15,6 +15,7 @@
  ******************************************************************************/
 package com.skype;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -78,7 +79,7 @@ public final class Call extends SkypeObject {
     	 * VM_CANCELLED - leaving voicemail has been cancelled.
     	 * VM_FAILED - leaving voicemail failed; check FAILUREREASON.
     	 */
-        UNPLACED, ROUTING, EARLYMEDIA, FAILED, RINGING, INPROGRESS, ONHOLD, FINISHED, MISSED, REFUSED, BUSY, CANCELLED, VM_BUFFERING_GREETING, VM_PLAYING_GREETING, VM_RECORDING, VM_UPLOADING, VM_SENT, VM_CANCELLED, VM_FAILED
+        UNPLACED, ROUTING, EARLYMEDIA, FAILED, RINGING, INPROGRESS, ONHOLD, FINISHED, MISSED, REFUSED, BUSY, CANCELLED, VM_BUFFERING_GREETING, VM_PLAYING_GREETING, VM_RECORDING, VM_UPLOADING, VM_SENT, VM_CANCELLED, VM_FAILED, TRANSFERRING, TRANSFERRED
     }
 
     /**
@@ -520,5 +521,181 @@ public final class Call extends SkypeObject {
      */
     void setCallListenerEventFired(final boolean fired) {
         isCallListenerEventFired = fired;
+    }
+    
+    public void setFileInput(File file) throws SkypeException {
+        if (file == null) {
+            clearFileInput();
+            return;
+        }
+        Map<String, String> inputStreams = getInputStreams();
+        inputStreams.put("FILE", file.getAbsolutePath());
+        setInputStreams(inputStreams);
+    }
+    
+    public void clearFileInput() throws SkypeException {
+        Map<String, String> inputStreams = getInputStreams();
+        inputStreams.remove("FILE");
+        setInputStreams(inputStreams);
+    }
+
+    public void setFileOutput(File file) throws SkypeException {
+        if (file == null) {
+            clearFileOutput();
+            return;
+        }
+        Map<String, String> outputStreams = getOutputStreams();
+        outputStreams.put("FILE", file.getAbsolutePath());
+        setOutputStreams(outputStreams);
+    }
+    
+    public void clearFileOutput() throws SkypeException {
+        Map<String, String> outputStreams = getOutputStreams();
+        outputStreams.remove("FILE");
+        setOutputStreams(outputStreams);
+    }
+    
+    public void setFileCaptureMic(File file) throws SkypeException {
+        if (file == null) {
+            clearFileCaptureMic();
+            return;
+        }
+        Map<String, String> captureMicStreams = getCaptureMicStreams();
+        captureMicStreams.put("FILE", file.getAbsolutePath());
+        setCaptureMicStreams(captureMicStreams);
+    }
+    
+    public void clearFileCaptureMic() throws SkypeException {
+        Map<String, String> inputStreams = getCaptureMicStreams();
+        inputStreams.remove("FILE");
+        setCaptureMicStreams(inputStreams);
+    }
+
+    public void setPortInput(int port) throws SkypeException {
+        if (port <= 0) {
+            clearPortInput();
+            return;
+        }
+        Map<String, String> inputStreams = getInputStreams();
+        inputStreams.put("PORT", "" + port);
+        setInputStreams(inputStreams);
+    }
+    
+    public void clearPortInput() throws SkypeException {
+        Map<String, String> inputStreams = getInputStreams();
+        inputStreams.remove("PORT");
+        setInputStreams(inputStreams);
+    }
+
+    public void setPortOutput(int port) throws SkypeException {
+        if (port <= 0) {
+            clearPortOutput();
+            return;
+        }
+        Map<String, String> outputStreams = getOutputStreams();
+        outputStreams.put("PORT", "" + port);
+        setOutputStreams(outputStreams);
+    }
+    
+    public void clearPortOutput() throws SkypeException {
+        Map<String, String> outputStreams = getOutputStreams();
+        outputStreams.remove("PORT");
+        setOutputStreams(outputStreams);
+    }
+
+    public void setPortCaptureMic(int port) throws SkypeException {
+        if (port <= 0) {
+            clearPortCaptureMic();
+            return;
+        }
+        Map<String, String> captureMicStreams = getCaptureMicStreams();
+        captureMicStreams.put("PORT", "" + port);
+        setCaptureMicStreams(captureMicStreams);
+    }
+    
+    public void clearPortCaptureMic() throws SkypeException {
+        Map<String, String> captureMicStreams = getCaptureMicStreams();
+        captureMicStreams.remove("PORT");
+        setCaptureMicStreams(captureMicStreams);
+    }
+    
+    private Map<String, String> getInputStreams() throws SkypeException {
+        return getStreams("INPUT");
+    }
+    
+    private Map<String, String> getOutputStreams() throws SkypeException {
+        return getStreams("OUTPUT");
+    }
+    
+    private Map<String, String> getCaptureMicStreams() throws SkypeException {
+        return getStreams("CAPTURE_MIC");
+    }
+
+    private Map<String, String> getStreams(String type) throws SkypeException {
+        String response = Utils.getProperty("CALL", getId(), type);
+        Utils.checkError(response);
+        if("".equals(response)) {
+            return new HashMap<String, String>();
+        }
+        Map<String, String> r = new HashMap<String, String>();
+        for(String element: response.split(", ")) {
+            int index = element.indexOf('=');
+            String key = element.substring(0, index);
+            String value = element.substring(index + 2, element.length() - 1); // remove first and last double quotation mark
+            r.put(key, value);
+        }
+        return r;
+    }
+
+    private void setInputStreams(Map<String, String> inputStreams) throws SkypeException {
+        setStreams("INPUT", inputStreams);
+    }
+
+    private void setOutputStreams(Map<String, String> outputStreams) throws SkypeException {
+        setStreams("OUTPUT", outputStreams);
+    }
+
+    private void setCaptureMicStreams(Map<String, String> captureMicStreams) throws SkypeException {
+        setStreams("CAPTURE_MIC", captureMicStreams);
+    }
+
+    private void setStreams(String type, Map<String, String> streams) throws SkypeException {
+        try {
+            StringBuilder parameters = new StringBuilder();
+            for(String key: streams.keySet()) {
+                parameters.append(" ");
+                parameters.append(key);
+                parameters.append("=\"");
+                parameters.append(streams.get(key));
+                parameters.append("\"");
+            }
+            String response = Connector.getInstance().execute("ALTER CALL " + getId() + " SET_" + type + parameters);
+            Utils.checkError(response);
+        } catch(ConnectorException e) {
+            Utils.convertToSkypeException(e);
+        }
+    }
+    
+    public boolean canTransferTo(String skypeId) throws SkypeException {
+        try {
+            String command = "GET CALL " + getId() + " CAN_TRANSFER " + skypeId;
+            String responseHeader = "CALL " + getId() + " CAN_TRANSFER " + skypeId + " ";
+            String response = Connector.getInstance().execute(command, responseHeader);
+            Utils.checkError(response);
+            return Boolean.parseBoolean(response.substring((responseHeader).length()));
+        } catch (ConnectorException e) {
+            Utils.convertToSkypeException(e);
+            return false;
+        }
+    }
+
+    public void transferTo(String... skypeIds) throws SkypeException {
+        Utils.checkNotNull("skypeIds", skypeIds);
+        try {
+            String response = Connector.getInstance().execute("ALTER CALL " + getId() + " TRANSFER \"" + Utils.convertToCommaSeparatedString(skypeIds) + "\"");
+            Utils.checkError(response);
+        } catch (ConnectorException e) {
+            Utils.convertToSkypeException(e);
+        }
     }
 }
