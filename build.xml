@@ -1,57 +1,60 @@
 <?xml version="1.0"?>
 <project name="skype" default="jar" basedir=".">
-    <property name="build.dir" value="bin"/>
+    <property name="bin.dir" value="bin"/>
     <property name="lib.dir" value="lib"/>
     <property name="src.dir" value="src"/>
     <property name="release.dir" value="release"/>
 
     <target name="prepare">
-        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${bin.dir}"/>
     </target>
 
     <target name="compile" depends="prepare">
-        <javac srcdir="${src.dir}" destdir="${build.dir}" classpath="${lib.dir}/swt/swt.jar"/>
+        <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${lib.dir}/swt/swt.jar"/>
     </target>
 
     <target name="jar" depends="compile">
-        <jar basedir="${build.dir}" includes="**/**" destfile="${release.dir}/skype.jar"/>
-    	<!-- create a jar with the  OS X library file in it. -->
-    	<copy todir="${build.dir}/osx">
-    		<fileset dir="${lib.dir}/osx"/>
-    	</copy>
-        <jar basedir="${build.dir}" includes="**/**" destfile="${release.dir}/skype_osx.jar"/>
-    	<delete dir="${build.dir}/osx"/>
-    	<!-- create a jar with the  linux library file in it. -->
-    	<copy todir="${build.dir}/linux">
-    		<fileset dir="${lib.dir}/linux"/>
-    	</copy>
-        <jar basedir="${build.dir}" includes="**/**" destfile="${release.dir}/skype_linux.jar"/>
-    	<delete dir="${build.dir}/linux"/>
-    	<!-- create a jar with the  win32 library file in it. -->
-    	<copy todir="${build.dir}/win32">
-    		<fileset dir="${lib.dir}/win32"/>
-    	</copy>
-        <jar basedir="${build.dir}" includes="**/**" destfile="${release.dir}/skype_win32.jar"/>
-    	<delete dir="${build.dir}/win32"/>
-    	<!-- create a jar with the  ALL library files in it. -->
-    	<copy todir="${build.dir}/osx">
-    		<fileset dir="${lib.dir}/osx"/>
-    	</copy>
-    	<copy todir="${build.dir}/linux">
-    		<fileset dir="${lib.dir}/linux"/>
-    	</copy>
-    	<copy todir="${build.dir}/win32">
-    		<fileset dir="${lib.dir}/win32"/>
-    	</copy>
+        <jar basedir="${bin.dir}" includes="**/**" destfile="${release.dir}/skype.jar"/>
 
-        <jar basedir="${build.dir}" includes="**/**" destfile="${release.dir}/skype_full.jar"/>
-    	<delete dir="${build.dir}/osx"/>
-    	<delete dir="${build.dir}/linux"/>
-        <delete dir="${build.dir}/win32"/>
+    	<!-- create a jar with the  OS X library file in it. -->
+    	<copy todir="${bin.dir}/osx">
+    		<fileset dir="${lib.dir}/osx"/>
+    	</copy>
+        <jar basedir="${bin.dir}" includes="**/**" destfile="${release.dir}/skype_osx.jar"/>
+    	<delete dir="${bin.dir}/osx"/>
+
+    	<!-- create a jar with the  linux library file in it. -->
+    	<copy todir="${bin.dir}/linux">
+    		<fileset dir="${lib.dir}/linux"/>
+    	</copy>
+        <jar basedir="${bin.dir}" includes="**/**" destfile="${release.dir}/skype_linux.jar"/>
+    	<delete dir="${bin.dir}/linux"/>
+
+    	<!-- create a jar with the  win32 library file in it. -->
+    	<copy todir="${bin.dir}/win32">
+    		<fileset dir="${lib.dir}/win32"/>
+    	</copy>
+        <jar basedir="${bin.dir}" includes="**/**" destfile="${release.dir}/skype_win32.jar"/>
+    	<delete dir="${bin.dir}/win32"/>
+
+    	<!-- create a jar with the  ALL library files in it. -->
+    	<copy todir="${bin.dir}/osx">
+    		<fileset dir="${lib.dir}/osx"/>
+    	</copy>
+    	<copy todir="${bin.dir}/linux">
+    		<fileset dir="${lib.dir}/linux"/>
+    	</copy>
+    	<copy todir="${bin.dir}/win32">
+    		<fileset dir="${lib.dir}/win32"/>
+    	</copy>
+        <jar basedir="${bin.dir}" includes="**/**" destfile="${release.dir}/skype_full.jar"/>
+    	<delete dir="${bin.dir}/osx"/>
+    	<delete dir="${bin.dir}/linux"/>
+        <delete dir="${bin.dir}/win32"/>
     </target>
 	
     <target name="clean">
-        <delete dir="${build.dir}"/>
+        <delete dir="${bin.dir}"/>
     </target>
 </project>
 
