@@ -3,10 +3,17 @@
  * 
  * Copyright (c) 2006 Skype Technologies S.A. <http://www.skype.com/>
  * 
- * All rights reserved. This program and the accompanying materials are made
- * available under the terms of the Common Public License v1.0 which accompanies
- * this distribution, and is available at
- * http://www.eclipse.org/legal/cpl-v10.html
+ * Skype4Java is licensed under either the Apache License, Version 2.0 or
+ * the Eclipse Public License v1.0.
+ * You may use it freely in commercial and non-commercial products.
+ * You may obtain a copy of the licenses at
+ *
+ *   the Apache License - http://www.apache.org/licenses/LICENSE-2.0
+ *   the Eclipse Public License - http://www.eclipse.org/legal/epl-v10.html
+ *
+ * If it is possible to cooperate with the publicity of Skype4Java, please add
+ * links to the Skype4Java web site <https://developer.skype.com/wiki/Java_API> 
+ * in your web site or documents.
  * 
  * Contributors:
  * r-yu/xai - initial implementation
