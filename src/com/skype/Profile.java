@@ -395,6 +395,16 @@ public final class Profile {
     }
 
     /**
+     * Gets the IP country of the current user by the ISO code.
+     * @return the country of the current user by the ISO code.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     * @see <a href="http://en.wikipedia.org/wiki/ISO_3166-1">ISO 3166-1</a>
+     */
+    public String getIPCountryByISOCode() throws SkypeException {
+        return getProperty("IPCOUNTRY");
+    }
+
+    /**
      * Sets the country of the current user by the ISO code.
      * @param newValue the new country of the current user by the ISO code.
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
