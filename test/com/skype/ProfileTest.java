@@ -37,15 +37,15 @@ public final class ProfileTest extends TestCaseByCSVFile {
         if (isRecordingMode()) {
             System.out.println(profile.getId());
             System.out.println(profile.getStatus());
-            System.out.println("" + profile.canDoSkypeOut());
-            System.out.println("" + profile.canDoSkypeIn());
-            System.out.println("" + profile.canDoVoiceMail());
+            System.out.println(profile.canDoSkypeOut());
+            System.out.println(profile.canDoSkypeIn());
+            System.out.println(profile.canDoVoiceMail());
 
             System.out.println(profile.getPSTNBalance());
             System.out.println(profile.getPSTNBalanceCurrencyUnit());
             System.out.println(profile.getFullName());
-            System.out.println("" + new SimpleDateFormat("yyyy/MM/dd").format(profile.getBirthDay()));
-            System.out.println("" + profile.getSex());
+            System.out.println(new SimpleDateFormat("yyyy/MM/dd").format(profile.getBirthDay()));
+            System.out.println(profile.getSex());
             System.out.println(profile.getAllLauguages()[0]);
             System.out.println(profile.getCountry());
             System.out.println(profile.getCountryByISOCode());
@@ -58,7 +58,7 @@ public final class ProfileTest extends TestCaseByCSVFile {
             System.out.println(profile.getHomePageAddress());
             System.out.println(profile.getIntroduction());
             System.out.println(profile.getMoodMessage());
-            System.out.println("" + profile.getTimeZone());
+            System.out.println(profile.getTimeZone());
         } else {
             assertEquals("skype_api_for_java", profile.getId());
             assertEquals(Profile.Status.ONLINE, profile.getStatus());
