@@ -51,7 +51,7 @@ public class User extends SkypeObject {
      * @param id whose associated User object is to be returned.
      * @return User object with ID == id.
      */
-    static User getInstance(final String id) {
+    public static User getInstance(final String id) {
         synchronized(users) {
             if (!users.containsKey(id)) {
                 users.put(id, new User(id));
@@ -141,6 +141,28 @@ public class User extends SkypeObject {
          * The <code>FEMALE</code> constant indicates the skype user is female.
          */
         FEMALE;
+    }
+    
+    /**
+     * The <code>BuddyStatus</code> enum contains the buddy status of the skype user.
+     */
+    public enum BuddyStatus {
+        /**
+         * The <code>NEVER_BEEN</code> constant indicates the skype user has never been in contact list.
+         */
+        NEVER_BEEN,
+        /**
+         * The <code>DELETED</code> constant indicates the skype user is deleted from contact list.
+         */
+        DELETED,
+        /**
+         * The <code>PENDING</code> constant indicates the skype user is pending authorisation.
+         */
+        PENDING,
+        /**
+         * The <code>ADDED</code> constant indicates the skype user is added to contact list.
+         */
+        ADDED
     }
 
     /** ID of this User. */
@@ -243,7 +265,17 @@ public class User extends SkypeObject {
      * @throws SkypeException when connection to Skype client has gone bad.
      */
     public final Status getStatus() throws SkypeException {
-        return Status.valueOf((getProperty("ONLINESTATUS")));
+        return Status.valueOf(getProperty("ONLINESTATUS"));
+    }
+
+
+    /**
+     * Return last online time (UNIX timestamp).
+     * @return Time of last online.
+     * @throws SkypeException when connection has gone bad.
+     */
+    public Date getLastOnlineTime() throws SkypeException {
+        return Utils.parseUnixTime(getProperty("LASTONLINETIMESTAMP"));
     }
 
     /**
@@ -251,8 +283,35 @@ public class User extends SkypeObject {
      * @return String with native language.
      * @throws SkypeException when connection to Skype client has gone bad.
      */
+    @Deprecated
     public final String getLauguage() throws SkypeException {
-        return getProperty("LANGUAGE");
+        return getLanguage();
+    }
+
+    /**
+     * Return the native language of this User.
+     * @return String with native language.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final String getLanguage() throws SkypeException {
+        final String value = getProperty("LANGUAGE");
+        if ("".equals(value)) {
+            return "";
+        }
+        return value.substring(value.indexOf(' ') + 1);
+    }
+
+    /**
+     * Return the native language by ISO code of this User.
+     * @return String with native language.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final String getLanguageByISOCode() throws SkypeException {
+        final String value = getProperty("LANGUAGE");
+        if ("".equals(value)) {
+            return "";
+        }
+        return value.substring(0, value.indexOf(' '));
     }
 
     /**
@@ -261,7 +320,24 @@ public class User extends SkypeObject {
      * @throws SkypeException when connection to Skype client has gone bad.
      */
     public final String getCountry() throws SkypeException {
-        return getProperty("COUNTRY");
+        final String value = getProperty("COUNTRY");
+        if ("".equals(value)) {
+            return "";
+        }
+        return value.substring(value.indexOf(' ') + 1);
+    }
+
+    /**
+     * Return the country by ISO code the User is based.
+     * @return String with country.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final String getCountryByISOCode() throws SkypeException {
+        final String value = getProperty("COUNTRY");
+        if ("".equals(value)) {
+            return "";
+        }
+        return value.substring(0, value.indexOf(' '));
     }
 
     /**
@@ -287,7 +363,17 @@ public class User extends SkypeObject {
      * @return String with Home phone number.
      * @throws SkypeException when connection to Skype client has gone bad.
      */
+    @Deprecated
     public final String getHomePhone() throws SkypeException {
+        return getHomePhoneNumber();
+    }
+
+    /**
+     * Return the home phone number that is in the User profile.
+     * @return String with Home phone number.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final String getHomePhoneNumber() throws SkypeException {
         return getProperty("PHONE_HOME");
     }
 
@@ -296,7 +382,17 @@ public class User extends SkypeObject {
      * @return String with office phone number.
      * @throws SkypeException when connection to Skype client has gone bad.
      */
+    @Deprecated
     public final String getOfficePhone() throws SkypeException {
+        return getOfficePhoneNumber();
+    }
+
+    /**
+     * Return the office phone number that is in the User profile.
+     * @return String with office phone number.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final String getOfficePhoneNumber() throws SkypeException {
         return getProperty("PHONE_OFFICE");
     }
 
@@ -305,7 +401,17 @@ public class User extends SkypeObject {
      * @return String with mobile phone number.
      * @throws SkypeException when connection to Skype client has gone bad.
      */
+    @Deprecated
     public final String getMobilePhone() throws SkypeException {
+        return getMobilePhoneNumber();
+    }
+
+    /**
+     * Return the mobile phone number of this User.
+     * @return String with mobile phone number.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final String getMobilePhoneNumber() throws SkypeException {
         return getProperty("PHONE_MOBILE");
     }
 
@@ -323,7 +429,17 @@ public class User extends SkypeObject {
      * @return STring with extra info.
      * @throws SkypeException when connection to Skype client has gone bad.
      */
+    @Deprecated
     public final String getAbout() throws SkypeException {
+        return getIntroduction();
+    }
+
+    /**
+     * Returns introduction User has provided in his/her profile.
+     * @return STring with extra info.
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final String getIntroduction() throws SkypeException {
         return getProperty("ABOUT");
     }
 
@@ -334,6 +450,36 @@ public class User extends SkypeObject {
      */
     public String getMoodMessage() throws SkypeException {
         return getProperty("MOOD_TEXT");
+    }
+
+    /**
+     * Gets the speed dial of this user.
+     * @return the speed dial of this user.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     * @see #setSpeedDial(String)
+     */
+    public String getSpeedDial() throws SkypeException {
+        return getProperty("SPEEDDIAL");
+    }
+
+    /**
+     * Sets the speed dial of this user.
+     * @param newValue the speed dial of this user.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     * @see #getSpeedDial()
+     */
+    public void getSpeedDial(final String newValue) throws SkypeException {
+        setProperty("SPEEDDIAL", newValue);
+    }
+
+    /**
+     * Gets the time zone of the current user.
+     * @return the time zone of the current user.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     * @see #setTimeZone(int)
+     */
+    public int getTimeZone() throws SkypeException {
+        return Integer.parseInt(getProperty("TIMEZONE"));
     }
 
     /**
@@ -353,7 +499,31 @@ public class User extends SkypeObject {
     public final boolean isVideoCapable() throws SkypeException {
         return Boolean.parseBoolean(getProperty("IS_VIDEO_CAPABLE"));
     }
+    
+    /**
+     * Returns the buddy status of this user.
+     * @return Buddy status of this user
+     * @throws SkypeException when connection to Skype client has gone bad.
+     */
+    public final BuddyStatus getBuddyStatus() throws SkypeException {
+        return BuddyStatus.values()[Integer.parseInt(getProperty("BUDDYSTATUS"))];
+    }
 
+    final void askForAuthorization(String messageForAuthorization) throws SkypeException {
+        try {
+            String command = "SET " + "USER" + " " + getId() + " " + "BUDDYSTATUS" + " " + (BuddyStatus.PENDING.ordinal() + " " + messageForAuthorization);
+            String responseHeader = "USER" + " " + getId() + " " + "BUDDYSTATUS";
+            String response = Connector.getInstance().execute(command, responseHeader);
+            Utils.checkError(response);
+        } catch (ConnectorException e) {
+            Utils.convertToSkypeException(e);
+        }
+    }
+    
+    final void removeFromContactList() throws SkypeException {
+        setProperty("BUDDYSTATUS", "" + BuddyStatus.DELETED.ordinal());
+    }
+    
     /**
      * Check if this User is authorized in your contactlist.
      * @return true if User is authorized.
@@ -362,19 +532,41 @@ public class User extends SkypeObject {
     public final boolean isAuthorized() throws SkypeException {
         return Boolean.parseBoolean(getProperty("ISAUTHORIZED"));
     }
-    
+
     /**
-     * Set the authorization of this user.
-     * @param authorized TRUE will authorize the user.
+     * Set this user being authorized, or not in your contactlist.
+     * @param on true if user will be authorized.
      * @throws SkypeException when connection to Skype client has gone bad.
      */
-    public final void setAuthorized(boolean authorized) throws SkypeException {
-        if (authorized) {
-            getProperty("ISAUTHORIZED TRUE");
-        } else {
-            getProperty("ISAUTHORIZED FALSE");
-        }
-        
+    public final void setAuthorized(boolean on) throws SkypeException {
+        setProperty("ISAUTHORIZED", on);
+    }
+
+    /**
+     * Check if this User is blocked in your contactlist.
+     * @return true if User is blocked.
+     * @throws SkypeException when connection to Skype client has gone bad. 
+     */
+    public final boolean isBlocked() throws SkypeException {
+        return Boolean.parseBoolean(getProperty("ISBLOCKED"));
+    }
+    
+    /**
+     * Indicates whether the current user can leave voice mails to this user.
+     * @return <code>true</code> if the current user can leave voice mails; <code>false</code> otherwise.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     */
+    public final boolean canLeaveVoiceMail() throws SkypeException {
+        return Boolean.parseBoolean(getProperty("CAN_LEAVE_VM"));
+    }
+    
+    /**
+     * Set this user being blocked, or not in your contactlist.
+     * @param on true if user will be blocked.
+     * @throws SkypeException when connection to Skype client has gone bad. 
+     */
+    public final void setBlocked(boolean on) throws SkypeException {
+        setProperty("ISBLOCKED", on);
     }
     
     /**
@@ -385,6 +577,14 @@ public class User extends SkypeObject {
      */
     private String getProperty(String name) throws SkypeException {
         return Utils.getProperty("USER", getId(), name);
+    }
+
+    private void setProperty(String name, boolean newValue) throws SkypeException {
+        setProperty(name, ("" + newValue).toUpperCase());
+    }
+    
+    private void setProperty(String name, String newValue) throws SkypeException {
+        Utils.setProperty("USER", getId(), name, newValue);
     }
 
     /**
@@ -426,11 +626,11 @@ public class User extends SkypeObject {
 
     /**
      * Set a displayname for this User.
-     * @param displayName the new name to set.
+     * @param newValue the new name to set.
      * @throws SkypeException  when connection to Skype client has gone bad.
      */
-    public final void setDisplayName(String displayName) throws SkypeException {
-        Utils.setProperty("USER", getId(), "DISPLAYNAME", displayName);
+    public final void setDisplayName(String newValue) throws SkypeException {
+        Utils.setProperty("USER", getId(), "DISPLAYNAME", newValue);
     }
 
     /**

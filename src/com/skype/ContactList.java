@@ -193,6 +193,37 @@ public final class ContactList {
             return null;
         }
     }
+    
+    /**
+     * Add user to contactlist.
+     * @param user user to be added.
+     * @return Added friend.
+     * @throws SkypeException when connection has gone bad.
+     */
+    public Friend addFriend(User user, String messageForAuthorization) throws SkypeException {
+        return addFriend(user.getId(), messageForAuthorization);
+    }
+
+    /**
+     * Add user to contactlist.
+     * @param skypeId skype id of user to be added.
+     * @return Added friend.
+     * @throws SkypeException when connection has gone bad.
+     */
+    public Friend addFriend(String skypeId, String messageForAuthorization) throws SkypeException {
+        Friend friend = Friend.getFriendInstance(skypeId);
+        friend.askForAuthorization(messageForAuthorization);
+        return friend;
+    }
+    
+    /**
+     * Removes friend from this contact list.
+     * @param friend friend to be removed.
+     * @throws SkypeException when connection has gone bad.
+     */
+    public void removeFriend(Friend friend) throws SkypeException {
+        friend.removeFromContactList();
+    }
 
     /** 
      * Remove group from contactlist.
