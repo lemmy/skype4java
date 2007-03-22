@@ -610,9 +610,9 @@ public abstract class Connector {
             }
         };
         addConnectorListener(listener, false);
-        fireMessageSent(command);
         synchronized (wait) {
             try {
+                fireMessageSent(command);
                 sendCommand(command);
                 if (withoutTimeout) {
                     wait.wait();

@@ -79,7 +79,7 @@ public final class TestConnector extends Connector {
                         }
                     }
                 };
-                Connector.getInstance().addConnectorListener(recordListener);
+                Connector.getInstance().addConnectorListener(recordListener, false, true);
             }
             if(recorderList == null) {
                 recorderList = new ArrayList<Recorder>();
@@ -133,7 +133,7 @@ public final class TestConnector extends Connector {
                     }
                 }
             };
-            Connector.getInstance().addConnectorListener(playingLister);
+            Connector.getInstance().addConnectorListener(playingLister, false, true);
             playerCleared = false;
             playerThread = new Thread("TestConnectorPlayer") {
                 @Override
