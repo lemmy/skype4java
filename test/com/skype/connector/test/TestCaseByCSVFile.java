@@ -26,52 +26,37 @@ import java.io.File;
 import junit.framework.TestCase;
 
 public abstract class TestCaseByCSVFile extends TestCase {
-    private boolean isRecordingMode;
-    private CSVRecorder recorder;
+    private boolean _isRecordingMode;
     
     public final void setRecordingMode(final boolean on) {
-        isRecordingMode = on;
+        _isRecordingMode = on;
     }
     
     public final boolean isRecordingMode() {
-        return isRecordingMode;
+        return _isRecordingMode;
     }
     
     @Override
     protected final void runTest() throws Throwable {
-        if (isRecordingMode) {
-            recorder = startCSVRecording();
+        if (isRecordingMode()) {
+            CSVRecorder recorder = null;
+            try {
+                recorder = new CSVRecorder(getTestDataFileName());
+                TestConnector.getInstance().addRecorder(recorder);
+                super.runTest();
+            } finally {
+                if (recorder != null) {
+                    recorder.close();
+                }
+            }
         } else {
-            startCSVPlaying();
-        }
-        try {
-            super.runTest();
-        } finally {
-            if (isRecordingMode) {
-                endCSVRecording(recorder);
-            } else {
-                endCSVPlaying();
+            try {
+                TestConnector.getInstance().setPlayer(new CSVPlayer(getTestDataFileName()));
+                super.runTest();
+            } finally {
+                TestConnector.getInstance().clearPlayer();
             }
         }
-    }
-
-    private CSVRecorder startCSVRecording() throws Exception {
-        CSVRecorder recorder = new CSVRecorder(getTestDataFileName());
-        TestConnector.getInstance().addRecorder(recorder);
-        return recorder;
-    }
-
-    private void endCSVRecording(final CSVRecorder recorder) {
-        assert recorder != null;
-        recorder.close();
-    }
-    
-    private void startCSVPlaying() throws Exception {
-        TestConnector.getInstance().setPlayer(new CSVPlayer(getTestDataFileName()));
-    }
-    
-    private void endCSVPlaying() throws Exception {
-        TestConnector.getInstance().clearPlayer();
     }
 
     private String getTestDataFileName() {
