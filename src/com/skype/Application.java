@@ -194,7 +194,7 @@ public final class Application extends SkypeObject {
     public Stream[] connectToAll() throws SkypeException {
         return connect(getAllConnectableFriends());
     }
-
+    
     /**
      * Setup an AP2AP connection with a Friend.
      * 
@@ -204,6 +204,18 @@ public final class Application extends SkypeObject {
      */
     public Stream[] connect(final Friend... friends) throws SkypeException {
         Utils.checkNotNull("friends", friends);
+        return connect(toIds(friends));
+    }
+
+    /**
+     * Setup an AP2AP connection with members.
+     * 
+     * @param ids The member IDs to start a AP2AP with.
+     * @return The connected streams.
+     * @throws SkypeException when connection is gone bad.
+     */
+    public Stream[] connect(final String... ids) throws SkypeException {
+        Utils.checkNotNull("ids", ids);
         synchronized(connectMutex) {
             try {
                 final Object wait = new Object();
@@ -220,9 +232,9 @@ public final class Application extends SkypeObject {
                 try {
                     Connector.getInstance().addConnectorListener(connectorListener);
                     synchronized(wait) {
-                        for(Friend friend: friends) {
-                            if(friend != null) {
-                                String result = Connector.getInstance().execute("ALTER APPLICATION " + getName() + " CONNECT " + friend.getId());
+                        for(String skypeId: ids) {
+                            if(skypeId != null) {
+                                String result = Connector.getInstance().execute("ALTER APPLICATION " + getName() + " CONNECT " + skypeId);
                                 Utils.checkError(result);
                             }
                         }
@@ -233,7 +245,7 @@ public final class Application extends SkypeObject {
                             throw new SkypeException("The connecting was interrupted.", e);
                         }
                     }
-                    return getAllStreams(friends);
+                    return getAllStreams(ids);
                 } catch(ConnectorException e) {
                     Utils.convertToSkypeException(e);
                     return null;
@@ -241,7 +253,7 @@ public final class Application extends SkypeObject {
                     Connector.getInstance().removeConnectorListener(connectorListener);
                 }
             } catch(SkypeException e) {
-                for(Stream stream: getAllStreams(friends)) {
+                for(Stream stream: getAllStreams(ids)) {
                     try {
                         stream.disconnect();
                     } catch(SkypeException e2) {
@@ -261,11 +273,31 @@ public final class Application extends SkypeObject {
      * @throws SkypeException when connection is gone bad.
      */
     public Stream[] getAllStreams(final Friend... friends) throws SkypeException {
+        Utils.checkNotNull("friends", friends);
+        return getAllStreams(toIds(friends));
+    }
+    
+    private String[] toIds(Friend... friends) {
+        String[] ids = new String[friends.length];
+        for(int i = 0; i < ids.length; i++) {
+            ids[i] = friends[i].getId();
+        }
+        return ids;
+    }
+
+    /**
+     * Find a connected AP2AP stream by Skype IDs.
+     * 
+     * @param The Skype Ids to search streams for.
+     * @return the found streams.
+     * @throws SkypeException when connection is gone bad.
+     */
+    public Stream[] getAllStreams(final String... ids) throws SkypeException {
         List<Stream> results = new ArrayList<Stream>();
         for(Stream stream: getAllStreams()) {
-            Friend friend = stream.getFriend();
-            for(Friend comparedFriend: friends) {
-                if(friend.equals(comparedFriend)) {
+            String comparedId = stream.getFriend().getId();
+            for(String id: ids) {
+                if(comparedId.equals(id)) {
                     results.add(stream);
                 }
             }
