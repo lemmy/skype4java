@@ -208,12 +208,13 @@ public final class Profile {
 
     /**
      * Sets the online status of the current user by the {@link Status} enum.
-     * @param newStatus the new online status of the current user.
+     * @param newValue the new online status of the current user.
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #getStatus()
      */
-    public void setStatus(Status newStatus) throws SkypeException {
-        Utils.setProperty("USERSTATUS", newStatus.toString());
+    public void setStatus(final Status newValue) throws SkypeException {
+        Utils.checkNotNull("newValue", newValue);
+        Utils.setProperty("USERSTATUS", newValue.toString());
     }
 
     /**
@@ -249,7 +250,7 @@ public final class Profile {
      * @return true if this privilege is ok.
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      */
-    private boolean canDo(String name) throws SkypeException {
+    private boolean canDo(final String name) throws SkypeException {
         return Boolean.parseBoolean(Utils.getProperty("PRIVILEGE", name));
     }
 
@@ -258,8 +259,18 @@ public final class Profile {
      * @return the balance of the current user.
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      */
+    @Deprecated
     public int getPSTNBalance() throws SkypeException {
         return Integer.parseInt(getProperty("PSTN_BALANCE"));
+    }
+
+    /**
+     * Gets the credit of the current user.
+     * @return the balance of the current user.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     */
+    public int getCredit() throws SkypeException {
+        return getPSTNBalance();
     }
 
     /**
@@ -267,8 +278,18 @@ public final class Profile {
      * @return the currency code of the current user.
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      */
+    @Deprecated
     public String getPSTNBalanceCurrencyUnit() throws SkypeException {
         return getProperty("PSTN_BALANCE_CURRENCY");
+    }
+
+    /**
+     * Gets the credit currency unit of the current user.
+     * @return the currency code of the current user.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     */
+    public String getCreditCurrencyUnit() throws SkypeException {
+        return getPSTNBalanceCurrencyUnit();
     }
 
     /**
@@ -287,7 +308,7 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #getFullName()
      */
-    public void setFullName(String newValue) throws SkypeException {
+    public void setFullName(final String newValue) throws SkypeException {
         setProperty("FULLNAME", newValue);
     }
 
@@ -305,7 +326,7 @@ public final class Profile {
             try {
                 return new SimpleDateFormat("yyyyMMdd").parse(value);
             } catch (ParseException e) {
-                throw new IllegalStateException("library developer should check Skype specification.");
+                throw new IllegalStateException("The library developer should check Skype specification.");
             }
         }
     }
@@ -316,7 +337,7 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #getBirthDay()
      */
-    public void setBirthDay(Date newValue) throws SkypeException {
+    public void setBirthDay(final Date newValue) throws SkypeException {
         String newValueString;
         if (newValue == null) {
             newValueString = "0";
@@ -333,7 +354,7 @@ public final class Profile {
      * @see #setSex(Sex)
      */
     public Sex getSex() throws SkypeException {
-        return Sex.valueOf((getProperty("SEX")));
+        return Sex.valueOf(getProperty("SEX"));
     }
 
     /**
@@ -342,7 +363,8 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #getSex()
      */
-    public void setSex(Sex newValue) throws SkypeException {
+    public void setSex(final Sex newValue) throws SkypeException {
+        Utils.checkNotNull("newValue", newValue);
         setProperty("SEX", newValue.toString());
     }
 
@@ -352,8 +374,19 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #setAllLanguages(String[])
      */
+    @Deprecated
     public String[] getAllLauguages() throws SkypeException {
         return getProperty("LANGUAGES").split(" ");
+    }
+    
+    /**
+     * Get the language by ISO code of the current user.
+     * @return the language of the current user.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     * @see #setLanguage(String)
+     */
+    public String getLanguageByISOCode() throws SkypeException  {
+        return getAllLauguages()[0];
     }
 
     /**
@@ -362,6 +395,7 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #getAllLauguages()
      */
+    @Deprecated
     public void setAllLanguages(String[] newValues) throws SkypeException {
         if (newValues == null) {
             newValues = new String[0];
@@ -370,14 +404,27 @@ public final class Profile {
     }
 
     /**
+     * Sets the language by ISO code of the current user.
+     * @param newValues the language by ISO code of the current user.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     * @see #getAllLauguages()
+     */
+    public void setLanguageByISOCode(final String newValue) throws SkypeException {
+        setProperty("LANGUAGES", newValue);
+    }
+
+    /**
      * List a object in a space seperated String.
      * @param newValues objects to list.
      * @return String with whitespaces and objectnames.
      */
-    private String toSpaceSeparatedString(Object[] newValues) {
+    private String toSpaceSeparatedString(final Object[] newValues) {
         StringBuilder newValuesString = new StringBuilder();
-        for (Object newValue : newValues) {
-            newValuesString.append(newValue);
+        for (int i = 0; i < newValues.length; i++) {
+            if (i != 0) {
+                newValuesString.append(' ');
+            }
+            newValuesString.append(newValues[i]);
         }
         return newValuesString.toString();
     }
@@ -411,11 +458,8 @@ public final class Profile {
      * @see #getCountryByISOCode()
      * @see <a href="http://en.wikipedia.org/wiki/ISO_3166-1">ISO 3166-1</a>
      */
-    public void setCountryByISOCode(String newValue) throws SkypeException {
-        if (newValue == null) {
-            newValue = "";
-        }
-        setProperty("COUNTRY", newValue + " " + getCountry());
+    public void setCountryByISOCode(final String newValue) throws SkypeException {
+        setProperty("COUNTRY", Utils.convertNullToEmptyString(newValue) + " " + getCountry());
     }
 
     /**
@@ -435,11 +479,8 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #getCountry()
      */
-    public void setCountry(String newValue) throws SkypeException {
-        if (newValue == null) {
-            newValue = "";
-        }
-        setProperty("COUNTRY", getCountryByISOCode() + " " + newValue);
+    public void setCountry(final String newValue) throws SkypeException {
+        setProperty("COUNTRY", getCountryByISOCode() + " " + Utils.convertNullToEmptyString(newValue));
     }
 
     /**
@@ -458,7 +499,7 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #getProvince()
      */
-    public void setProvince(String newValue) throws SkypeException {
+    public void setProvince(final String newValue) throws SkypeException {
         setProperty("PROVINCE", newValue);
     }
 
@@ -478,7 +519,7 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #getCity()
      */
-    public void setCity(String newValue) throws SkypeException {
+    public void setCity(final String newValue) throws SkypeException {
         setProperty("CITY", newValue);
     }
 
@@ -498,7 +539,7 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #getHomePhoneNumber()
      */
-    public void setHomePhoneNumber(String newValue) throws SkypeException {
+    public void setHomePhoneNumber(final String newValue) throws SkypeException {
         setProperty("PHONE_HOME", newValue);
     }
 
@@ -518,7 +559,7 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #getOfficePhoneNumber()
      */
-    public void setOfficePhoneNumber(String newValue) throws SkypeException {
+    public void setOfficePhoneNumber(final String newValue) throws SkypeException {
         setProperty("PHONE_OFFICE", newValue);
     }
 
@@ -538,7 +579,7 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #getMobilePhoneNumber()
      */
-    public void setMobilePhoneNumber(String newValue) throws SkypeException {
+    public void setMobilePhoneNumber(final String newValue) throws SkypeException {
         setProperty("PHONE_MOBILE", newValue);
     }
 
@@ -548,8 +589,19 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #setHomePageAddress(String)
      */
+    @Deprecated
     public String getHomePageAddress() throws SkypeException {
         return getProperty("HOMEPAGE");
+    }
+
+    /**
+     * Gets the web site address of the current user.
+     * @return the web site address of the current user.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     * @see #setWebSiteAddress(String)
+     */
+    public String getWebSiteAddress() throws SkypeException {
+        return getHomePageAddress();
     }
 
     /**
@@ -558,8 +610,19 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #getHomePageAddress()
      */
-    public void setHomePageAddress(String newValue) throws SkypeException {
+    @Deprecated
+    public void setHomePageAddress(final String newValue) throws SkypeException {
         setProperty("HOMEPAGE", newValue);
+    }
+
+    /**
+     * Sets the web site address of the current user.
+     * @param newValue the new web site address of the current user.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     * @see #getWebSiteAddress()
+     */
+    public void setWebSiteAddress(final String newValue) throws SkypeException {
+        setHomePageAddress(newValue);
     }
 
     /**
@@ -578,7 +641,7 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #getIntroduction()
      */
-    public void setIntroduction(String newValue) throws SkypeException {
+    public void setIntroduction(final String newValue) throws SkypeException {
         setProperty("ABOUT", newValue);
     }
 
@@ -598,7 +661,7 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #getMoodMessage()
      */
-    public void setMoodMessage(String newValue) throws SkypeException {
+    public void setMoodMessage(final String newValue) throws SkypeException {
         setProperty("MOOD_TEXT", newValue);
     }
 
@@ -618,7 +681,7 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #getTimeZone()
      */
-    public void setTimeZone(int newValue) throws SkypeException {
+    public void setTimeZone(final int newValue) throws SkypeException {
         setProperty("TIMEZONE", "" + newValue);
     }
 
@@ -647,7 +710,7 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #getWaitTimeBeforeCallForwarding()
      */
-    public void setWaitTimeBeforeCallForwarding(int newValue) throws SkypeException {
+    public void setWaitTimeBeforeCallForwarding(final int newValue) throws SkypeException {
         setProperty("CALL_NOANSWER_TIMEOUT", "" + newValue);
     }
 
@@ -667,7 +730,7 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @see #isCallForwarding()
      */
-    public void setCallForwarding(boolean on) throws SkypeException {
+    public void setCallForwarding(final boolean on) throws SkypeException {
         setProperty("CALL_APPLY_CF", ("" + on).toUpperCase());
     }
 
@@ -697,6 +760,9 @@ public final class Profile {
      * @see #getAllCallForwardingRules()
      */
     public void setAllCallForwardingRules(CallForwardingRule[] newValues) throws SkypeException {
+        if (newValues == null) {
+            newValues = new CallForwardingRule[0];
+        }
         setProperty("CALL_FORWARD_RULES", toSpaceSeparatedString(newValues));
     }
 
@@ -705,7 +771,7 @@ public final class Profile {
      * @return Array of Strings with the numbers.
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      */
-    String[] getAllValidSMSNumbers() throws SkypeException {
+    public String[] getAllValidSMSNumbers() throws SkypeException {
         return Utils.convertToArray(getProperty("SMS_VALIDATED_NUMBERS"));
     }
 
@@ -715,7 +781,7 @@ public final class Profile {
      * @return the value of the parameter.
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      */
-    private String getProperty(String name) throws SkypeException {
+    private String getProperty(final String name) throws SkypeException {
         return Utils.getProperty("PROFILE", name);
     }
 
@@ -725,7 +791,7 @@ public final class Profile {
      * @param value value of the property.
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      */
-    private void setProperty(String name, String value) throws SkypeException {
-        Utils.setProperty("PROFILE", name, value);
+    private void setProperty(final String name, final String value) throws SkypeException {
+        Utils.setProperty("PROFILE", name, Utils.convertNullToEmptyString(value));
     }
 }
