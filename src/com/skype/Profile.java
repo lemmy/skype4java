@@ -29,7 +29,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 import javax.imageio.ImageIO;
 
@@ -710,7 +709,7 @@ public final class Profile {
             return;
         }
         try {
-            final File file = createTempraryFile("set_avator_", "jpg");
+            final File file = Utils.createTempraryFile("set_avator_", "jpg");
             if (ImageIO.write(newValue, "jpg", file)) {
                 setAvatarByFile(file);
                 file.delete();
@@ -719,10 +718,6 @@ public final class Profile {
         }
     }
 
-    private File createTempraryFile(final String header, final String extension) {
-        return new File(System.getProperty("java.io.tmpdir"), header + UUID.randomUUID().toString() + "." + extension);
-    }
-    
     /**
      * Sets the avatar of the current user by a file .
      * @param newValue the new image file of the avatar.
@@ -751,7 +746,7 @@ public final class Profile {
      */
     public BufferedImage getAvatar() throws SkypeException {
         try {
-            final File file = createTempraryFile("get_avator_", "jpg");
+            final File file = Utils.createTempraryFile("get_avator_", "jpg");
             final String command = "GET AVATAR 1 " + file.getAbsolutePath();
             final String responseHeader = "AVATAR 1 ";
             final String response = Connector.getInstance().execute(command, responseHeader);

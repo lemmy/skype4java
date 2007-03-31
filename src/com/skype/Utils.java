@@ -21,9 +21,11 @@
  ******************************************************************************/
 package com.skype;
 
+import java.io.File;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.UUID;
 
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
@@ -287,6 +289,10 @@ final class Utils {
             return;
         }
         Skype.handleUncaughtException(e);
+    }
+
+    static File createTempraryFile(final String header, final String extension) {
+        return new File(System.getProperty("java.io.tmpdir"), header + UUID.randomUUID().toString() + "." + extension);
     }
 
     /**

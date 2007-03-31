@@ -21,6 +21,9 @@
  ******************************************************************************/
 package com.skype;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -29,6 +32,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
 
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
@@ -567,6 +572,30 @@ public class User extends SkypeObject {
      */
     public final void setBlocked(boolean on) throws SkypeException {
         setProperty("ISBLOCKED", on);
+    }
+
+    /**
+     * Gets the avatar of this user.
+     * @return the avatar image of this user.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     * @since Protocol 7
+     */
+    public BufferedImage getAvatar() throws SkypeException {
+        try {
+            final File file = Utils.createTempraryFile("get_avator_", "jpg");
+            final String command = "GET USER " + getId() + " AVATAR 1 " + file.getAbsolutePath();
+            final String responseHeader = "USER " + getId() + " AVATAR 1 ";
+            final String response = Connector.getInstance().execute(command, responseHeader);
+            Utils.checkError(response);
+            final BufferedImage image = ImageIO.read(file);
+            file.delete();
+            return image;
+        } catch(ConnectorException e) {
+            Utils.convertToSkypeException(e);
+            return null;
+        } catch(IOException e) {
+            return null;
+        }
     }
     
     /**
