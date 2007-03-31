@@ -32,8 +32,19 @@ import com.skype.connector.ConnectorException;
  * Util class used by this API to store common used helper methods.
  */
 final class Utils {
-	
-	/**
+    /**
+     * Converts value to a empty string if value is null.
+     * @param value the checked value.
+     * @return the converted value.
+     */
+    static String convertNullToEmptyString(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value;
+    }
+
+    /**
 	 * Convert a connector exception to a SkypeException.
 	 * @param e the connectorException to convert.
 	 * @throws SkypeException the converted connectorException.
