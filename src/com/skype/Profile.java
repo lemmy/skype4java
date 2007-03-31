@@ -666,6 +666,28 @@ public final class Profile {
     }
 
     /**
+     * Gets the rich mood message of the current user.
+     * @return the rich mood message of the current user.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     * @since Protocol 7
+     * @see #setRichMoodMessage(String)
+     */
+    public String getRichMoodMessage() throws SkypeException {
+        return getProperty("RICH_MOOD_TEXT");
+    }
+
+    /**
+     * Sets the rich mood message of the current user.
+     * @param newValue the new rich mood message of the current user.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     * @since Protocol 7
+     * @see #getRichMoodMessage()
+     */
+    public void setRichMoodMessage(final String newValue) throws SkypeException {
+        setProperty("RICH_MOOD_TEXT", newValue);
+    }
+
+    /**
      * Gets the time zone of the current user.
      * @return the time zone of the current user.
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
