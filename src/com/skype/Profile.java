@@ -743,7 +743,7 @@ public final class Profile {
     
     /**
      * Gets the avatar of the current user.
-     * @param newValue the avatar image of the current user.
+     * @return the avatar image of the current user.
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      * @since Protocol 7
      * @see #setAvatar(BufferedImage)
