@@ -5,6 +5,8 @@
     <property name="src.dir" value="src"/>
     <property name="release.dir" value="release"/>
 
+    <taskdef name="fmpp" classname="fmpp.tools.AntTask" classpath="${lib.dir}/tools/fmpp.jar"/>
+	
     <target name="prepare">
         <mkdir dir="${bin.dir}"/>
     </target>
@@ -52,6 +54,22 @@
     	<delete dir="${bin.dir}/linux"/>
         <delete dir="${bin.dir}/win32"/>
     </target>
+	
+	<target name="javadoc">
+		<macrodef name="javadoc-i18n">
+			<attribute name="locale"/>
+			<sequential>
+				<mkdir dir="tmp/src-@{locale}"/>
+				<fmpp sourceroot="src" outputroot="tmp/src-@{locale}" data="locale:@{locale}"/>
+				<javadoc sourcepath="tmp/src-@{locale}" destdir="javadoc/@{locale}" windowtitle="Skype4Java" Locale="@{locale}" Encoding="UTF-8" packagenames="com.skype.*" charset="UTF-8">
+					<link href="https://developer.skype.com/wiki/Java_API"/>
+				</javadoc>
+			</sequential>
+		</macrodef>
+
+		<javadoc-i18n locale="ja"/>
+		<javadoc-i18n locale="en"/>
+	</target>
 	
     <target name="clean">
         <delete dir="${bin.dir}"/>

@@ -4,11 +4,7 @@
 	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="src" path="sample"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry exported="true" sourcepath="lib/swt/src.zip" kind="lib" path="lib/swt/swt.jar">
-		<attributes>
-			<attribute value="skype/lib/swt" name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry sourcepath="/JUNIT_SRC_HOME/junitsrc.zip" kind="var" path="JUNIT_HOME/junit.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/swt/swt.jar" sourcepath="lib/swt/swt_src.zip"/>
+	<classpathentry kind="var" path="JUNIT_HOME/junit.jar" sourcepath="/JUNIT_SRC_HOME/junitsrc.zip"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

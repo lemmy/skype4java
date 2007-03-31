@@ -1,82 +1,82 @@
 Skype API for Java <http://skype.sourceforge.jp/>
 
-1.�͂��߂�
-2.����
-3.�����N�W
-4.�J������
-5.���쌠�E�Ɛӎ���
+1.はじめに
+2.準備
+3.リンク集
+4.開発履歴
+5.著作権・免責事項
 
 
-1.�͂��߂�
+1.はじめに
 
-Skype�͎g���n�߂����ɂ͉����̕i���̍����Ƀr�b�N�����܂����B
-���ł͎d���A�v���C�x�[�g���Ɍ������Ȃ��c�[���ɂȂ��Ă��܂��B
-������Skype API�����J����ėl�X�ȃv���O�C��������悤�ɂȂ������ɂ͂���Ƀr�b�N�����܂����B
+Skypeは使い始めた時には音声の品質の高さにビックリしました。
+今では仕事、プライベート共に欠かせないツールになっています。
+しかもSkype APIが公開されて様々なプラグインが作れるようになった時にはさらにビックリしました。
 
-�ł����AJava�����C���Ŏg���Ă���l�ɂ͑��̌���ł̊J���͑�ςł��B
-���̂��߁A���낢���Java���C�u�������l�b�g��ŒT���܂����B
+ですが、Javaをメインで使っている僕には他の言語での開発は大変です。
+そのため、いろいろなJavaライブラリをネット上で探しました。
 
-JNI�ŒʐM���C���[����������JSA<http://jsa.sourceforge.net/>�ACOM�����b�s���O���Ď�������
-skype2rtc<http://skype2rtc.sourceforge.net/>�������܂�����ActiveS�قǂɂ͋@�\���[������
-���܂���B
+JNIで通信レイヤーを実現したJSA<http://jsa.sourceforge.net/>、COMをラッピングして実現した
+skype2rtc<http://skype2rtc.sourceforge.net/>を見つけましたがActiveSほどには機能が充実して
+いません。
 
-�Ƃ������ƂŎ������g�ŉ�Ђ̓~�x�݂𗘗p���č쐬���邱�Ƃɂ��܂����B
+ということで自分自身で会社の冬休みを利用して作成することにしました。
 
-����Java���C�u�����Ɣ�ׂĂ̓�����
-�E�����̃e�X�g���s���Ă���eclipse�v���W�F�N�g��SWT���C�u������p���Ď���
-�EP2P�t���[�����[�N��A2P���T�|�[�g
-�ESkype 2.0�Œǉ����ꂽ�O���[�v�A�r�f�I�`���b�g���T�|�[�g
-�ƂȂ��Ă��܂��B
+他のJavaライブラリと比べての特徴は
+・多くのテストが行われているeclipseプロジェクトのSWTライブラリを用いて実装
+・P2PフレームワークのA2Pをサポート
+・Skype 2.0で追加されたグループ、ビデオチャットもサポート
+となっています。
 
-���̃��C�u�����ɂ��
-�E�����̍ŐV�̃u���O�̃G���g���^�C�g����Skype�̃��[�h�e�L�X�g�ɂ��Ēʒm
-�E�d�b�T�|�[�g���s����I�[�N�V�����Ǘ��\�t�g���쐬
-�EP2P�t���[�����[�N��p���ăO���[�v�E�F�A���쐬
-���X�A�l�X�ȃA�v���P�[�V������Java��p���ĊȒP�ɊJ���ł���悤�ɂȂ�܂��B
+このライブラリにより
+・自分の最新のブログのエントリタイトルをSkypeのムードテキストにして通知
+・電話サポートが行えるオークション管理ソフトを作成
+・P2Pフレームワークを用いてグループウェアを作成
+等々、様々なアプリケーションをJavaを用いて簡単に開発できるようになります。
 
-���낢�뉞�p���ėV��ł݂Ă���������
-�A�v���P�[�V�������쐬�����ۂɂ�hisano@gmail.com�܂ł���񂢂�������Ə�����܂��B
+いろいろ応用して遊んでみてください♪
+アプリケーションを作成した際にはhisano@gmail.comまでご一報いただけると助かります。
 
-���{�\�t�g�E�F�A��Skype�Ђ̋��͂̌��ɊJ������Ă��܂����ASkype�Ђɂ��₢���킹�ɂȂ邱�Ƃ͂��������������B
+※本ソフトウェアはSkype社の協力の元に開発されていますが、Skype社にお問い合わせになることはご遠慮ください。
 
 
-2.����
+2.準備
 
-���L�̊���p�ӂ��Ă��������B
-�EJDK5.0(http://java.sun.com/j2se/1.5.0/ja/download.html)
-�Eeclise3.1(http://www.eclipse.org/downloads/)
+下記の環境を用意してください。
+・JDK5.0(http://java.sun.com/j2se/1.5.0/ja/download.html)
+・eclise3.1(http://www.eclipse.org/downloads/)
 
-���̌�Aeclipse��[�t�@�C�� - �C���|�[�g]���j���[����{�v���W�F�N�g���C���|�[�g��
-�Ă��������B
-API�̎g������JUnit�̃e�X�g�P�[�X���������������B
+その後、eclipseの[ファイル - インポート]メニューから本プロジェクトをインポートし
+てください。
+APIの使い方はJUnitのテストケースをご覧ください。
 
-���̃A�v���P�[�V�����ɑg�ݍ��ޏꍇ��release�t�H���_����
-�Eskype.jar
-�Eswt.jar
-�Eswt-win32-3139.dll(�l�C�e�B�u���C�u����)
-��lib�t�H���_���ɃR�s�[���Ă����p���������B
-�쐬�����A�v���P�[�V���������s����ꍇ�ɂ͈ȉ��̂悤�Ƀl�C�e�B�u���C�u�����̏ꏊ���w�肵�Ȃ���΂����܂���̂�
-�����ӂ��������B
+他のアプリケーションに組み込む場合はreleaseフォルダ内の
+・skype.jar
+・swt.jar
+・swt-win32-3139.dll(ネイティブライブラリ)
+をlibフォルダ内にコピーしてご利用ください。
+作成したアプリケーションを実行する場合には以下のようにネイティブライブラリの場所を指定しなければいけませんので
+ご注意ください。
 
 java -Djava.library.path=lib -classpath bin;lib\skype.jar;lib\swt.jar Main
 
 
-3.�����N�W
+3.リンク集
 
 http://skype.sourceforge.jp/index.php?%A5%EA%A5%F3%A5%AF%BD%B8
 
 
-4.�J������
+4.開発履歴
 
-ver0.9 - 2006/01/15(��)
-�@�x�[�^�Ō��J
+ver0.9 - 2006/01/15(日)
+　ベータ版公開
 
 
-5.���쌠�E�Ɛӎ���
+5.著作権・免責事項
 
-Skype�́ASkype Limited�̕č��A����т��̑��̍��ɂ����鏤�W�A�܂��͓o�^���W�ł��B
+Skypeは、Skype Limitedの米国、およびその他の国における商標、または登録商標です。
 
-Skype API for Java�̒��쌠�͋v�[�F���AUBION Inc.�ASkype Technologies S.A.���L���Ă��܂��B
-�{���C�u�����̂����p�ɂ���ĉ��炩�̏�Q����K�I�Ȃ��̂��܂߂��������������Ƃ��Ă��@���Ȃ闝�R�ł����҂�
-��؂̐ӔC�𕉂��܂���B
-���p�҂̎��ȐӔC�ɂ����Ă��g�p���ĉ������B
+Skype API for Javaの著作権は久納孝治、UBION Inc.、Skype Technologies S.A.が有しています。
+本ライブラリのご利用によって何らかの障害や金銭的なものも含めた損失が生じたとしても如何なる理由であれ作者は
+一切の責任を負いません。
+利用者の自己責任においてご使用して下さい。
