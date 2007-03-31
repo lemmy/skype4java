@@ -21,11 +21,20 @@
  ******************************************************************************/
 package com.skype;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
+
+import javax.imageio.ImageIO;
+
+import com.skype.connector.Connector;
+import com.skype.connector.ConnectorException;
 
 /**
  * The <code>Profile</code> class contains the current user's information.
@@ -41,7 +50,7 @@ public final class Profile {
     /**
      * The <code>Status</code> enum contains the online status constants of the current user.
      * @see Profile#getStatus()
-     * @see Profile#setStatus(Status)
+     * @see Profile#setStatus(Status)k
      */
     public enum Status {
         /**
@@ -188,15 +197,6 @@ public final class Profile {
     }
 
     /**
-     * Gets the Skype ID (username) of the current user. 
-     * @return the Skype ID (username) of the current user.
-     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
-     */
-    public String getId() throws SkypeException {
-        return Utils.getProperty("CURRENTUSERHANDLE");
-    }
-
-    /**
      * Gets the online status of the current user.
      * @return the online status of the current user.
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
@@ -215,6 +215,15 @@ public final class Profile {
     public void setStatus(final Status newValue) throws SkypeException {
         Utils.checkNotNull("newValue", newValue);
         Utils.setProperty("USERSTATUS", newValue.toString());
+    }
+
+    /**
+     * Gets the Skype ID (username) of the current user. 
+     * @return the Skype ID (username) of the current user.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     */
+    public String getId() throws SkypeException {
+        return Utils.getProperty("CURRENTUSERHANDLE");
     }
 
     /**
@@ -685,6 +694,77 @@ public final class Profile {
      */
     public void setRichMoodMessage(final String newValue) throws SkypeException {
         setProperty("RICH_MOOD_TEXT", newValue);
+    }
+    
+    /**
+     * Sets the avatar of the current user.
+     * @param newValue the new image of the avatar.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     * @since Protocol 7
+     * @see #setAvatarByFile(File)
+     * @see #getAvatar()
+     */
+    public void setAvatar(final BufferedImage newValue) throws SkypeException {
+        if (newValue == null) {
+            setAvatarByFile((File)null);
+            return;
+        }
+        try {
+            final File file = createTempraryFile("set_avator_", "jpg");
+            if (ImageIO.write(newValue, "jpg", file)) {
+                setAvatarByFile(file);
+                file.delete();
+            }
+        } catch(IOException e) {
+        }
+    }
+
+    private File createTempraryFile(final String header, final String extension) {
+        return new File(System.getProperty("java.io.tmpdir"), header + UUID.randomUUID().toString() + "." + extension);
+    }
+    
+    /**
+     * Sets the avatar of the current user by a file .
+     * @param newValue the new image file of the avatar.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     * @since Protocol 7
+     * @see #setAvatar(BufferedImage)
+     * @see #getAvatar()
+     */
+    public void setAvatarByFile(final File newValue) throws SkypeException {
+        final String newValueString;
+        if (newValue == null) {
+            newValueString = "";
+        } else {
+            newValueString = newValue.getAbsolutePath();
+        }
+        Utils.setProperty("AVATAR", "1", newValueString);
+    }
+    
+    /**
+     * Gets the avatar of the current user.
+     * @param newValue the avatar image of the current user.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     * @since Protocol 7
+     * @see #setAvatar(BufferedImage)
+     * @see #setAvatarByFile(File)
+     */
+    public BufferedImage getAvatar() throws SkypeException {
+        try {
+            final File file = createTempraryFile("get_avator_", "jpg");
+            final String command = "GET AVATAR 1 " + file.getAbsolutePath();
+            final String responseHeader = "AVATAR 1 ";
+            final String response = Connector.getInstance().execute(command, responseHeader);
+            Utils.checkError(response);
+            final BufferedImage image = ImageIO.read(file);
+            file.delete();
+            return image;
+        } catch(ConnectorException e) {
+            Utils.convertToSkypeException(e);
+            return null;
+        } catch(IOException e) {
+            return null;
+        }
     }
 
     /**
