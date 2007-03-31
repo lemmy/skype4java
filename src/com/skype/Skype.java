@@ -33,13 +33,27 @@ import com.skype.connector.ConnectorListener;
 import com.skype.connector.ConnectorMessageEvent;
 
 /**
- * Main model (not view) class of the Skype Java API.
+<#if locale="ja">
+ * <p>
+ * Skypeの情報モデルにアクセスするクラスです。
+ * </p><p>
+ * Skypeのユーザインターフェイスにアクセスするには{@link com.skype.SkypeClient}を用いてください。
+ * </p>
+<#else>
+ * Skype information model (not view) class of Skype4Java.
  * Use this class staticly to do model actions (send messages, SMS messages or calls, etc).
+</#if>
  * @see SkypeClient
  * @author Koji Hisano
  */
 public final class Skype {
-    /** library version. **/
+    /**
+    <#if locale="ja">
+     * ライブラリのバージョンです。
+    <#else>
+     * The library version.
+    </#if>
+     */
     public static final String LIBRARY_VERSION = "1.0.0.0";
 
     /** contactList instance. */
@@ -85,9 +99,18 @@ public final class Skype {
     private static SkypeExceptionHandler exceptionHandler = defaultExceptionHandler;
 
     /**
-     * Make the main thread of this API a deamon thread.
-     * @see Thread
-     * @param on if true the main thread will be a deamon thread.
+    <#if locale="ja">
+     * <p>
+     * Skype4Javaスレッドのアプリケーションスレッドまたはデーモンスレッドに設定します。
+     * </p><p>
+     * {@link Skype}にリスナーを設定しても、そのままでは{@code main}メソッドが終了するとアプリケーションが終了してしまって一瞬しか動作しないものになります。
+     * {@code main}メソッドが終了してもリスナーが働き続けるように、本メソッドの引数に{@code false}を渡してSkype4Javaスレッドをアプリケーションスレッドに変更します。
+     * </p>
+     * @param on デーモンモードにする場合は{@code true}、アプリケーションモードにする場合は{@code false}
+    <#else>
+     * Sets the thread of Skype4Java to deamon mode or not.
+     * @param on true to set the thread to "deamon mode"
+    </#if>
      */
     public static void setDeamon(boolean on) {
         synchronized (userThreadFieldMutex) {
