@@ -23,7 +23,6 @@ package com.skype;
 
 import java.text.SimpleDateFormat;
 
-import com.skype.connector.Connector;
 import com.skype.connector.test.TestCaseByCSVFile;
 
 public final class ProfileTest extends TestCaseByCSVFile {
@@ -41,12 +40,12 @@ public final class ProfileTest extends TestCaseByCSVFile {
             System.out.println(profile.canDoSkypeIn());
             System.out.println(profile.canDoVoiceMail());
 
-            System.out.println(profile.getPSTNBalance());
-            System.out.println(profile.getPSTNBalanceCurrencyUnit());
+            System.out.println(profile.getCredit());
+            System.out.println(profile.getCreditCurrencyUnit());
             System.out.println(profile.getFullName());
             System.out.println(new SimpleDateFormat("yyyy/MM/dd").format(profile.getBirthDay()));
             System.out.println(profile.getSex());
-            System.out.println(profile.getAllLauguages()[0]);
+            System.out.println(profile.getLanguageByISOCode());
             System.out.println(profile.getCountry());
             System.out.println(profile.getCountryByISOCode());
             System.out.println(profile.getIPCountryByISOCode());
@@ -55,7 +54,7 @@ public final class ProfileTest extends TestCaseByCSVFile {
             System.out.println(profile.getHomePhoneNumber());
             System.out.println(profile.getOfficePhoneNumber());
             System.out.println(profile.getMobilePhoneNumber());
-            System.out.println(profile.getHomePageAddress());
+            System.out.println(profile.getWebSiteAddress());
             System.out.println(profile.getIntroduction());
             System.out.println(profile.getMoodMessage());
             System.out.println(profile.getTimeZone());
@@ -66,12 +65,12 @@ public final class ProfileTest extends TestCaseByCSVFile {
             assertTrue(profile.canDoSkypeIn());
             assertTrue(profile.canDoVoiceMail());
 
-            assertEquals(1000000, profile.getPSTNBalance());
-            assertEquals("JPY", profile.getPSTNBalanceCurrencyUnit());
+            assertEquals(1000000, profile.getCredit());
+            assertEquals("JPY", profile.getCreditCurrencyUnit());
             assertEquals("Skype API for Java", profile.getFullName());
             assertEquals("1980/12/05", new SimpleDateFormat("yyyy/MM/dd").format(profile.getBirthDay()));
             assertEquals(Profile.Sex.MALE, profile.getSex());
-            assertEquals("ja", profile.getAllLauguages()[0]);
+            assertEquals("ja", profile.getLanguageByISOCode());
             assertEquals("Japan", profile.getCountry());
             assertEquals("jp", profile.getCountryByISOCode());
             assertEquals("jp", profile.getIPCountryByISOCode());
@@ -80,7 +79,7 @@ public final class ProfileTest extends TestCaseByCSVFile {
             assertEquals("+8130-0000-0000", profile.getHomePhoneNumber());
             assertEquals("+8130-0000-0000", profile.getOfficePhoneNumber());
             assertEquals("+8190-0000-0000", profile.getMobilePhoneNumber());
-            assertEquals("http://skype.sourceforge.jp/", profile.getHomePageAddress());
+            assertEquals("http://skype.sourceforge.jp/", profile.getWebSiteAddress());
             assertEquals("Skype API for Java", profile.getIntroduction());
             assertEquals("Please, enjoy 'Skype API for Java'.", profile.getMoodMessage());
             assertEquals(118800, profile.getTimeZone());
