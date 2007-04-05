@@ -135,9 +135,19 @@ public final class Skype {
     }
 
     /**
+    <#if locale="ja">
+     * <p>
+     * Skype APIのコマンド送信/結果受信のデバッグ出力を設定します。
+     * </p><p>
+     * {@link Skype}にリスナーを設定しても、そのままでは{@code main}メソッドが終了するとアプリケーションが終了してしまって一瞬しか動作しないものになります。
+     * {@code main}メソッドが終了してもリスナーが働き続けるように、本メソッドの引数に{@code false}を渡してSkype4Javaスレッドをアプリケーションスレッドに変更します。
+     * </p>
+     * @param on デーモンモードにする場合は{@code true}、アプリケーションモードにする場合は{@code false}
+    <#else>
      * Enable debug logging.
      * @param on if true debug logging will be sent to the console.
      * @throws SkypeException when the connection has gone bad.
+    </#if>
      */
     public static void setDebug(boolean on) throws SkypeException {
         try {
@@ -707,10 +717,17 @@ public final class Skype {
     }
 
     /**
+    <#if locale="ja">
+     * チャットメッセージ送信/受信時にイベントを受け取る {@link ChatMessageListener} を追加します。
+     * @param listener 追加するリスナー
+     * @throws SkypeException Skypeが起動していない、Skype APIが許可されていない、コマンドが不正な場合
+     * @see #removeChatMessageListener(ChatMessageListener)
+    <#else>
      * Add a listener for CHATMESSAGE events received from the Skype API.
-     * @see ChatMessageListener
      * @param listener the Listener to add.
      * @throws SkypeException when connection has gone bad or ERROR reply.
+     * @see #removeChatMessageListener(ChatMessageListener)
+    </#if>
      */
     public static void addChatMessageListener(ChatMessageListener listener) throws SkypeException {
         Utils.checkNotNull("listener", listener);
@@ -760,9 +777,16 @@ public final class Skype {
     }
 
     /**
+    <#if locale="ja">
+     * チャットメッセージ送信/受信時にイベントを受け取る {@link ChatMessageListener} を削除します。
+     * @param listener 削除するリスナー
+     * @see #addChatMessageListener(ChatMessageListener)
+    <#else>
      * Remove a listener for CHATMESSAGE events.
      * If the listener is already removed nothing happens.
      * @param listener The listener to remove.
+     * @see #addChatMessageListener(ChatMessageListener)
+    </#if>
      */
     public static void removeChatMessageListener(ChatMessageListener listener) {
         Utils.checkNotNull("listener", listener);
@@ -798,7 +822,7 @@ public final class Skype {
                                 String propertyValue = propertyNameAndValue.substring(propertyNameAndValue.indexOf(' ') + 1);
                                 Call.Status status = Call.Status.valueOf(propertyValue);
                                 Call call = Call.getInstance(id);
-                                EXIT: if (status == Call.Status.RINGING || status == Call.Status.EARLYMEDIA) {
+                                EXIT: if (status == Call.Status.ROUTING) {
                                     synchronized(call) {
                                         if (call.isCallListenerEventFired()) {
                                             break EXIT;
