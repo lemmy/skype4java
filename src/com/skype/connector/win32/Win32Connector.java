@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2006 r-yu/xai
+ * Copyright (c) 2006-2007 r-yu/xai
  *
- * Copyright (c) 2006 Koji Hisano <hisano@gmail.com> - UBION Inc. Developer
- * Copyright (c) 2006 UBION Inc. <http://www.ubion.co.jp/> All rights reserved.
+ * Copyright (c) 2006-2007 Koji Hisano <hisano@gmail.com> - UBION Inc. Developer
+ * Copyright (c) 2006-2007 UBION Inc. <http://www.ubion.co.jp/>
  * 
- * Copyright (c) 2006 Skype Technologies S.A. <http://www.skype.com/>
+ * Copyright (c) 2006-2007 Skype Technologies S.A. <http://www.skype.com/>
  * 
  * Skype4Java is licensed under either the Apache License, Version 2.0 or
  * the Eclipse Public License v1.0.

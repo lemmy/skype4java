@@ -1,8 +1,8 @@
 /*******************************************************************************
- * Copyright (c) 2006 Koji Hisano <hisano@gmail.com> - UBION Inc. Developer
- * Copyright (c) 2006 UBION Inc. <http://www.ubion.co.jp/>
+ * Copyright (c) 2006-2007 Koji Hisano <hisano@gmail.com> - UBION Inc. Developer
+ * Copyright (c) 2006-2007 UBION Inc. <http://www.ubion.co.jp/>
  * 
- * Copyright (c) 2006 Skype Technologies S.A. <http://www.skype.com/>
+ * Copyright (c) 2006-2007 Skype Technologies S.A. <http://www.skype.com/>
  * 
  * Skype4Java is licensed under either the Apache License, Version 2.0 or
  * the Eclipse Public License v1.0.
@@ -34,9 +34,9 @@ import com.skype.connector.ConnectorMessageEvent;
 /**
 <#if locale="ja">
  * <p>
- * Skypeの情報モデルにアクセスするクラスです。
+ * Skypeの�?報モ�?ルにアクセスするクラスです�??
  * </p><p>
- * Skypeのユーザインターフェイスにアクセスするには{@link com.skype.SkypeClient}を用いてください。
+ * Skypeのユーザインターフェイスにアクセスするには{@link com.skype.SkypeClient}を用�?てください�?
  * </p>
 <#else>
  * Skype information model (not view) class of Skype4Java.
@@ -48,7 +48,7 @@ import com.skype.connector.ConnectorMessageEvent;
 public final class Skype {
     /**
     <#if locale="ja">
-     * ライブラリのバージョンです。
+     * ライブラリのバ�?�ジョンです�??
     <#else>
      * The library version.
     </#if>
@@ -100,12 +100,12 @@ public final class Skype {
     /**
     <#if locale="ja">
      * <p>
-     * Skype4Javaスレッドのアプリケーションスレッドまたはデーモンスレッドに設定します。
+     * Skype4Javaスレ�?ド�?�アプリケーションスレ�?ドまた�?��?ーモンスレ�?ドに設定します�??
      * </p><p>
-     * {@link Skype}にリスナーを設定しても、そのままでは{@code main}メソッドが終了するとアプリケーションが終了してしまって一瞬しか動作しないものになります。
-     * {@code main}メソッドが終了してもリスナーが働き続けるように、本メソッドの引数に{@code false}を渡してSkype4Javaスレッドをアプリケーションスレッドに変更します。
+     * {@link Skype}にリスナ�?�を設定しても�?�そのままでは{@code main}メソ�?ドが終�?するとアプリケーションが終�?してしまって�?瞬しか動作しな�?も�?�になります�??
+     * {@code main}メソ�?ドが終�?してもリスナ�?�が働き続けるよ�?に、本メソ�?ド�?�引数に{@code false}を渡してSkype4Javaスレ�?ドをアプリケーションスレ�?ドに変更します�??
      * </p>
-     * @param on デーモンモードにする場合は{@code true}、アプリケーションモードにする場合は{@code false}
+     * @param on �?ーモンモードにする場合�?�{@code true}、アプリケーションモードにする場合�?�{@code false}
     <#else>
      * Sets the thread of Skype4Java to deamon mode or not.
      * @param on true to set the thread to "deamon mode"
@@ -136,12 +136,12 @@ public final class Skype {
     /**
     <#if locale="ja">
      * <p>
-     * Skype APIのコマンド送信/結果受信のデバッグ出力を設定します。
+     * Skype APIのコマンド�?�信/結果受信の�?バッグ出力を設定します�??
      * </p><p>
-     * {@link Skype}にリスナーを設定しても、そのままでは{@code main}メソッドが終了するとアプリケーションが終了してしまって一瞬しか動作しないものになります。
-     * {@code main}メソッドが終了してもリスナーが働き続けるように、本メソッドの引数に{@code false}を渡してSkype4Javaスレッドをアプリケーションスレッドに変更します。
+     * {@link Skype}にリスナ�?�を設定しても�?�そのままでは{@code main}メソ�?ドが終�?するとアプリケーションが終�?してしまって�?瞬しか動作しな�?も�?�になります�??
+     * {@code main}メソ�?ドが終�?してもリスナ�?�が働き続けるよ�?に、本メソ�?ド�?�引数に{@code false}を渡してSkype4Javaスレ�?ドをアプリケーションスレ�?ドに変更します�??
      * </p>
-     * @param on デーモンモードにする場合は{@code true}、アプリケーションモードにする場合は{@code false}
+     * @param on �?ーモンモードにする場合�?�{@code true}、アプリケーションモードにする場合�?�{@code false}
     <#else>
      * Enable debug logging.
      * @param on if true debug logging will be sent to the console.
@@ -717,9 +717,9 @@ public final class Skype {
 
     /**
     <#if locale="ja">
-     * チャットメッセージ送信/受信時にイベントを受け取る {@link ChatMessageListener} を追加します。
-     * @param listener 追加するリスナー
-     * @throws SkypeException Skypeが起動していない、Skype APIが許可されていない、コマンドが不正な場合
+     * チャ�?トメ�?セージ送信/受信時にイベントを受け取る {@link ChatMessageListener} を追�?します�??
+     * @param listener 追�?するリスナ�?�
+     * @throws SkypeException Skypeが起動して�?な�?、Skype APIが許可されて�?な�?、コマンドが不正な場�?
      * @see #removeChatMessageListener(ChatMessageListener)
     <#else>
      * Add a listener for CHATMESSAGE events received from the Skype API.
@@ -777,8 +777,8 @@ public final class Skype {
 
     /**
     <#if locale="ja">
-     * チャットメッセージ送信/受信時にイベントを受け取る {@link ChatMessageListener} を削除します。
-     * @param listener 削除するリスナー
+     * チャ�?トメ�?セージ送信/受信時にイベントを受け取る {@link ChatMessageListener} を削除します�??
+     * @param listener 削除するリスナ�?�
      * @see #addChatMessageListener(ChatMessageListener)
     <#else>
      * Remove a listener for CHATMESSAGE events.

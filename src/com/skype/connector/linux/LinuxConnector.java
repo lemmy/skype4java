@@ -1,7 +1,7 @@
 /*******************************************************************************
- * Copyright (c) 2006 Bart Lamot <bart.almot@gmail.com> 
+ * Copyright (c) 2006-2007 Bart Lamot <bart.almot@gmail.com> 
  * 
- * Copyright (c) 2006 Skype Technologies S.A. <http://www.skype.com/>
+ * Copyright (c) 2006-2007 Skype Technologies S.A. <http://www.skype.com/>
  * 
  * Skype4Java is licensed under either the Apache License, Version 2.0 or
  * the Eclipse Public License v1.0.
