@@ -22,9 +22,8 @@
  ******************************************************************************/
 package com.skype;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.skype.connector.AbstractConnectorListener;
 import com.skype.connector.Connector;
@@ -67,26 +66,26 @@ public final class Skype {
     /** CHATMESSAGE listener. */
     private static ConnectorListener chatMessageListener;
     /** Collection of listeners. */
-    private static List<ChatMessageListener> chatMessageListeners = Collections.synchronizedList(new ArrayList<ChatMessageListener>());
+    private static List<ChatMessageListener> chatMessageListeners = new CopyOnWriteArrayList<ChatMessageListener>();
 
     /** callListener lock object. */
     private static Object callListenerMutex = new Object();
     /** CALL listener. */
     private static ConnectorListener callListener;
     /** Collection of all CALL listeners. */
-    private static List<CallListener> callListeners = Collections.synchronizedList(new ArrayList<CallListener>());
+    private static List<CallListener> callListeners = new CopyOnWriteArrayList<CallListener>();
 
     /** voiceMailListener lock object. */
     private static Object voiceMailListenerMutex = new Object();
     /** VOICEMAIL listener. */
     private static ConnectorListener voiceMailListener;
     /** Collection of all VOICEMAIL listeners. */
-    private static List<VoiceMailListener> voiceMailListeners = Collections.synchronizedList(new ArrayList<VoiceMailListener>());
+    private static List<VoiceMailListener> voiceMailListeners = new CopyOnWriteArrayList<VoiceMailListener>();
 
-    /** User thread. */
-    private static Thread userThread;
     /** User threading lock object. */
     private static Object userThreadFieldMutex = new Object();
+    /** User thread. */
+    private static Thread userThread;
 
     /** General exception handler. */
     private static SkypeExceptionHandler defaultExceptionHandler = new SkypeExceptionHandler() {
