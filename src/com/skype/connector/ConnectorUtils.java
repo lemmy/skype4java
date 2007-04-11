@@ -47,7 +47,7 @@ public final class ConnectorUtils {
 	 */
 	public static void checkNotNull(String name, Object value) {
         if (value == null) {
-            throw new NullPointerException("The" + name + " must not be null.");
+            throw new NullPointerException("The " + name + " must not be null.");
         }
     }
 
