@@ -180,6 +180,7 @@ int OnCopyData( HWND hWnd, HWND hWnd2, PCOPYDATASTRUCT piCopyData ){
 
 		envWndProc->CallObjectMethod(*objWndProc, methodid, message ); 
 
+		envWndProc->DeleteLocalRef(message);
 	}
 
    	return 1;
