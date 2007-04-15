@@ -347,6 +347,15 @@ public final class Chat extends SkypeObject {
     }
 
     /**
+     * Indicates if this chat has been bookmarked.
+     * @return true if this chat is bookmarked
+     * @throws SkypeException when the connection has gone bad.
+     */
+    public boolean isBookmarked() throws SkypeException {
+        return Boolean.parseBoolean(getProperty("BOOKMARKED"));
+    }
+
+    /**
      * Return a property of this CHAT.
      * @param name propertyname.
      * @return value of the property.
