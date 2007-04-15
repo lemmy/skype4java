@@ -12,7 +12,7 @@
     </target>
 
     <target name="compile" depends="prepare">
-        <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${lib.dir}/swt/swt.jar"/>
+        <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${lib.dir}/swt/swt.jar" encoding="UTF-8"/>
     </target>
 
     <target name="jar" depends="compile">
