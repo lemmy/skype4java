@@ -32,26 +32,14 @@ import com.skype.connector.ConnectorListener;
 import com.skype.connector.ConnectorMessageEvent;
 
 /**
-<#if locale="ja">
- * <p>
- * Skypeの�?報モ�?ルにアクセスするクラスです�??
- * </p><p>
- * Skypeのユーザインターフェイスにアクセスするには{@link com.skype.SkypeClient}を用�?てください�?
- * </p>
-<#else>
  * Skype information model (not view) class of Skype4Java.
  * Use this class staticly to do model actions (send messages, SMS messages or calls, etc).
-</#if>
  * @see SkypeClient
  * @author Koji Hisano
  */
 public final class Skype {
     /**
-    <#if locale="ja">
-     * ライブラリのバ�?�ジョンです�??
-    <#else>
      * The library version.
-    </#if>
      */
     public static final String LIBRARY_VERSION = "1.0.0.0";
 
@@ -98,18 +86,8 @@ public final class Skype {
     private static SkypeExceptionHandler exceptionHandler = defaultExceptionHandler;
 
     /**
-    <#if locale="ja">
-     * <p>
-     * Skype4Javaスレ�?ド�?�アプリケーションスレ�?ドまた�?��?ーモンスレ�?ドに設定します�??
-     * </p><p>
-     * {@link Skype}にリスナ�?�を設定しても�?�そのままでは{@code main}メソ�?ドが終�?するとアプリケーションが終�?してしまって�?瞬しか動作しな�?も�?�になります�??
-     * {@code main}メソ�?ドが終�?してもリスナ�?�が働き続けるよ�?に、本メソ�?ド�?�引数に{@code false}を渡してSkype4Javaスレ�?ドをアプリケーションスレ�?ドに変更します�??
-     * </p>
-     * @param on �?ーモンモードにする場合�?�{@code true}、アプリケーションモードにする場合�?�{@code false}
-    <#else>
      * Sets the thread of Skype4Java to deamon mode or not.
      * @param on true to set the thread to "deamon mode"
-    </#if>
      */
     public static void setDeamon(boolean on) {
         synchronized (userThreadFieldMutex) {
@@ -134,19 +112,9 @@ public final class Skype {
     }
 
     /**
-    <#if locale="ja">
-     * <p>
-     * Skype APIのコマンド�?�信/結果受信の�?バッグ出力を設定します�??
-     * </p><p>
-     * {@link Skype}にリスナ�?�を設定しても�?�そのままでは{@code main}メソ�?ドが終�?するとアプリケーションが終�?してしまって�?瞬しか動作しな�?も�?�になります�??
-     * {@code main}メソ�?ドが終�?してもリスナ�?�が働き続けるよ�?に、本メソ�?ド�?�引数に{@code false}を渡してSkype4Javaスレ�?ドをアプリケーションスレ�?ドに変更します�??
-     * </p>
-     * @param on �?ーモンモードにする場合�?�{@code true}、アプリケーションモードにする場合�?�{@code false}
-    <#else>
      * Enable debug logging.
      * @param on if true debug logging will be sent to the console.
      * @throws SkypeException when the connection has gone bad.
-    </#if>
      */
     public static void setDebug(boolean on) throws SkypeException {
         try {
@@ -716,17 +684,10 @@ public final class Skype {
     }
 
     /**
-    <#if locale="ja">
-     * チャ�?トメ�?セージ送信/受信時にイベントを受け取る {@link ChatMessageListener} を追�?します�??
-     * @param listener 追�?するリスナ�?�
-     * @throws SkypeException Skypeが起動して�?な�?、Skype APIが許可されて�?な�?、コマンドが不正な場�?
-     * @see #removeChatMessageListener(ChatMessageListener)
-    <#else>
      * Add a listener for CHATMESSAGE events received from the Skype API.
      * @param listener the Listener to add.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      * @see #removeChatMessageListener(ChatMessageListener)
-    </#if>
      */
     public static void addChatMessageListener(ChatMessageListener listener) throws SkypeException {
         Utils.checkNotNull("listener", listener);
@@ -776,16 +737,10 @@ public final class Skype {
     }
 
     /**
-    <#if locale="ja">
-     * チャ�?トメ�?セージ送信/受信時にイベントを受け取る {@link ChatMessageListener} を削除します�??
-     * @param listener 削除するリスナ�?�
-     * @see #addChatMessageListener(ChatMessageListener)
-    <#else>
      * Remove a listener for CHATMESSAGE events.
      * If the listener is already removed nothing happens.
      * @param listener The listener to remove.
      * @see #addChatMessageListener(ChatMessageListener)
-    </#if>
      */
     public static void removeChatMessageListener(ChatMessageListener listener) {
         Utils.checkNotNull("listener", listener);
