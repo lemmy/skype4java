@@ -22,6 +22,8 @@
 package com.skype;
 
 import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
@@ -32,8 +34,11 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import com.skype.connector.AbstractConnectorListener;
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
+import com.skype.connector.ConnectorListener;
+import com.skype.connector.ConnectorMessageEvent;
 
 /**
  * The <code>Profile</code> class contains the current user's information.
@@ -46,6 +51,11 @@ import com.skype.connector.ConnectorException;
  * @author Koji Hisano
  */
 public final class Profile {
+    /** Identifies the status property. */
+    public static final String STATUS_PROPERTY = "status";
+    /** Identifies the mood message property. */
+    public static final String MOOD_TEXT_PROPERTY = "moodText";
+
     /**
      * The <code>Status</code> enum contains the online status constants of the current user.
      * @see Profile#getStatus()
@@ -187,6 +197,10 @@ public final class Profile {
             return target;
         }
     }
+    
+    private PropertyChangeSupport listeners = new PropertyChangeSupport(this);
+    private Object propertyChangeListenerMutex = new Object();
+    private ConnectorListener propertyChangeListener;
 
     /**
      * Constructor.
@@ -890,5 +904,66 @@ public final class Profile {
      */
     private void setProperty(final String name, final String value) throws SkypeException {
         Utils.setProperty("PROFILE", name, Utils.convertNullToEmptyString(value));
+    }
+    
+    /**
+     * Adds a PropertyChangeListener to this user.
+     * <p>
+     * The listener is registered for all bound properties of this user, including the following:
+     * <ul>
+     *    <li>this user's status ("status")</li>
+     *    <li>this user's mood message ("moodMessage")</li>
+     * </ul>
+     * </p><p>
+     * If listener is null, no exception is thrown and no action is performed.
+     * </p>
+     * @param listener the PropertyChangeListener to be added
+     * @see #removePropertyChangeListener(PropertyChangeListener)
+     */
+    public final void addPropertyChangeListener(PropertyChangeListener listener) throws SkypeException {
+        synchronized (propertyChangeListenerMutex) {
+            if (propertyChangeListener == null) {
+                ConnectorListener connectorListener = new AbstractConnectorListener() {
+                    @Override
+                    public void messageReceived(ConnectorMessageEvent event) {
+                        String message = event.getMessage();
+                        if (message.startsWith("PROFILE ")) {
+                            String data = message.substring("PROFILE ".length());
+                            String propertyName = data.substring(0, data.indexOf(' '));
+                            String propertyValue = data.substring(data.indexOf(' ') + 1);
+                            if (propertyName.equals("MOOD_TEXT")) {
+                                firePropertyChanged(MOOD_TEXT_PROPERTY, null, propertyValue);
+                            }
+                        } else if (message.startsWith("USERSTATUS ")) {
+                            String value = message.substring("USERSTATUS ".length());
+                            firePropertyChanged(STATUS_PROPERTY, null, Status.valueOf(value));
+                        }
+                    }
+                };
+                try {
+                    Connector.getInstance().addConnectorListener(connectorListener);
+                    propertyChangeListener = connectorListener;
+                } catch(ConnectorException e) {
+                    Utils.convertToSkypeException(e);
+                }
+            }
+        }
+        listeners.addPropertyChangeListener(listener);
+    }
+    
+    private void firePropertyChanged(String propertyName, Object oldValue, Object newValue) {
+        listeners.firePropertyChange(propertyName, oldValue, newValue);
+    }
+    
+    /**
+     * Removes the PropertyChangeListener from this user.
+     * <p>
+     * If listener is null, no exception is thrown and no action is performed.
+     * </p>
+     * @param listener the PropertyChangeListener to be removed
+     * @see #addPropertyChangeListener(PropertyChangeListener)
+     */
+    public final void removePropertyChangeListener(PropertyChangeListener listener) {
+        listeners.removePropertyChangeListener(listener);
     }
 }
