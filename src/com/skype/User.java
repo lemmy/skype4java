@@ -732,12 +732,12 @@ public class User extends SkypeObject {
         users.remove(getId());
     }
     
-    final void firePropertyChanged(String propertyName, Object oldValue, Object newValue) {
+    private void firePropertyChanged(String propertyName, Object oldValue, Object newValue) {
         listeners.firePropertyChange(propertyName, oldValue, newValue);
     }
     
     /**
-     * Adds a PropertyChangeListener to the user.
+     * Adds a PropertyChangeListener to this user.
      * <p>
      * The listener is registered for all bound properties of this user, including the following:
      * <ul>
@@ -783,7 +783,7 @@ public class User extends SkypeObject {
     }
     
     /**
-     * Removes a PropertyChangeListener from the user.
+     * Removes the PropertyChangeListener from this user.
      * <p>
      * If listener is null, no exception is thrown and no action is performed.
      * </p>
