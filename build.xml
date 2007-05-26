@@ -16,8 +16,6 @@
     </target>
 
     <target name="jar" depends="compile">
-        <jar basedir="${bin.dir}" includes="**/**" destfile="${release.dir}/skype.jar"/>
-
     	<!-- create a jar with the  OS X library file in it. -->
     	<copy todir="${bin.dir}/osx">
     		<fileset dir="${lib.dir}/osx"/>
@@ -49,7 +47,7 @@
     	<copy todir="${bin.dir}/win32">
     		<fileset dir="${lib.dir}/win32"/>
     	</copy>
-        <jar basedir="${bin.dir}" includes="**/**" destfile="${release.dir}/skype_full.jar"/>
+        <jar basedir="${bin.dir}" includes="**/**" destfile="${release.dir}/skype.jar"/>
     	<delete dir="${bin.dir}/osx"/>
     	<delete dir="${bin.dir}/linux"/>
         <delete dir="${bin.dir}/win32"/>
