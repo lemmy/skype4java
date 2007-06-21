@@ -776,7 +776,7 @@ public final class Skype {
                                 String propertyValue = propertyNameAndValue.substring(propertyNameAndValue.indexOf(' ') + 1);
                                 Call.Status status = Call.Status.valueOf(propertyValue);
                                 Call call = Call.getInstance(id);
-                                EXIT: if (status == Call.Status.ROUTING) {
+                                EXIT: if (status == Call.Status.ROUTING || status == Call.Status.RINGING) {
                                     synchronized(call) {
                                         if (call.isCallListenerEventFired()) {
                                             break EXIT;
