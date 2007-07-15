@@ -129,7 +129,7 @@ public final class Application extends SkypeObject {
         try {
             String response = Connector.getInstance().execute("CREATE APPLICATION " + name);
             Utils.checkError(response);
-            Connector.getInstance().addConnectorListener(dataListener);
+            Connector.getInstance().addConnectorListener(dataListener, true, true);
             shutdownHookForFinish = new Thread() {
                 @Override
                 public void run() {
