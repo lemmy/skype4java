@@ -214,6 +214,10 @@ public final class ChatMessage extends SkypeObject {
         return getProperty("BODY");
     }
 
+    public boolean isEditable() throws SkypeException {
+        return Boolean.parseBoolean(getProperty("IS_EDITABLE"));
+    }
+
     /**
      * Get the parent CHAT object for this CHATMESSAGE.
      * @see Chat
