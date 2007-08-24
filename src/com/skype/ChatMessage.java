@@ -214,6 +214,22 @@ public final class ChatMessage extends SkypeObject {
         return getProperty("BODY");
     }
 
+    /**
+     * Sets the content of the chat message to the specified string.
+     * @param name  the string that is to be this chat message's content
+     * @see #getContent
+     * @since Protocol 7 (API version 3.0)
+     * @throws SkypeException when the connection has gone bad.
+     */
+    public void setContent(final String content) throws SkypeException {
+        setProperty("BODY", content);
+    }
+
+    /**
+     * Indicates if the chat message is editable.
+     * @return true if the chat message is editable
+     * @throws SkypeException when the connection has gone bad.
+     */
     public boolean isEditable() throws SkypeException {
         return Boolean.parseBoolean(getProperty("IS_EDITABLE"));
     }
@@ -256,6 +272,9 @@ public final class ChatMessage extends SkypeObject {
         return Utils.getProperty("CHATMESSAGE", getId(), name);
     }
 
+    private void setProperty(String name, String value) throws SkypeException {
+        Utils.setProperty("CHATMESSAGE", getId(), name, value);
+    }
     // TODO void setSeen()
     // TODO boolean isSeen()
 }
