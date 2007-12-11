@@ -102,7 +102,7 @@ DBusWatch      *g_watch = NULL;
              return FALSE;
      }
      for( ; ; dbus_message_iter_next( &iter ) ){
-         apim = dbus_message_iter_get_string( &iter );
+         dbus_message_iter_get_basic( &iter, &apim );
          //Send the received message to Java
 	 sendToJava(apim); 
 	if( !dbus_message_iter_has_next(&iter) )
@@ -129,7 +129,7 @@ DBusWatch      *g_watch = NULL;
      //Connect to DBus
      connection = dbus_bus_get (DBUS_BUS_SESSION, &error);
      //if connection failed set the Java status to NOT_CONNECTED 
-     if (connection == NULL){
+     if (dbus_error_is_set(&error)){
          fprintf(stderr, "Failed to open connection to bus: %s\n", error.message);
          dbus_error_free (&error);
         statusToJava(3); 
@@ -137,7 +137,7 @@ DBusWatch      *g_watch = NULL;
      }
      //Test if the service is around....
      //Service can be on SYSTEM bus if there is no SESSION bus.
-	if (!dbus_bus_service_exists(connection,"com.Skype.API",&error)) {
+	if (!dbus_bus_name_has_owner(connection,"com.Skype.API",&error)) {
  	 connection = dbus_bus_get (DBUS_BUS_SYSTEM, &error);
      	 //if connection failed set the Java status to NOT_CONNECTED
      	 if (connection == NULL){
@@ -184,13 +184,13 @@ int dbusDetectSkype() {
      }
      //Test if the service is around....
      //Service can be on SYSTEM bus if there is no SESSION bus.
-     if (!dbus_bus_service_exists(connection,"com.Skype.API",&error)) {
+     if (!dbus_bus_name_has_owner(connection,"com.Skype.API",&error)) {
        connection = dbus_bus_get (DBUS_BUS_SYSTEM, &error);
        if (connection == NULL){
          dbus_error_free (&error);
          return 0;
        }
-       if (!dbus_bus_service_exists(connection,"com.Skype.API",&error)) {
+       if (!dbus_bus_name_has_owner(connection,"com.Skype.API",&error)) {
 	 return 0;
        }
      }
@@ -204,7 +204,7 @@ int dbusDetectSkype() {
  	runmainloopBool = 1; 
 	// Current DBus documentation says that disconnect is deprecated, but version .22 doesn't support close() yet.
 	//dbus_connection_close(connection);
-	dbus_connection_disconnect(connection);
+	dbus_connection_close(connection);
  }
 
  /**********************************
@@ -287,7 +287,7 @@ int dbusDetectSkype() {
                          "/com/Skype",        /*path*/
                          "com.Skype.API",  /*interface*/
                          "Invoke"); 
-     dbus_message_set_auto_activation( message, TRUE );
+//     dbus_message_set_auto_activation( message, TRUE );
  
      if( !dbus_message_append_args( message,
                          DBUS_TYPE_STRING, msg,

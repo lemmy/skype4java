@@ -10,7 +10,8 @@ LEX      = flex
 YACC     = yacc
 CFLAGS   = -pipe -Wall -W -g  -DQT_SHARED -DQT_NO_DEBUG -DQT_THREAD_SUPPORT -D_REENTRANT
 CXXFLAGS = -pipe -Wall -W -g -DDBUS_API_SUBJECT_TO_CHANGE -ggdb  -DQT_SHARED -DQT_NO_DEBUG -DQT_THREAD_SUPPORT -D_REENTRANT
-INCPATH  = -I. -I/usr/include/dbus-1.0 -I/usr/lib/dbus-1.0/include 
+JDK_DIR = /usr/lib/jvm/java-1.5.0-sun
+INCPATH  = -I. -I/usr/include/dbus-1.0 -I/usr/lib/dbus-1.0/include -I$(JDK_DIR)/include -I$(JDK_DIR)/include/linux
 LINK     = g++
 LFLAGS   =  -shared -L/usr/X11R6/lib
 LIBS     = $(SUBLIBS) -ldbus-1 -lpthread -lX11
@@ -32,7 +33,7 @@ MKDIR    = mkdir -p
 
 ####### Output directory
 
-OBJECTS_DIR = .obj/
+OBJECTS_DIR = obj/
 
 ####### Files
 
@@ -83,6 +84,7 @@ dist:
 clean: 
 	-$(DEL_FILE) $(OBJECTS)
 	-$(DEL_FILE) $(TARGET) 
+	$(MKDIR) .obj
 
 
 ####### Sub-libraries
