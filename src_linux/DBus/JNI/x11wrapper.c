@@ -26,6 +26,7 @@
 
 #define BUFSIZE 512
 Display *disp;
+Display *disp2;
 Window dummyWindow;
 Window skype_win = (Window)-1;
 int loop = 1;
@@ -45,9 +46,7 @@ int loop = 1;
   * Returns a replystring.
   **********************************/
  char *x11SendToSkype(const char *msg) {
-        Display *display;
-        display = XOpenDisplay(NULL);
-	if(x11sendMessageInternal(skype_win,msg, display, dummyWindow) == 0){
+	if(x11sendMessageInternal(skype_win,msg, disp2, dummyWindow) == 0){
 		printf("x11SendToSkype failed\r\n");
 	} 
 	return NULL; 
@@ -153,7 +152,8 @@ int x11sendMessageInternal(Window w_P, const char* message_P, Display *disp, Win
 **/
 void *x11Mainloop(void *args){
 	(void)args;
-	disp = XOpenDisplay(getenv("DISPLAY"));
+	disp = XOpenDisplay(NULL);
+	disp2 = XOpenDisplay(NULL);
         int status;
         if (x11DetectSkype()==1) {
                 status = 0;
