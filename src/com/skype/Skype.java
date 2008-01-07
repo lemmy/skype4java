@@ -167,6 +167,36 @@ public final class Skype {
     }
 
     /**
+     * Search users by a part of id or e-mail.
+     * @param keword a part of id or e-mail
+     * @return users
+     * @throws SkypeException when connection has gone bad or ERROR reply.
+     */
+    public static User[] searchUsers(String keyword) throws SkypeException {
+        int oldTimeout = Connector.getInstance().getCommandTimeout();
+        try {
+            // TODO need refactoring
+            Connector.getInstance().setCommandTimeout(0);
+
+            String command = "SEARCH USERS " + keyword;
+            String responseHeader = "USERS ";
+            String response = Connector.getInstance().executeWithId(command, responseHeader);
+            String data = response.substring(responseHeader.length());
+            String[] ids = Utils.convertToArray(data);
+            User[] users = new User[ids.length];
+            for (int i = 0; i < ids.length; ++i) {
+                users[i] = User.getInstance(ids[i]);
+            }
+            return users;
+        } catch (ConnectorException ex) {
+            Utils.convertToSkypeException(ex);
+            return null;
+        } finally {
+            Connector.getInstance().setCommandTimeout(oldTimeout);
+        }
+    }
+
+    /**
      * Get the contactlist instance of this Skype session.
      * @return contactlist singleton.
      * @throws SkypeException when connection has gone bad or ERROR reply.

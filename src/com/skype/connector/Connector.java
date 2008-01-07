@@ -620,7 +620,7 @@ public abstract class Connector {
                     long start = System.currentTimeMillis();
                     long commandResponseTime = getCommandTimeout();
                     wait.wait(commandResponseTime);
-                    if (commandResponseTime <= System.currentTimeMillis() - start) {
+                    if (commandResponseTime != 0 && commandResponseTime <= System.currentTimeMillis() - start) {
                         setStatus(Status.NOT_RUNNING);
                         throw new NotAttachedException(Status.NOT_RUNNING);
                     }
