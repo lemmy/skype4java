@@ -578,7 +578,16 @@ public class User extends SkypeObject {
     public final boolean canLeaveVoiceMail() throws SkypeException {
         return Boolean.parseBoolean(getProperty("CAN_LEAVE_VM"));
     }
-    
+
+    /**
+     * Indicates whether the current user is forwarding calls.
+     * @return <code>true</code> if the current user is forwarding calls; <code>false</code> otherwise.
+     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
+     */
+    public final boolean isForwardingCalls() throws SkypeException {
+        return Boolean.parseBoolean(getProperty("IS_CF_ACTIVE"));
+    }
+
     /**
      * Set this user being blocked, or not in your contactlist.
      * @param on true if user will be blocked.
