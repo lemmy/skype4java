@@ -51,21 +51,21 @@ public final class Win32Connector extends Connector {
     private static final String LIBFILENAME = "JNIConnector.dll";
     
     /** Singleton instance. */
-    private static Win32Connector myInstance_ = null;
+    private static Win32Connector instance = null;
 
     /**
      * Get singleton instance.
      * @return instance.
      */
     public static synchronized Connector getInstance() {
-        if(myInstance_ == null) {
-            myInstance_ = new Win32Connector();
+        if(instance == null) {
+            instance = new Win32Connector();
         }
-        return (Connector) myInstance_;
+        return (Connector) instance;
     }
 
     /** Thread. */
-    private Thread thread_ = null;
+    private Thread eventDispatcher = null;
 
     /**
      * Constructor.
@@ -104,13 +104,13 @@ public final class Win32Connector extends Connector {
         jni_init();
 
         // Starting Window Thread
-        thread_ = new Thread(new Runnable() {
+        eventDispatcher = new Thread(new Runnable() {
             public void run() {
                 jni_windowProc();
             }
         }, "SkypeBridge WindowProc Thread");
-        thread_.setDaemon(true);
-        thread_.start();
+        eventDispatcher.setDaemon(true);
+        eventDispatcher.start();
     }
 
     /**
