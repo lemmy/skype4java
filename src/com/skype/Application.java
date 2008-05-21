@@ -23,17 +23,10 @@
  ******************************************************************************/
 package com.skype;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.*;
 
-import com.skype.connector.AbstractConnectorListener;
-import com.skype.connector.Connector;
-import com.skype.connector.ConnectorException;
-import com.skype.connector.ConnectorListener;
-import com.skype.connector.ConnectorMessageEvent;
+import com.skype.connector.*;
 
 /**
  * Implements the AP2AP API.
@@ -45,7 +38,7 @@ public final class Application extends SkypeObject {
     /**
      * Collection of Application objects.
      */
-    private static final Map<String, Application> applications = new HashMap<String, Application>();
+    private static final ConcurrentMap<String, Application> applications = new ConcurrentHashMap<String, Application>();
 
     /**
      * Returns the Application object by the specified id.
@@ -55,18 +48,39 @@ public final class Application extends SkypeObject {
      * @throws SkypeException when connection has gone bad.
      */
     static Application getInstance(final String id) throws SkypeException {
-        synchronized(applications) {
-            if(!applications.containsKey(id)) {
-                applications.put(id, new Application(id));
-            }
-            return applications.get(id);
+        Application newApplication = new Application(id);
+        Application application = applications.putIfAbsent(id, newApplication);
+        if (application == null) {
+            application = newApplication;
         }
+        application.initialize();
+        return application;
     }
 
     /**
      * Application name, used to register with the Skype client.
      */
     private final String name;
+
+    /**
+     * Boolean to check the application state.
+     */
+    private boolean isInitialized;
+
+    /**
+     * Ending synchronisation helper field.
+     */
+    private final Object isInitializedFieldMutex = new Object();
+
+    /**
+     * Shutdownhook thread for cleaning up all instances.
+     */
+    private Thread shutdownHookForFinish = new ShutdownHookForFinish();
+
+    /**
+     * Listener for messages received through Skype.
+     */
+    private final ConnectorListener dataListener = new DataListener();
 
     /**
      * Used for synchronisation.
@@ -84,26 +98,6 @@ public final class Application extends SkypeObject {
     private final Map<String, Stream> streams = new HashMap<String, Stream>();
 
     /**
-     * Listener for messages received through Skype.
-     */
-    private final ConnectorListener dataListener = new DataListener();
-
-    /**
-     * Boolean to check the application state.
-     */
-    private boolean isFinished;
-
-    /**
-     * Ending synchronisation helper field.
-     */
-    private final Object isFinishedFieldMutex = new Object();
-
-    /**
-     * Shutdownhook thread for cleaning up all instances.
-     */
-    private Thread shutdownHookForFinish;
-
-    /**
      * Application exception handler.
      */
     private SkypeExceptionHandler exceptionHandler;
@@ -117,33 +111,6 @@ public final class Application extends SkypeObject {
     private Application(final String newName) throws SkypeException {
         assert newName != null;
         this.name = newName;
-        initialize();
-    }
-
-    /**
-     * Initializes the AP2AP.
-     * 
-     * @throws SkypeException when connection is gone bad. if connection could not be established.
-     */
-    void initialize() throws SkypeException {
-        try {
-            String response = Connector.getInstance().execute("CREATE APPLICATION " + name);
-            Utils.checkError(response);
-            Connector.getInstance().addConnectorListener(dataListener, true, true);
-            shutdownHookForFinish = new Thread() {
-                @Override
-                public void run() {
-                    try {
-                        Connector.getInstance().execute("DELETE APPLICATION " + Application.this.getName());
-                    } catch(ConnectorException e) {
-                        // because we are already stopping the app ignore the errors.
-                    }
-                }
-            };
-            Runtime.getRuntime().addShutdownHook(shutdownHookForFinish);
-        } catch(ConnectorException e) {
-            Utils.convertToSkypeException(e);
-        }
     }
 
     /**
@@ -156,33 +123,56 @@ public final class Application extends SkypeObject {
     };
 
     /**
-     * End the AP2AP data connection.
-     * 
-     * @throws SkypeException when connection is gone bad.
-     */
-    public void finish() throws SkypeException {
-        synchronized(isFinishedFieldMutex) {
-            if(!isFinished) {
-                Connector.getInstance().removeConnectorListener(dataListener);
-                Runtime.getRuntime().removeShutdownHook(shutdownHookForFinish);
-                isFinished = true;
-                try {
-                    String response = Connector.getInstance().execute("DELETE APPLICATION " + getName());
-                    Utils.checkError(response);
-                } catch(ConnectorException e) {
-                    Utils.convertToSkypeException(e);
-                }
-            }
-        }
-    }
-
-    /**
      * Return the application name.
      * 
      * @return the application name.
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * Initializes this application.
+     * 
+     * @throws SkypeException when connection is gone bad. if connection could not be established.
+     */
+    void initialize() throws SkypeException {
+        try {
+            synchronized(isInitializedFieldMutex) {
+                if (!isInitialized) {
+                    Connector.getInstance().addConnectorListener(dataListener, false, true);
+                    Runtime.getRuntime().addShutdownHook(shutdownHookForFinish);
+                    String response = Connector.getInstance().execute("CREATE APPLICATION " + name);
+                    Utils.checkError(response);
+                    isInitialized = true;
+                }
+            }
+        } catch(ConnectorException e) {
+            Connector.getInstance().removeConnectorListener(dataListener);
+            Runtime.getRuntime().removeShutdownHook(shutdownHookForFinish);
+            Utils.convertToSkypeException(e);
+        }
+    }
+
+    /**
+     * Finishes this application with disconnecting all streams.
+     * 
+     * @throws SkypeException when connection is gone bad.
+     */
+    public void finish() throws SkypeException {
+        try {
+            synchronized(isInitializedFieldMutex) {
+                if(isInitialized) {
+                    Connector.getInstance().removeConnectorListener(dataListener);
+                    Runtime.getRuntime().removeShutdownHook(shutdownHookForFinish);
+                    String response = Connector.getInstance().execute("DELETE APPLICATION " + getName());
+                    Utils.checkError(response);
+                    isInitialized = false;
+                }
+            }
+        } catch(ConnectorException e) {
+            Utils.convertToSkypeException(e);
+        }
     }
 
     /**
@@ -239,7 +229,7 @@ public final class Application extends SkypeObject {
                             }
                         }
                         try {
-                            // TODO Retuns when not attached to Skype
+                            // TODO must return when Skype is not runnning.
                             wait.wait();
                         } catch(InterruptedException e) {
                             throw new SkypeException("The connecting was interrupted.", e);
@@ -266,7 +256,7 @@ public final class Application extends SkypeObject {
     }
 
     /**
-     * Find a connected AP2AP stream with a connectable user.
+     * Gets all connected streams by Friend instances.
      * 
      * @param friends to search streams for.
      * @return the found streams.
@@ -286,7 +276,7 @@ public final class Application extends SkypeObject {
     }
 
     /**
-     * Find a connected AP2AP stream by Skype IDs.
+     * Gets connected streams by Skype IDs.
      * 
      * @param The Skype Ids to search streams for.
      * @return the found streams.
@@ -306,7 +296,7 @@ public final class Application extends SkypeObject {
     }
 
     /**
-     * Find all AP2AP streams started.
+     * Gets all connected streams.
      * 
      * @return all started streams.
      * @throws SkypeException when connection is gone bad.
@@ -327,10 +317,6 @@ public final class Application extends SkypeObject {
         }
     }
 
-    /**
-     * @TODO Fill in this javadoc.
-     * @param newStreamIdList idunno.
-     */
     private void fireStreamEvents(final String newStreamIdList) {
         synchronized(streams) {
             String[] newStreamIds = "".equals(newStreamIdList)? new String[0]: newStreamIdList.split(" ");
@@ -355,7 +341,7 @@ public final class Application extends SkypeObject {
     }
 
     /**
-     * Fire an event if a AP2AP connection is connected.
+     * Fires an connected event when a stream is created.
      * 
      * @param stream The connected stream.
      */
@@ -373,7 +359,7 @@ public final class Application extends SkypeObject {
     }
 
     /**
-     * Fire an event if an AP2AP connection is closed.
+     * Fires an disconnect event when a stream ends.
      * 
      * @param stream the closed AP2AP stream.
      */
@@ -408,85 +394,6 @@ public final class Application extends SkypeObject {
     public void removeApplicationListener(final ApplicationListener listener) {
         Utils.checkNotNull("listener", listener);
         listeners.remove(listener);
-    }
-
-    /**
-     * This class implements a listener for data packets.
-     * 
-     * @author Koji Hisano
-     */
-    private class DataListener extends AbstractConnectorListener {
-        /**
-         * Message received event method. It checks the name of the AP2AP application name and strips the SKYPE protocol data from the message. Then it will call handleData(String) to process the inner data.
-         * 
-         * @param event The event and message that triggered this listener.
-         */
-        public void messageReceived(ConnectorMessageEvent event) {
-            String message = event.getMessage();
-            String streamsHeader = "APPLICATION " + getName() + " STREAMS ";
-            if(message.startsWith(streamsHeader)) {
-                String streamIds = message.substring(streamsHeader.length());
-                fireStreamEvents(streamIds);
-            }
-            final String dataHeader = "APPLICATION " + getName() + " ";
-            if(message.startsWith(dataHeader)) {
-                handleData(message.substring(dataHeader.length()));
-            }
-        }
-
-        /**
-         * This method will process the inner data of a data message.
-         * 
-         * @param dataResponse the received data.
-         */
-        private void handleData(final String dataResponse) {
-            try {
-                if(isReceivedText(dataResponse)) {
-                    String data = dataResponse.substring("RECEIVED ".length());
-                    String streamId = data.substring(0, data.indexOf('='));
-                    String dataHeader = "ALTER APPLICATION " + getName() + " READ " + streamId;
-                    String response = Connector.getInstance().executeWithId(dataHeader, dataHeader);
-                    Utils.checkError(response);
-                    String text = response.substring(dataHeader.length() + 1);
-                    synchronized(streams) {
-                        if(streams.containsKey(streamId)) {
-                            streams.get(streamId).fireTextReceived(text);
-                        }
-                    }
-                } else if(isReceivedDatagram(dataResponse)) {
-                    String data = dataResponse.substring("DATAGRAM ".length());
-                    String streamId = data.substring(0, data.indexOf(' '));
-                    String datagram = data.substring(data.indexOf(' ') + 1);
-                    synchronized(streams) {
-                        if(streams.containsKey(streamId)) {
-                            streams.get(streamId).fireDatagramReceived(datagram);
-                        }
-                    }
-                }
-            } catch(Exception e) {
-                Utils.handleUncaughtException(e, exceptionHandler);
-            }
-        }
-
-        /**
-         * Check if received data is text instead of DATAGRAM.
-         * 
-         * @param dataResponse the data to check.
-         * @return true if the data is text.
-         */
-        private boolean isReceivedText(final String dataResponse) {
-            return dataResponse.startsWith("RECEIVED ") && ("RECEIVED ".length() < dataResponse.length());
-        }
-
-        /**
-         * Check if received data is DATAGRAM instead of text.
-         * 
-         * @param dataResponse the data to check.
-         * @return true if the data is DATAGRAM.
-         */
-        private boolean isReceivedDatagram(final String dataResponse) {
-            return dataResponse.startsWith("DATAGRAM ");
-        }
     }
 
     /**
@@ -588,5 +495,93 @@ public final class Application extends SkypeObject {
             }
         }
         return friends.toArray(new Friend[0]);
+    }
+
+    /**
+     * This class implements a listener for data packets.
+     */
+    private class DataListener extends AbstractConnectorListener {
+        /**
+         * Message received event method. It checks the name of the AP2AP application name and strips the SKYPE protocol data from the message. Then it will call handleData(String) to process the inner data.
+         * 
+         * @param event The event and message that triggered this listener.
+         */
+        public void messageReceived(ConnectorMessageEvent event) {
+            String message = event.getMessage();
+            String streamsHeader = "APPLICATION " + getName() + " STREAMS ";
+            if(message.startsWith(streamsHeader)) {
+                String streamIds = message.substring(streamsHeader.length());
+                fireStreamEvents(streamIds);
+            }
+            final String dataHeader = "APPLICATION " + getName() + " ";
+            if(message.startsWith(dataHeader)) {
+                handleData(message.substring(dataHeader.length()));
+            }
+        }
+
+        /**
+         * This method will process the inner data of a data message.
+         * 
+         * @param dataResponse the received data.
+         */
+        private void handleData(final String dataResponse) {
+            try {
+                if(isReceivedText(dataResponse)) {
+                    String data = dataResponse.substring("RECEIVED ".length());
+                    String streamId = data.substring(0, data.indexOf('='));
+                    String dataHeader = "ALTER APPLICATION " + getName() + " READ " + streamId;
+                    String response = Connector.getInstance().executeWithId(dataHeader, dataHeader);
+                    Utils.checkError(response);
+                    String text = response.substring(dataHeader.length() + 1);
+                    synchronized(streams) {
+                        if(streams.containsKey(streamId)) {
+                            streams.get(streamId).fireTextReceived(text);
+                        }
+                    }
+                } else if(isReceivedDatagram(dataResponse)) {
+                    String data = dataResponse.substring("DATAGRAM ".length());
+                    String streamId = data.substring(0, data.indexOf(' '));
+                    String datagram = data.substring(data.indexOf(' ') + 1);
+                    synchronized(streams) {
+                        if(streams.containsKey(streamId)) {
+                            streams.get(streamId).fireDatagramReceived(datagram);
+                        }
+                    }
+                }
+            } catch(Exception e) {
+                Utils.handleUncaughtException(e, exceptionHandler);
+            }
+        }
+
+        /**
+         * Check if received data is text instead of DATAGRAM.
+         * 
+         * @param dataResponse the data to check.
+         * @return true if the data is text.
+         */
+        private boolean isReceivedText(final String dataResponse) {
+            return dataResponse.startsWith("RECEIVED ") && ("RECEIVED ".length() < dataResponse.length());
+        }
+
+        /**
+         * Check if received data is DATAGRAM instead of text.
+         * 
+         * @param dataResponse the data to check.
+         * @return true if the data is DATAGRAM.
+         */
+        private boolean isReceivedDatagram(final String dataResponse) {
+            return dataResponse.startsWith("DATAGRAM ");
+        }
+    }
+
+    private class ShutdownHookForFinish extends Thread {
+        @Override
+        public void run() {
+            try {
+                Connector.getInstance().execute("DELETE APPLICATION " + Application.this.getName());
+            } catch(ConnectorException e) {
+                // ignore errors because the program was stopped.
+            }
+        }
     }
 }

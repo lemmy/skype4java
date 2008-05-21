@@ -157,10 +157,10 @@ public final class Stream extends SkypeObject {
             application.addApplicationListener(applicationListener);
             String header = "ALTER APPLICATION " + getApplication().getName() + " WRITE " + getId();
             synchronized(wait) {
-                String result = Connector.getInstance().executeWithId(header + " " + text, header);
-                Utils.checkError(result);
                 try {
-                    // TODO Retuns when not attached to Skype
+                    String result = Connector.getInstance().executeWithId(header + " " + text, header);
+                    Utils.checkError(result);
+                    // TODO must retun when Skype is not running
                     wait.wait();
                 } catch(InterruptedException e) {
                     throw new SkypeException("The writing was interrupted.", e);
