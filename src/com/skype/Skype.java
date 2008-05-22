@@ -169,27 +169,23 @@ public final class Skype {
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
     public static User[] searchUsers(String keyword) throws SkypeException {
-        int oldTimeout = Connector.getInstance().getCommandTimeout();
+        String command = "SEARCH USERS " + keyword;
+        String responseHeader = "USERS ";
+        String response;
         try {
-            // TODO need refactoring
-            Connector.getInstance().setCommandTimeout(0);
-
-            String command = "SEARCH USERS " + keyword;
-            String responseHeader = "USERS ";
-            String response = Connector.getInstance().executeWithId(command, responseHeader);
-            String data = response.substring(responseHeader.length());
-            String[] ids = Utils.convertToArray(data);
-            User[] users = new User[ids.length];
-            for (int i = 0; i < ids.length; ++i) {
-                users[i] = User.getInstance(ids[i]);
-            }
-            return users;
-        } catch (ConnectorException ex) {
+            response = Connector.getInstance().executeWithId(command, responseHeader);
+        } catch(ConnectorException ex) {
             Utils.convertToSkypeException(ex);
             return null;
-        } finally {
-            Connector.getInstance().setCommandTimeout(oldTimeout);
         }
+        Utils.checkError(response);
+        String data = response.substring(responseHeader.length());
+        String[] ids = Utils.convertToArray(data);
+        User[] users = new User[ids.length];
+        for(int i = 0; i < ids.length; ++i) {
+            users[i] = User.getInstance(ids[i]);
+        }
+        return users;
     }
 
     /**

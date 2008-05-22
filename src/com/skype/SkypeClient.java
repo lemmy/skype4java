@@ -422,7 +422,7 @@ public final class SkypeClient {
         try {
             String command = "SET SILENT_MODE " + (on? "ON": "OFF");
             String responseHeader = "SILENT_MODE ";
-            String response = Connector.getInstance().executeWithoutTimeout(command, responseHeader);
+            String response = Connector.getInstance().execute(command, responseHeader);
             Utils.checkError(response);
             String responseValue = response.substring(responseHeader.length());
             return "ON".equals(responseValue);
