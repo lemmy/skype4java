@@ -19,26 +19,28 @@
  * Contributors:
  * Koji Hisano - initial API and implementation
  ******************************************************************************/
-package com.skype.sample;
+package com.skype;
 
-import com.skype.*;
+import com.skype.connector.test.TestCaseByCSVFile;
 
-public class A2AServer {
-    public static void main(String[] args) throws Exception {
-        Skype.setDebug(true);
-        Skype.setDeamon(false);
-        Application application = Skype.addApplication(A2AClient.class.getName());
-        application.addApplicationListener(new ApplicationAdapter() {
-            @Override
-            public void connected(Stream stream) throws SkypeException {
-                System.out.println("connected:" + stream.getId());
-                stream.addStreamListener(new StreamAdapter() {
-                    @Override
-                    public void textReceived(String receivedText) throws SkypeException {
-                        System.out.println("received:" + receivedText);
-                    }
-                });
-            }
-        });
+public class AutoAp2ApAPITest extends TestCaseByCSVFile {
+    @Override
+    protected void setUp() throws Exception {
+        setRecordingMode(false);
+    }
+
+    public void testRecreatingApplication() throws Exception {
+        String APPLICATION_NAME = "test";
+        Application application = Skype.addApplication(APPLICATION_NAME);
+        application.finish();
+        application = Skype.addApplication(APPLICATION_NAME);
+        application.finish();
+    }
+
+    public void testDoubleConnecting() throws Exception {
+        Application application = Skype.addApplication("test");
+        Stream[] streams = application.connect("echo123");
+        streams[0].write("TEST");
+        application.finish();
     }
 }

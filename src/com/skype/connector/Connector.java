@@ -479,9 +479,9 @@ public abstract class Connector {
         };
         processor.init(wait, listener);
         addConnectorListener(listener, false);
-        fireMessageSent(command);
         synchronized (wait) {
             try {
+                fireMessageSent(command);
                 sendCommand(command);
                 long start = System.currentTimeMillis();
                 long commandResponseTime = getCommandTimeout();

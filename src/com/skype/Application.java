@@ -216,6 +216,21 @@ public final class Application extends SkypeObject {
                             synchronized(wait) {
                                 wait.notify();
                             }
+                        } else if (message.startsWith("APPLICATION " + getName() + " STREAMS ")) {
+                            String streamIds = message.substring(("APPLICATION " + getName() + " STREAMS ").length());
+                            if ("".equals(streamIds)) {
+                                return;
+                            }
+                            for (String streamId: streamIds.split(" ")) {
+                                for (String id: ids) {
+                                    if (streamId.startsWith(id + ":")) {
+                                        synchronized(wait) {
+                                            wait.notify();
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 };

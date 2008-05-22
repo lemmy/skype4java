@@ -23,11 +23,7 @@ package com.skype.sample;
 
 import java.util.Arrays;
 
-import com.skype.Application;
-import com.skype.ApplicationAdapter;
-import com.skype.Skype;
-import com.skype.SkypeException;
-import com.skype.Stream;
+import com.skype.*;
 
 public class A2AClient {
     public static void main(String[] args) throws Exception {
@@ -36,12 +32,12 @@ public class A2AClient {
         String name = A2AClient.class.getName();
         Stream[] streams = connectToServer(name);
         
-        for (int i = 0; i < 25; i++) {
+        for (int i = 0; i < 26; i++) {
             for (Stream stream: streams) {
-                stream.write(createData(i, (char)('a' + i)));
+                stream.write(createData(i + 1, (char)('a' + i)));
             }
         }
-        
+        Thread.sleep(5000);
         for (Stream stream: streams) {
             stream.disconnect();
         }

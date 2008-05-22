@@ -21,14 +21,9 @@
  ******************************************************************************/
 package com.skype.connector.test;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-import com.skype.connector.AbstractConnectorListener;
-import com.skype.connector.Connector;
-import com.skype.connector.ConnectorException;
-import com.skype.connector.ConnectorListener;
-import com.skype.connector.ConnectorMessageEvent;
+import com.skype.connector.*;
 
 public final class TestConnector extends Connector {
     private static class Holder {
@@ -48,7 +43,6 @@ public final class TestConnector extends Connector {
     private Object playingFieldsMutex = new Object();
     private Player player;
     private ConnectorListener playingLister;
-    private volatile boolean playerCleared;
     private Thread playerThread;
     private Object sentMessageFieldsMutex = new Object();
     private String sentMessage = null;
@@ -120,11 +114,17 @@ public final class TestConnector extends Connector {
             playingLister = new AbstractConnectorListener() {
                 @Override
                 public void messageSent(ConnectorMessageEvent event) {
+                    // TODO Check the below code when synchronous event mechanism is changed
+                    if (event.getMessage().startsWith("PROTOCOL ")) {
+                        return;
+                    }
+
                     synchronized(sentMessageFieldsMutex) {
                         while (sentMessage != null) {
                             try {
                                 sentMessageFieldsMutex.wait();
                             } catch(InterruptedException e) {
+                                Thread.currentThread().interrupt();
                                 return;
                             }
                         }
@@ -134,7 +134,6 @@ public final class TestConnector extends Connector {
                 }
             };
             Connector.getInstance().addConnectorListener(playingLister, false, true);
-            playerCleared = false;
             playerThread = new Thread("TestConnectorPlayer") {
                 @Override
                 public void run() {
@@ -150,9 +149,8 @@ public final class TestConnector extends Connector {
                                             try {
                                                 sentMessageFieldsMutex.wait();
                                             } catch(InterruptedException e) {
-                                                if (playerCleared) {
-                                                    return;
-                                                }
+                                                Thread.currentThread().interrupt();
+                                                return;
                                             }
                                         }
                                         String sentMessage = TestConnector.this.sentMessage;
@@ -169,15 +167,14 @@ public final class TestConnector extends Connector {
                                         try {
                                             Thread.sleep(-period);
                                         } catch(InterruptedException e) {
-                                            if (playerCleared) {
-                                                return;
-                                            }
+                                            Thread.currentThread().interrupt();
+                                            return;
                                         }
                                     }
                                     fireMessageReceived(message.getMessage());
                                     break;
                             }
-                            if (playerCleared) {
+                            if (Thread.currentThread().isInterrupted()) {
                                 return;
                             }
                         }
@@ -193,7 +190,6 @@ public final class TestConnector extends Connector {
 
     public void clearPlayer() throws ConnectorException {
         synchronized(playingFieldsMutex) {
-            playerCleared = true;
             playerThread.interrupt();
             playerThread = null;
             Connector.getInstance().removeConnectorListener(playingLister);

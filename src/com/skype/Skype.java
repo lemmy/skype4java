@@ -25,11 +25,7 @@ package com.skype;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import com.skype.connector.AbstractConnectorListener;
-import com.skype.connector.Connector;
-import com.skype.connector.ConnectorException;
-import com.skype.connector.ConnectorListener;
-import com.skype.connector.ConnectorMessageEvent;
+import com.skype.connector.*;
 
 /**
  * Skype information model (not view) class of Skype4Java.
@@ -480,6 +476,7 @@ public final class Skype {
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
     public static Application addApplication(String name) throws SkypeException {
+        Utils.checkNotNull("name", name);
         return Application.getInstance(name);
     }
 
