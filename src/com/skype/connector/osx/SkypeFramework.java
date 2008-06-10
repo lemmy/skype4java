@@ -92,11 +92,13 @@ final class SkypeFramework {
         }
     }
     
-    static String sendCommand(String commandString) {
-        return sendCommand0(commandString);            
+    static void sendCommand(String commandString) {
+        synchronized(sendCommandMutex) {
+            sendCommand0(commandString);            
+        }
     }
 
-    private static native String sendCommand0(String commandString);
+    private static native void sendCommand0(String commandString);
     
     static void fireNotificationReceived(String notificationString) {
         for (SkypeFrameworkListener listener: listeners) {

@@ -74,17 +74,22 @@ public final class OSXConnector extends Connector {
      */
     private OSXConnector() {
     }
+    
+    public boolean isRunning() throws ConnectorException {
+        return SkypeFramework.isRunning();
+    }
 
     /**
      * Gets the absolute path of Skype.
      * @return the absolute path of Skype.
      */
     public String getInstalledPath() {
-        return "skype";
-    }
-    
-    public boolean isRunning() throws ConnectorException {
-        return SkypeFramework.isRunning();
+        File application = new File("/Applications/Skype.app/Contents/MacOS/Skype");
+        if (application.exists()) {
+            return application.getAbsolutePath();
+        } else {
+            return null;
+        }
     }
 
     /**

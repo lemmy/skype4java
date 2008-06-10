@@ -12,18 +12,6 @@
 			buildConfigurationList = 4CEBA75808679E4D0015D03E /* Build configuration list for PBXAggregateTarget "skype" */;
 			buildPhases = (
 			);
-			buildSettings = {
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = skype;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
 			dependencies = (
 				6A9FA55D024695C10CC91562 /* PBXTargetDependency */,
 				6A9FA6060246ADAE0CC91562 /* PBXTargetDependency */,
@@ -36,8 +24,9 @@
 
 /* Begin PBXBuildFile section */
 		363028FA0383184400C91562 /* Manifest in JavaArchive */ = {isa = PBXBuildFile; fileRef = 363028F90383184400C91562 /* Manifest */; settings = {JAVA_ARCHIVE_SUBDIR = ""; }; };
-		4CEBA79B08679F3E0015D03E /* SkypeFramework.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A52677B022AFE3B0CC91562 /* SkypeFramework.c */; };
+		4CEBA79B08679F3E0015D03E /* SkypeFramework.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A52677B022AFE3B0CC91562 /* SkypeFramework.m */; };
 		4CEBA79C08679F510015D03E /* JavaVM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AE2200B0208CA9C0CC91562 /* JavaVM.framework */; };
+		8266A0490DFEA813008EE468 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8266A0480DFEA813008EE468 /* Foundation.framework */; };
 		82C1DC990DFCEEC300724F2F /* SkypeFrameworkTest.java in Sources */ = {isa = PBXBuildFile; fileRef = 82C1DC980DFCEEC300724F2F /* SkypeFrameworkTest.java */; };
 		82C1DC9B0DFCEEFC00724F2F /* SkypeFramework.java in Sources */ = {isa = PBXBuildFile; fileRef = 82C1DC9A0DFCEEFC00724F2F /* SkypeFramework.java */; };
 		82C1DD200DFD009A00724F2F /* Skype.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 82C1DD1F0DFD009A00724F2F /* Skype.framework */; };
@@ -45,30 +34,6 @@
 		82C1DDA40DFD237000724F2F /* ConnectorUtils.java in Sources */ = {isa = PBXBuildFile; fileRef = 82C1DDA30DFD237000724F2F /* ConnectorUtils.java */; };
 		82C1DE6C0DFD295800724F2F /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 82C1DE6B0DFD295800724F2F /* Carbon.framework */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXBuildStyle section */
-		130F8B95001BDF0A11CA292A /* Debug */ = {
-			isa = PBXBuildStyle;
-			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				ZERO_LINK = YES;
-			};
-			name = Debug;
-		};
-		130F8B96001BDF0A11CA292A /* Release */ = {
-			isa = PBXBuildStyle;
-			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				ZERO_LINK = NO;
-			};
-			name = Release;
-		};
-/* End PBXBuildStyle section */
 
 /* Begin PBXContainerItemProxy section */
 		36ABB26A061E0EED00C43093 /* PBXContainerItemProxy */ = {
@@ -98,8 +63,9 @@
 		329C727F0360BF9A00C91783 /* skype_framework.jar */ = {isa = PBXFileReference; explicitFileType = archive.jar; includeInIndex = 0; path = skype_framework.jar; sourceTree = BUILT_PRODUCTS_DIR; };
 		363028F90383184400C91562 /* Manifest */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Manifest; sourceTree = "<group>"; };
 		4CEBA78F08679EF10015D03E /* libskype.jnilib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libskype.jnilib; sourceTree = BUILT_PRODUCTS_DIR; };
-		6A52677B022AFE3B0CC91562 /* SkypeFramework.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SkypeFramework.c; sourceTree = "<group>"; };
+		6A52677B022AFE3B0CC91562 /* SkypeFramework.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SkypeFramework.m; sourceTree = "<group>"; };
 		6AE2200B0208CA9C0CC91562 /* JavaVM.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaVM.framework; path = /System/Library/Frameworks/JavaVM.framework; sourceTree = "<absolute>"; };
+		8266A0480DFEA813008EE468 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		82C1DC980DFCEEC300724F2F /* SkypeFrameworkTest.java */ = {isa = PBXFileReference; fileEncoding = "-2147483647"; lastKnownFileType = sourcecode.java; name = SkypeFrameworkTest.java; path = ../test/com/skype/connector/osx/SkypeFrameworkTest.java; sourceTree = SOURCE_ROOT; };
 		82C1DC9A0DFCEEFC00724F2F /* SkypeFramework.java */ = {isa = PBXFileReference; fileEncoding = "-2147483647"; lastKnownFileType = sourcecode.java; name = SkypeFramework.java; path = ../src/com/skype/connector/osx/SkypeFramework.java; sourceTree = SOURCE_ROOT; };
 		82C1DCDD0DFCFC6B00724F2F /* Headers/SkypeFramework.h */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = Headers/SkypeFramework.h; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -117,6 +83,7 @@
 				4CEBA79C08679F510015D03E /* JavaVM.framework in Frameworks */,
 				82C1DD200DFD009A00724F2F /* Skype.framework in Frameworks */,
 				82C1DE6C0DFD295800724F2F /* Carbon.framework in Frameworks */,
+				8266A0490DFEA813008EE468 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -136,9 +103,10 @@
 				82C1DDA30DFD237000724F2F /* ConnectorUtils.java */,
 				82C1DD3C0DFD06D300724F2F /* SkypeFrameworkListener.java */,
 				82C1DC9A0DFCEEFC00724F2F /* SkypeFramework.java */,
-				6A52677B022AFE3B0CC91562 /* SkypeFramework.c */,
+				6A52677B022AFE3B0CC91562 /* SkypeFramework.m */,
 				82C1DC980DFCEEC300724F2F /* SkypeFrameworkTest.java */,
 				363028F90383184400C91562 /* Manifest */,
+				8266A0480DFEA813008EE468 /* Foundation.framework */,
 				82C1DE6B0DFD295800724F2F /* Carbon.framework */,
 				6AE2200B0208CA9C0CC91562 /* JavaVM.framework */,
 				82C1DD1F0DFD009A00724F2F /* Skype.framework */,
@@ -188,29 +156,6 @@
 				6A9FA559024695C00CC91562 /* JavaArchive */,
 				6A9FA55A024695C00CC91562 /* Frameworks */,
 			);
-			buildSettings = {
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				JAVA_ARCHIVE_COMPRESSION = NO;
-				JAVA_ARCHIVE_TYPE = JAR;
-				JAVA_COMPILER = /usr/bin/javac;
-				JAVA_MANIFEST_FILE = Manifest;
-				JAVA_SOURCE_SUBDIR = .;
-				LIBRARY_STYLE = STATIC;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_LIBTOOL_FLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = JNIWrapper;
-				PURE_JAVA = YES;
-				REZ_EXECUTABLE = YES;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
 			dependencies = (
 			);
 			name = Jar;
@@ -224,10 +169,6 @@
 			buildPhases = (
 				6A9FA6050246AD8E0CC91562 /* ShellScript */,
 			);
-			buildSettings = {
-				PRODUCT_NAME = Headers/JNIWrapper.h;
-				REZ_EXECUTABLE = YES;
-			};
 			dependencies = (
 			);
 			name = Headers;
@@ -248,26 +189,6 @@
 			);
 			buildRules = (
 			);
-			buildSettings = {
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = /usr/local/lib;
-				LIBRARY_STYLE = DYNAMIC;
-				OPTIMIZATION_CFLAGS = "";
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
-				PRODUCT_NAME = JNILibN;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
 			dependencies = (
 			);
 			name = JNILib;
@@ -281,12 +202,6 @@
 		00E6828EFEC88D1A11DB9C8B /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 4CEBA75C08679E4D0015D03E /* Build configuration list for PBXProject "skype" */;
-			buildSettings = {
-			};
-			buildStyles = (
-				130F8B95001BDF0A11CA292A /* Debug */,
-				130F8B96001BDF0A11CA292A /* Release */,
-			);
 			hasScannedForEncodings = 1;
 			mainGroup = 00E6828FFEC88D1A11DB9C8B;
 			productRefGroup = 0120612AFEC8923411DB9C8B /* Products */;
@@ -317,7 +232,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4CEBA79B08679F3E0015D03E /* SkypeFramework.c in Sources */,
+				4CEBA79B08679F3E0015D03E /* SkypeFramework.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

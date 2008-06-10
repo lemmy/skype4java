@@ -20,9 +20,10 @@
  * Koji Hisano - initial API and implementation
  ******************************************************************************/
 
-#include "com_skype_connector_osx_SkypeFramework.h"
-#include <Skype/Skype.h>
-#include <Carbon/Carbon.h>
+#import "com_skype_connector_osx_SkypeFramework.h"
+#import <Skype/Skype.h>
+#import <Carbon/Carbon.h>
+#import <Foundation/Foundation.h>
 
 #define SKYPE_FRAMEWORK_CLASS "com/skype/connector/osx/SkypeFramework"
 
@@ -32,6 +33,9 @@ static JavaVM *_vm;
 
 static UniChar *_notificationStringBuffer;
 static unsigned int _notificationStringBufferLength = 0;
+
+static unichar *_resultStringBuffer;
+static unsigned int _resultStringBufferLength = 0;
 
 static struct SkypeDelegate _delegate;
 
@@ -163,6 +167,12 @@ JNIEXPORT void JNICALL Java_com_skype_connector_osx_SkypeFramework_setup0(JNIEnv
 	}
 	_notificationStringBufferLength = SKYPE_STRING_MAX;
 
+	_resultStringBuffer = (unichar *)malloc(sizeof(unichar) * SKYPE_STRING_MAX);
+	if (checkNull(env, (void *)_resultStringBuffer)) {
+		return;
+	}
+	_resultStringBufferLength = SKYPE_STRING_MAX;
+
 	jboolean isCopy;
 	const char *ccApplicationName  = (*env)->GetStringUTFChars(env, applicationName, &isCopy);
 	if (checkNull(env, (void *)ccApplicationName)) {
@@ -203,6 +213,7 @@ JNIEXPORT void JNICALL Java_com_skype_connector_osx_SkypeFramework_sendCommand0(
 	if (checkNull(env, (void *)ccCommandString)) {
 		return;
 	}
+
 	CFStringRef cfCommandString = CFStringCreateWithCString(kCFAllocatorDefault, ccCommandString, kCFStringEncodingUTF8);
 	if (checkNull(env, (void *)cfCommandString)) {
 		if (isCopy == JNI_TRUE) {
@@ -211,7 +222,9 @@ JNIEXPORT void JNICALL Java_com_skype_connector_osx_SkypeFramework_sendCommand0(
 		return;
 	}
 
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	SendSkypeCommand(cfCommandString);
+	[pool release];
 
 	CFRelease(cfCommandString);
 	if (isCopy == JNI_TRUE) {

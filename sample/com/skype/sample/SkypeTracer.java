@@ -36,15 +36,16 @@ import org.eclipse.swt.widgets.Text;
 
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
+import com.skype.connector.MessageProcessor;
 
 public class SkypeTracer extends Shell {
     public static void main(final String args[]) throws Exception {
         final Display display = Display.getDefault();
-        final SkypeTracer shell = new SkypeTracer(display, SWT.SHELL_TRIM);
-        shell.open();
+        SkypeTracer shell = new SkypeTracer(display, SWT.SHELL_TRIM);
         shell.layout();
-        while (!shell.isDisposed()) {
-            if (!display.readAndDispatch()) {
+        shell.open();
+        while(!shell.isDisposed()) {
+            if(!display.readAndDispatch()) {
                 display.sleep();
             }
         }
@@ -64,28 +65,37 @@ public class SkypeTracer extends Shell {
 
         final Text fromSkype = new Text(this, SWT.V_SCROLL | SWT.MULTI | SWT.READ_ONLY | SWT.BORDER);
         fromSkype.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true, 2, 1));
-        Connector.getInstance().setDebugOut(new PrintWriter(new Writer() {
-            @Override
-            public void write(char[] cbuf, int off, int len) throws IOException {
-                final String appended = new String(cbuf, off, len);
-                Display.getDefault().asyncExec(new Runnable() {
-                    public void run() {
-                        fromSkype.append(appended);
+        new Thread() {
+            public void run() {
+                Connector.getInstance().setDebugOut(new PrintWriter(new Writer() {
+                    @Override
+                    public void write(char[] cbuf, int off, int len) throws IOException {
+                        final String appended = new String(cbuf, off, len);
+                        Display.getDefault().asyncExec(new Runnable() {
+                            public void run() {
+                                if (!fromSkype.isDisposed()) {
+                                    fromSkype.append(appended);
+                                }
+                            }
+                        });
                     }
-                });
-            }
 
-            @Override
-            public void flush() throws IOException {
-                // Do nothing
-            }
+                    @Override
+                    public void flush() throws IOException {
+                        // Do nothing
+                    }
 
-            @Override
-            public void close() throws IOException {
-                // Do nothing
+                    @Override
+                    public void close() throws IOException {
+                        // Do nothing
+                    }
+                }));
+                try {
+                    Connector.getInstance().setDebug(true);
+                } catch(ConnectorException e) {
+                }
             }
-        }));
-        Connector.getInstance().setDebug(true);
+        }.start();
 
         final Text toSkype = new Text(this, SWT.BORDER);
         toSkype.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
@@ -94,13 +104,18 @@ public class SkypeTracer extends Shell {
         send.addSelectionListener(new SelectionAdapter() {
             public void widgetSelected(SelectionEvent event) {
                 final String command = toSkype.getText();
-                new Thread() { // Use execute(String) without waiting
+                new Thread() {
                     @Override
                     public void run() {
                         try {
-                            Connector.getInstance().execute(command);
-                        } catch (ConnectorException e) {
-                            // Skip not Skype errors
+                            Connector.getInstance().execute(command, new MessageProcessor() {
+                                @Override
+                                protected void messageReceived(String message) {
+                                    releaseLock();
+                                }
+                            });
+                        } catch(ConnectorException e) {
+                            e.printStackTrace();
                         }
                     }
                 }.start();
