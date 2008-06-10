@@ -1,5 +1,8 @@
 /*******************************************************************************
- * Copyright (c) 2006-2007 Bart Lamot <bart.almot@gmail.com> 
+ * Copyright (c) 2006-2007 r-yu/xai
+ *
+ * Copyright (c) 2006-2007 Koji Hisano <hisano@gmail.com> - UBION Inc. Developer
+ * Copyright (c) 2006-2007 UBION Inc. <http://www.ubion.co.jp/>
  * 
  * Copyright (c) 2006-2007 Skype Technologies S.A. <http://www.skype.com/>
  * 
@@ -15,368 +18,140 @@
  * links to the Skype4Java web site <https://developer.skype.com/wiki/Java_API> 
  * in your web site or documents.
  * 
- * Contributors: 
- * Bart Lamot - initial API and implementation
+ * Contributors:
+ * r-yu/xai - initial implementation
+ * Koji Hisano - changed Skype event dispatch thread to a deamon thread
  ******************************************************************************/
 package com.skype.connector.osx;
 
 import java.io.File;
-import java.lang.reflect.Method;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import com.skype.connector.Connector;
+import com.skype.connector.ConnectorException;
 import com.skype.connector.ConnectorUtils;
 
 /**
- * Implementation of the connector for OS X. 
- * @author Bart Lamot
+ * Implementation of the connector for Mac OS X.
  */
-public final class OSXConnector extends Connector implements Runnable {
+public final class OSXConnector extends Connector {
+    private static final String LIBRARY_FILE_NAME = "JNIConnector.dll";
+    
+    /** Singleton instance. */
+    private static OSXConnector _instance = null;
 
-	/** The singleton instance. */
-	private static OSXConnector _instance = null;
-	/** Thread synchronisation lock. */
-	private static final Object lock = new Object();
-    /** Thread synchronisation lock flag. */
-    private static boolean lockWait = false;
-	/** Don't reinit the native code over and over. */
-	private boolean inited;
-	/** Name of the library. */
-	private static final String LIBNAME = "JSA";
-	/** Filename of the OS X jnilib. */
-	private static final String LIBFILENAME = "libJSA.jnilib";
-
-	/**
-	 * Constructor. It loads the native library, if it can't be loaded the
-	 * status is set to NOT_AVAILABLE.
-	 * 
-	 */
-	private OSXConnector() {
-		if (!ConnectorUtils.checkLibraryInPath(LIBFILENAME) || !checkInstalledFramework()) {
-            
-			ConnectorUtils.extractFromJarToTemp(LIBFILENAME);
-			installFramework();
-		}
-		try {
-			System.loadLibrary(LIBNAME);
-		} catch (Throwable e) {
-			try {
-				System.load(System.getProperty("java.io.tmpdir") + File.separatorChar + LIBFILENAME);
-			} catch (Throwable e2) {
-				System.err.println("Could not load the library");
-				if (!ConnectorUtils.checkLibraryInPath(LIBFILENAME)) {
-					System.err.println(LIBFILENAME + " is not in java.library.path");
-				}
-				if (!checkInstalledFramework()) {
-					System.err.println("Please install Skype.framework at /Library/Frameworks/Skype.framework");
-				}
-				// Sorry could not load.
-				setStatus(com.skype.connector.Connector.Status.NOT_AVAILABLE);
-				fireMessageReceived("ConnectorStatusChanged");
-			}
-		}
-	}
-
-	/**
-	 * Checks if the library file can be found in the library path.
-	 * 
-	 * @return true if the file is found.
-	 */
-	private boolean checkInstalledFramework() {
-		File frameworkLocationHome = new File("~/Library/Frameworks/Skype.framework");
-		File frameworkLocationSystem = new File("/Library/Frameworks/Skype.framework");
-		if (frameworkLocationHome.exists() || frameworkLocationSystem.exists()) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Install the Skype.framework from the jarfile. create directories and
-	 * extract framework files for jar.
-	 */
-	private void installFramework() {
-		// First check if Framework is in jarfile. Lets not create directories
-		// if nothing can be found.
-		if (ConnectorUtils.isInJar("A/Skype")) {
-            //The framework is in the jarfile.
-            //Clean up old one.
-            File frameworkLocation = new File("~/Library/Frameworks/Skype.framework");
-            if (frameworkLocation.exists()) {
-                ConnectorUtils.deleteDir(frameworkLocation);
-            }
-            frameworkLocation = new File("/Library/Frameworks/Skype.framework");
-            if (frameworkLocation.exists()) {
-                ConnectorUtils.deleteDir(frameworkLocation);
-            }
-
-            
-			String destinationname;
-			destinationname = System.getProperty("user.home");
-			if (!destinationname.endsWith(File.separator)) {
-				destinationname = destinationname + File.separator;
-			}
-			// check for root, root doesn't have a Users home directory.
-			if (destinationname.endsWith("root/")) {
-				destinationname = "/";
-			}
-			destinationname = destinationname + "Library/Frameworks/";
-			// Make Framework directories
-			File frameworkDirectory = new File(destinationname + "Skype.framework/Versions/A/.tmp");
-			frameworkDirectory.mkdirs();
-			frameworkDirectory = new File(destinationname + "Skype.framework/Versions/Current/.tmp");
-			frameworkDirectory.mkdirs();
-			ConnectorUtils.extractFromJar("A/Skype", "Skype", destinationname + "Skype.framework/Versions/A");
-			ConnectorUtils.extractFromJar("A/Skype", "Skype", destinationname + "Skype.framework/Versions/Current");
-			ConnectorUtils.extractFromJar("A/Skype", "Skype", destinationname + "Skype.framework");
-		}
-	}
-
-	/**
-	 * Return the singleton instance of this connector.
-	 * 
-	 * @return singleton instance.
-	 */
-	public static OSXConnector getInstance() {
-		// System.out.println("OSXConnector.getInstance()");
-		if (_instance == null) {
-			_instance = new OSXConnector();
-		}
-		return _instance;
-	}
-
-	/**
-	 * Send a command to the Skype API.
-	 * 
-	 * @param command
-	 *            the command to send.
-	 */
-	protected void sendCommand(String command) {
-		// System.out.println((new
-		// StringBuilder()).append("OSXConnector.sendCommand(").append(command).append(")
-		// start").toString());
-		sendSkypeMessage(command);
-		// System.out.println((new
-		// StringBuilder()).append("OSXConnector.sendCommand(").append(command).append(")
-		// end").toString());
-	}
-
-	/**
-	 * Disconnect from the Skype API and clean up the native implementation.
-	 */
-	protected void disposeImpl() {
-		// System.out.println("OSXConnector.disposeImpl() start");
-		setConnectedStatus(5);
-		disposeNative();
-		_instance = null;
-		// System.out.println("OSXConnector.disposeImpl() end");
-	}
-
-	/**
-	 * Wait for the connection to get initialized.
-	 * 
-	 * @param timeout Wait for this amout of millisecs to initialize.
-	 * @return Status after connecting.
-	 */
-	protected com.skype.connector.Connector.Status connect(int timeout) {
-		// System.out.println((new
-		// StringBuilder()).append("OSXConnector.connectImpl(").append(timeout).append(")
-		// start").toString());
-        if (_instance.getStatus() != com.skype.connector.Connector.Status.ATTACHED) {
-            synchronized (lock) {
-                try {
-                    lockWait = true;
-                    lock.wait(timeout);
-                } catch (InterruptedException e) {
-                }
-            }
-		}
-		// System.out.println((new
-		// StringBuilder()).append("OSXConnector.connectImpl(").append(timeout).append(")
-		// end").toString());
-		return getStatus();
-	}
-
-   /**
-     * This method checks if SWT is available in the classpath.
-     * @return true if SWT is found.
+    /**
+     * Get singleton instance.
+     * @return instance.
      */
-    private static boolean isSWTAvailable() {
-            try {
-                Class.forName("org.eclipse.swt.SWT");
-            } catch(ClassNotFoundException e) {
-                return false;
-            }
-        return true;
+    public static synchronized Connector getInstance() {
+        if(_instance == null) {
+            _instance = new OSXConnector();
+        }
+        return _instance;
     }
     
-	/**
-	 * Initialize the connection to Skype API.
-	 * 
-	 * @param timeout
-	 *            Wait for this amout of millisecs to initialize.
-	 */
-	protected void initialize() {
-		// System.out.println((new
-		// StringBuilder()).append("OSXConnector.initialize(").append(timeout).append(")
-		// start ***************").toString());
-		if (!inited) {
-			inited = true;
-            //Check if SWT is being used, if not just run the thread, else run it SWT like.
-			if (isSWTAvailable()) {
-                // The next line is the actual line needed for SWT to start the Thread.
-                //Display.getCurrent().asyncExec(this);
-                //But I don't want SWT in the import statements and in the classpath I will need this whole reflection part.
-                try {
-                    Class displayClass = Class.forName("org.eclipse.swt.widgets.Display");
-                    Method getCurrentMethod = displayClass.getMethod("getCurrent", null);
-                    Class[] params = new Class[1];                    
-                    params[0] = Class.forName("java.lang.Runnable");                    
-                    Method asyncExecMethod = displayClass.getMethod("asyncExec", params);
-                    Object display = getCurrentMethod.invoke(null, null);
-                    Object[] args = new Object[1];
-                    args[0] = this;
-                    asyncExecMethod.invoke(display, args);
-                } catch(Throwable e) {
-                    //Something went wrong in the fragile reflection, now just try to start the thread the normal way.
-                    //display can be null if SWT is found but not used.
-                    (new Thread(this)).start();
-                }
-            } else {
-                (new Thread(this)).start();
-            }
-			
-            setStatus(com.skype.connector.Connector.Status.PENDING_AUTHORIZATION);
-			fireMessageReceived("ConnectorStatusChanged");
-			setDebugPrinting(false);
-			init(getApplicationName());
-		}
-		// System.out.println((new
-		// StringBuilder()).append("OSXConnector.initialize(").append(timeout).append(")
-		// end ***************").toString());
-	}
-
-	/**
-	 * This method gets called by the native library when a message from Skype
-	 * is received.
-	 * 
-	 * @param message
-	 *            The received message.
-	 */
-	public static synchronized void receiveSkypeMessage(final String message) {
-		// System.out.println((new
-		// StringBuilder()).append("OSXConnector.receiveSkypeMessage(").append(message).append(")
-		// start").toString());
-
-		new Thread() {
-			public void run() {
-                if (_instance.getStatus() != com.skype.connector.Connector.Status.ATTACHED) {
-                    setConnectedStatus(1);
-                }
-                if (lockWait) {
-                    setConnectedStatus(1);
-					synchronized (lock) {
-						lock.notifyAll();
-					}
-                    lockWait = false;
-				}
-                if (message != null) {
-                    _instance.fireMessageReceived(message);
-                }
-			}
-		}.start();
-
-		// System.out.println((new
-		// StringBuilder()).append("OSXConnector.receiveSkypeMessage(").append(message).append(")
-		// end").toString());
-	}
-
-	/**
-	 * This method gets called from the native library when the status is
-	 * changed by Skype API.
-	 * 
-	 * @param status
-	 *            the new status.
-	 */
-	public static void setConnectedStatus(int status) {
-		// System.out.println((new
-		// StringBuilder()).append("OSXConnector.setConnectedStatus(").append(status).append(")
-		// start").toString());
-        if (lockWait) {
-            synchronized (lock) {
-                lock.notifyAll();
-                lockWait = false;
-            }
+    private SkypeFrameworkListener listener = new AbstractSkypeFrameworkListener() {
+        @Override
+        public void notificationReceived(String notificationString) {
+            fireMessageReceived(notificationString);
         }
-		switch (status) {
-			case 0 : // '\0'
-				_instance.setStatus(com.skype.connector.Connector.Status.PENDING_AUTHORIZATION);
-				break;
+    
+        @Override
+        public void becameUnavailable() {
+            setStatus(Status.NOT_AVAILABLE);
+        }
+    
+        @Override
+        public void becameAvailable() {
+            setStatus(Status.API_AVAILABLE);
+        }    
+    };
 
-			case 1 : // '\001'
-				_instance.setStatus(com.skype.connector.Connector.Status.ATTACHED);
-				break;
+    /**
+     * Constructor.
+     */
+    private OSXConnector() {
+    }
 
-			case 2 : // '\002'
-				_instance.setStatus(com.skype.connector.Connector.Status.REFUSED);
-				break;
+    /**
+     * Gets the absolute path of Skype.
+     * @return the absolute path of Skype.
+     */
+    public String getInstalledPath() {
+        return "skype";
+    }
+    
+    public boolean isRunning() throws ConnectorException {
+        return SkypeFramework.isRunning();
+    }
 
-			case 3 : // '\003'
-				_instance.setStatus(com.skype.connector.Connector.Status.NOT_AVAILABLE);
-				break;
+    /**
+     * Initializes this connector.
+     */
+    protected void initialize() {
+        SkypeFramework.init(getApplicationName());
+        SkypeFramework.addSkypeFrameworkListener(listener);
+    }
 
-			case 4 : // '\004'
-				_instance.setStatus(com.skype.connector.Connector.Status.API_AVAILABLE);
-				break;
+    /**
+     * Connects to Skype client.
+     * @param timeout the maximum time in milliseconds to connect.
+     * @return Status the status after connecting.
+     * @throws ConnectorException when connection can not be established.
+     */
+    protected Status connect(int timeout) throws ConnectorException {
+        if (!SkypeFramework.isRunning()) {
+            setStatus(Status.NOT_RUNNING);
+            return getStatus();
+        }
+        if (!SkypeFramework.isAvailable()) {
+            setStatus(Status.NOT_AVAILABLE);
+            return getStatus();
+        }
+        try {
+            final CountDownLatch latch = new CountDownLatch(1);
+            SkypeFrameworkListener listener = new AbstractSkypeFrameworkListener() {            
+               public void attachResponse(int attachResponseCode) {
+                   SkypeFramework.removeSkypeFrameworkListener(this);
+                   switch (attachResponseCode) {
+                       case 0:
+                           setStatus(Status.REFUSED);
+                           latch.countDown();
+                           break;
+                       case 1:
+                           setStatus(Status.ATTACHED);
+                           latch.countDown();
+                           break;
+                       default:
+                           throw new IllegalStateException("not supported attachResponseCode");
+                   }
+               }            
+            };
+            setStatus(Status.PENDING_AUTHORIZATION);
+            SkypeFramework.addSkypeFrameworkListener(listener);
+            SkypeFramework.connect();
+            latch.await(timeout, TimeUnit.MILLISECONDS);
+            return getStatus();
+        } catch(InterruptedException e) {
+            throw new ConnectorException("Trying to connect was interrupted.", e);
+        }
+    }
 
-			case 5 : // '\005'
-				_instance.setStatus(com.skype.connector.Connector.Status.NOT_RUNNING);
-				break;
+    /**
+     * Sends a command to the Skype client.
+     * @param command The command to send.
+     */
+    protected void sendCommand(final String command) {
+        SkypeFramework.sendCommand(command);
+    }
 
-			default :
-				_instance.setStatus(com.skype.connector.Connector.Status.NOT_RUNNING);
-				break;
-		}
-		_instance.fireMessageReceived("ConnectorStatusChanged");
-		// System.out.println((new
-		// StringBuilder()).append("OSXConnector.setConnectedStatus(").append(status).append(")
-		// end").toString());
-	}
-
-	/**
-	 * OS X needs a native event loop to run, this starts it.
-	 */
-	public void run() {
-		startEventLoop();
-	}
-
-	/**
-	 * Native init method.
-	 * @param applicationname The name of the Application.
-	 */
-	private synchronized native void init(String applicationname);
-
-	/**
-	 * Start the OS X eventloop.
-	 * This method does not return.
-	 */
-	private native void startEventLoop();
-
-	/**
-	 * Native send message method.
-	 * @param msg The message to send.
-	 */
-	private native void sendSkypeMessage(String msg);
-
-	/**
-	 * Clean up the native connection.
-	 *
-	 */
-	private native void disposeNative();
-
-	/**
-	 * Enable debug printing for the native library.
-	 * @param flag True to enable debug printing.
-	 */
-	private native void setDebugPrinting(boolean flag);
-
+    /**
+     * Cleans up the connector and the native library.
+     */
+    protected void disposeImpl() {
+        SkypeFramework.removeSkypeFrameworkListener(listener);
+        SkypeFramework.dispose();
+    }
 }
