@@ -515,6 +515,19 @@ public abstract class Connector {
     }
 
     /**
+     * Send a Skype command to the Skype client and wait for the reply based on the responseheader without timeout.
+     * @param command the command to send.
+     * @param responseHeader the expected reply header.
+     * @return the reply.
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
+    public final String executeWithoutTimeout(final String command, final String responseHeader) throws ConnectorException {
+        ConnectorUtils.checkNotNull("command", command);
+        ConnectorUtils.checkNotNull("responseHeader", responseHeader);
+        return execute(command, new String[] { responseHeader, "ERROR " }, true, true);
+    }
+
+    /**
      * Send a Skype command to the Skype client and wait for the reply based on the responseheader.
      * @param command the command to send.
      * @param responseHeader the expected reply header.
@@ -548,7 +561,19 @@ public abstract class Connector {
      * @return the response.
      * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
      */
-    public String execute(final String command, final String[] responseHeaders, final boolean checkAttached) throws ConnectorException {
+    protected final String execute(final String command, final String[] responseHeaders, final boolean checkAttached) throws ConnectorException {
+        return execute(command, responseHeaders, checkAttached, false);
+    }
+
+    /**
+     * Send a Skype command to Skype (actual implementation method) and wait for response.
+     * @param command the command to send.
+     * @param responseHeaders The expected response headers.
+     * @param checkAttached if true the connector will first check if it is connected.
+     * @return the response.
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
+    private String execute(final String command, final String[] responseHeaders, final boolean checkAttached, boolean withoutTimeout) throws ConnectorException {
         ConnectorUtils.checkNotNull("command", command);
         ConnectorUtils.checkNotNull("responseHeaders", responseHeaders);
 
