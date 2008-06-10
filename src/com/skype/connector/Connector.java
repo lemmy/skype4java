@@ -380,12 +380,8 @@ public abstract class Connector {
         }
         Status status = connect(timeout);
         if (status == Status.ATTACHED) {
-            try {
-                sendApplicationName(getApplicationName());
-                execute("PROTOCOL 9999", new String[] {"PROTOCOL "}, false);
-            } catch (TimeOutException e) {
-                status = Status.NOT_RUNNING;
-            }
+            sendApplicationName(getApplicationName());
+            execute("PROTOCOL 9999", new String[] {"PROTOCOL "}, false);
         }
         return status;
     }
@@ -440,7 +436,7 @@ public abstract class Connector {
      * @return true if connector is connected.
      * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
      */
-    public final boolean isRunning() throws ConnectorException {
+    public boolean isRunning() throws ConnectorException {
         try {
             assureAttached();
             return true;
