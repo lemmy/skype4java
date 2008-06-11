@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.skype.connector.ConnectorUtils;
+import com.skype.connector.LoadLibraryException;
 
 final class SkypeFramework {
     private static Object initializedFieldMutex = new Object();
@@ -35,11 +36,11 @@ final class SkypeFramework {
     private static Object sendCommandMutex = new Object();
     private static Object notificationReceivedMutex = new Object();
     
-    static void init(String applicationName) {
+    static void init(String applicationName) throws LoadLibraryException {
         ConnectorUtils.checkNotNull("applicationName", applicationName);
         synchronized(initializedFieldMutex) {
             if (!initialized) {
-                System.loadLibrary("skype");  
+                ConnectorUtils.loadLibrary("skype");  
                 setup0(applicationName);
                 initialized = true;                
             }

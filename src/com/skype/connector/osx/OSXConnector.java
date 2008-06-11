@@ -36,8 +36,6 @@ import com.skype.connector.ConnectorUtils;
  * Implementation of the connector for Mac OS X.
  */
 public final class OSXConnector extends Connector {
-    private static final String LIBRARY_FILE_NAME = "JNIConnector.dll";
-    
     /** Singleton instance. */
     private static OSXConnector _instance = null;
 
@@ -95,7 +93,7 @@ public final class OSXConnector extends Connector {
     /**
      * Initializes this connector.
      */
-    protected void initialize() {
+    protected void initialize() throws ConnectorException {
         SkypeFramework.init(getApplicationName());
         SkypeFramework.addSkypeFrameworkListener(listener);
     }

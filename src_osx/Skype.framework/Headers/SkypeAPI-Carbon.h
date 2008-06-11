@@ -40,6 +40,6 @@ void RemoveSkypeDelegate(void);
 void ConnectToSkype(void);
 void DisconnectFromSkype(void);
 
-void SendSkypeCommand(CFStringRef aCommandString);
+CFStringRef SendSkypeCommand(CFStringRef aCommandString);
 
 __END_DECLS

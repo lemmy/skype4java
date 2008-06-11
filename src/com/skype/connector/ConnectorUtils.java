@@ -26,10 +26,16 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -39,6 +45,8 @@ import java.util.zip.ZipInputStream;
  * Generic helper methods for all connectors.
  */
 public final class ConnectorUtils {
+    private static List<String> loadedLibraries = new ArrayList<String>();
+    
 	/**
 	 * Check an object if its not null.
 	 * If it is a NullPointerException will be thrown.
@@ -298,6 +306,81 @@ public final class ConnectorUtils {
     
         // The directory is now empty so delete it
         return dir.delete();
+    }
+
+    public static void loadLibrary(String libraryName) throws LoadLibraryException {
+        synchronized(loadedLibraries) {
+            if (loadedLibraries.contains(libraryName)) {
+                return;
+            }
+            
+            String libraryFileName = System.mapLibraryName(libraryName);
+            URL url = ConnectorUtils.class.getResource("/" + libraryFileName);
+            File libraryFile;
+            if(url.getProtocol().toLowerCase().equals("file")) {
+                try {
+                    libraryFile = new File(URLDecoder.decode(url.getPath(), "UTF-8"));
+                } catch(UnsupportedEncodingException e) {
+                    throw new LoadLibraryException("UTF-8 is not supported encoding.");
+                }
+            } else {
+                cleanUpOldLibraryFiles(libraryFileName);
+                libraryFile = createTempLibraryFile(libraryFileName);
+            }
+            try {
+                System.load(libraryFile.getAbsolutePath());            
+            } catch (UnsatisfiedLinkError e) {
+                throw new LoadLibraryException("Loading " + libraryFileName + " failed.");
+            }
+
+            loadedLibraries.add(libraryName);
+        }
+    }
+
+    private static void cleanUpOldLibraryFiles(final String libraryFileName) {
+        final String fileNamePrefix = libraryFileName.substring(0, libraryFileName.indexOf('.'));
+        final String extension = libraryFileName.substring(libraryFileName.lastIndexOf('.'));
+        for(File file: new File(System.getProperty("java.io.tmpdir")).listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return name.startsWith(fileNamePrefix) && name.endsWith(extension);
+            }
+        })) {
+            file.delete();
+        }
+    }
+
+    private static File createTempLibraryFile(String libraryFileName) throws LoadLibraryException {
+        InputStream in = ConnectorUtils.class.getResourceAsStream("/" + libraryFileName);
+        if(in == null) {
+            throw new LoadLibraryException(libraryFileName + " is not contained in the jar.");
+        }
+        FileOutputStream out = null;
+        try {
+            final String fileNamePrefix = libraryFileName.substring(0, libraryFileName.indexOf('.'));
+            final String extension = libraryFileName.substring(libraryFileName.lastIndexOf('.'));
+            File libraryFile = File.createTempFile(fileNamePrefix, extension);
+            libraryFile.deleteOnExit();
+            out = new FileOutputStream(libraryFile);
+            int count;
+            byte[] buffer = new byte[1024];
+            while(0 < (count = in.read(buffer))) {
+                out.write(buffer, 0, count);
+            }
+            return libraryFile;
+        } catch(IOException e) {
+            throw new LoadLibraryException("Writing " + libraryFileName + " failed.");
+        } finally {
+            try {
+                in.close();
+            } catch(IOException e) {
+            }
+            if(out != null) {
+                try {
+                    out.close();
+                } catch(IOException e) {
+                }
+            }
+        }
     }
     
 	/**

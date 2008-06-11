@@ -27,7 +27,7 @@
 + (void)connect;
 + (void)disconnect;
 
-+ (void)sendSkypeCommand:(NSString*)aCommandString;
++ (NSString*)sendSkypeCommand:(NSString*)aCommandString;
 @end
 
 

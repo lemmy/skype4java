@@ -59,6 +59,18 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		82C42A1F0DFFC6820076F036 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = ../res;
+			dstSubfolderSpec = 7;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		329C727F0360BF9A00C91783 /* skype_framework.jar */ = {isa = PBXFileReference; explicitFileType = archive.jar; includeInIndex = 0; path = skype_framework.jar; sourceTree = BUILT_PRODUCTS_DIR; };
 		363028F90383184400C91562 /* Manifest */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Manifest; sourceTree = "<group>"; };
@@ -186,6 +198,7 @@
 				4CEBA78B08679EF10015D03E /* Headers */,
 				4CEBA78C08679EF10015D03E /* Sources */,
 				4CEBA78D08679EF10015D03E /* Frameworks */,
+				82C42A1F0DFFC6820076F036 /* CopyFiles */,
 			);
 			buildRules = (
 			);
