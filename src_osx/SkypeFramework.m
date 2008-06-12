@@ -207,11 +207,11 @@ JNIEXPORT void JNICALL Java_com_skype_connector_osx_SkypeFramework_connect0(JNIE
 	ConnectToSkype();
 }
 
-JNIEXPORT void JNICALL Java_com_skype_connector_osx_SkypeFramework_sendCommand0(JNIEnv *env, jclass this, jstring commandString) {
+JNIEXPORT jstring JNICALL Java_com_skype_connector_osx_SkypeFramework_sendCommand0(JNIEnv *env, jclass this, jstring commandString) {
 	jboolean isCopy;
 	const char *ccCommandString  = (*env)->GetStringUTFChars(env, commandString, &isCopy);
 	if (checkNull(env, (void *)ccCommandString)) {
-		return;
+		return NULL;
 	}
 
 	CFStringRef cfCommandString = CFStringCreateWithCString(kCFAllocatorDefault, ccCommandString, kCFStringEncodingUTF8);
@@ -219,17 +219,55 @@ JNIEXPORT void JNICALL Java_com_skype_connector_osx_SkypeFramework_sendCommand0(
 		if (isCopy == JNI_TRUE) {
 			(*env)->ReleaseStringUTFChars(env, commandString, ccCommandString);
 		}
-		return;
+		return NULL;
 	}
 
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	SendSkypeCommand(cfCommandString);
+	CFStringRef cfResultString = SendSkypeCommand(cfCommandString);
+	
+	if (cfResultString == NULL) {
+		[pool release];
+
+		CFRelease(cfCommandString);
+		if (isCopy == JNI_TRUE) {
+			(*env)->ReleaseStringUTFChars(env, commandString, ccCommandString);
+		}
+
+		return NULL;
+	}
+	
+	CFRange range;
+	range.location = 0;
+	range.length = CFStringGetLength(cfResultString);
+
+	if (_resultStringBufferLength < range.length) {
+		free(_resultStringBuffer);
+		
+		_resultStringBuffer = (UniChar *)malloc(sizeof(UniChar) * range.length);
+		if (checkNull(env, (void *)_resultStringBuffer)) {
+			[pool release];
+
+			CFRelease(cfCommandString);
+			if (isCopy == JNI_TRUE) {
+				(*env)->ReleaseStringUTFChars(env, commandString, ccCommandString);
+			}
+
+			return NULL;
+		}
+		_resultStringBufferLength = range.length;
+	}
+	
+	CFStringGetCharacters(cfResultString, range, _resultStringBuffer);
+	jstring resultString = (*env)->NewString(env, (jchar *)_resultStringBuffer, (jsize)range.length);	
+
 	[pool release];
 
 	CFRelease(cfCommandString);
 	if (isCopy == JNI_TRUE) {
 		(*env)->ReleaseStringUTFChars(env, commandString, ccCommandString);
 	}
+	
+	return resultString;
 }
 
 JNIEXPORT void JNICALL Java_com_skype_connector_osx_SkypeFramework_dispose0(JNIEnv *env, jclass this) {

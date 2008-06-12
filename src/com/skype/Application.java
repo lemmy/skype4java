@@ -239,7 +239,8 @@ public final class Application extends SkypeObject {
                     synchronized(wait) {
                         for(String skypeId: ids) {
                             if(skypeId != null) {
-                                String result = Connector.getInstance().execute("ALTER APPLICATION " + getName() + " CONNECT " + skypeId);
+                                String command = "ALTER APPLICATION " + getName() + " CONNECT " + skypeId;
+                                String result = Connector.getInstance().execute(command, new String[] {command, "APPLICATION " + getName() + " CONNECTING ", "ERROR "});
                                 Utils.checkError(result);
                             }
                         }

@@ -175,7 +175,10 @@ public final class OSXConnector extends Connector {
      * @param command The command to send.
      */
     protected void sendCommand(final String command) {
-        SkypeFramework.sendCommand(command);
+        String result = SkypeFramework.sendCommand(command);
+        if (result != null) {
+            fireMessageReceived(result);
+        }
     }
 
     /**

@@ -33,6 +33,7 @@ final class SkypeFramework {
     
     private static final List<SkypeFrameworkListener> listeners = new CopyOnWriteArrayList<SkypeFrameworkListener>();
     
+    // to protect native memory buffer in JNI code
     private static Object sendCommandMutex = new Object();
     private static Object notificationReceivedMutex = new Object();
     
@@ -93,13 +94,14 @@ final class SkypeFramework {
         }
     }
     
-    static void sendCommand(String commandString) {
+    static String sendCommand(String commandString) {
+        // to protect native memory buffer
         synchronized(sendCommandMutex) {
-            sendCommand0(commandString);            
+            return sendCommand0(commandString);            
         }
     }
 
-    private static native void sendCommand0(String commandString);
+    private static native String sendCommand0(String commandString);
     
     static void fireNotificationReceived(String notificationString) {
         for (SkypeFrameworkListener listener: listeners) {
