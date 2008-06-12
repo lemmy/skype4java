@@ -31,7 +31,7 @@
 
 static JavaVM *_vm;
 
-static UniChar *_notificationStringBuffer;
+static unichar *_notificationStringBuffer;
 static unsigned int _notificationStringBufferLength = 0;
 
 static unichar *_resultStringBuffer;
@@ -131,7 +131,7 @@ static void SkypeNotificationReceived(CFStringRef aNotificationString){
 	if (_notificationStringBufferLength < range.length) {
 		free(_notificationStringBuffer);
 		
-		_notificationStringBuffer = (UniChar *)malloc(sizeof(UniChar) * range.length);
+		_notificationStringBuffer = (unichar *)malloc(sizeof(unichar) * range.length);
 		if (checkNull(env, (void *)_notificationStringBuffer)) {
 			monitorExit(env, mutex);
 			return;
@@ -161,7 +161,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
 }
 
 JNIEXPORT void JNICALL Java_com_skype_connector_osx_SkypeFramework_setup0(JNIEnv *env, jclass this, jstring applicationName) {
-	_notificationStringBuffer = (UniChar *)malloc(sizeof(UniChar) * SKYPE_STRING_MAX);
+	_notificationStringBuffer = (unichar *)malloc(sizeof(unichar) * SKYPE_STRING_MAX);
 	if (checkNull(env, (void *)_notificationStringBuffer)) {
 		return;
 	}
@@ -243,7 +243,7 @@ JNIEXPORT jstring JNICALL Java_com_skype_connector_osx_SkypeFramework_sendComman
 	if (_resultStringBufferLength < range.length) {
 		free(_resultStringBuffer);
 		
-		_resultStringBuffer = (UniChar *)malloc(sizeof(UniChar) * range.length);
+		_resultStringBuffer = (unichar *)malloc(sizeof(unichar) * range.length);
 		if (checkNull(env, (void *)_resultStringBuffer)) {
 			[pool release];
 
