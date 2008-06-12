@@ -1,6 +1,0 @@
-rule DefineHeaderDependencies
-{
-}
-
-DefineHeaderDependencies "<Headers/JNIWrapper.h>Headers/JNIWrapper.h" ;
-

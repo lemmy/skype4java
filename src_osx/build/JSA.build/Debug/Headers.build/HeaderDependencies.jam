@@ -1,6 +1,0 @@
-rule DefineHeaderDependencies
-{
-}
-
-DefineHeaderDependencies "<Headers/OSXConnector.h>Headers/OSXConnector.h" ;
-
