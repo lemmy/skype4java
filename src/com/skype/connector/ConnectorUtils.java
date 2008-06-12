@@ -314,23 +314,27 @@ public final class ConnectorUtils {
                 return;
             }
             
-            String libraryFileName = System.mapLibraryName(libraryName);
-            URL url = ConnectorUtils.class.getResource("/" + libraryFileName);
-            File libraryFile;
-            if(url.getProtocol().toLowerCase().equals("file")) {
-                try {
-                    libraryFile = new File(URLDecoder.decode(url.getPath(), "UTF-8"));
-                } catch(UnsupportedEncodingException e) {
-                    throw new LoadLibraryException("UTF-8 is not supported encoding.");
-                }
-            } else {
-                cleanUpOldLibraryFiles(libraryFileName);
-                libraryFile = createTempLibraryFile(libraryFileName);
-            }
             try {
-                System.load(libraryFile.getAbsolutePath());            
-            } catch (UnsatisfiedLinkError e) {
-                throw new LoadLibraryException("Loading " + libraryFileName + " failed.");
+                System.loadLibrary(libraryName);
+            } catch (UnsatisfiedLinkError err) {
+                String libraryFileName = System.mapLibraryName(libraryName);
+                URL url = ConnectorUtils.class.getResource("/" + libraryFileName);
+                File libraryFile;
+                if(url.getProtocol().toLowerCase().equals("file")) {
+                    try {
+                        libraryFile = new File(URLDecoder.decode(url.getPath(), "UTF-8"));
+                    } catch(UnsupportedEncodingException e) {
+                        throw new LoadLibraryException("UTF-8 is not supported encoding.");
+                    }
+                } else {
+                    cleanUpOldLibraryFiles(libraryFileName);
+                    libraryFile = createTempLibraryFile(libraryFileName);
+                }
+                try {
+                    System.load(libraryFile.getAbsolutePath());            
+                } catch (UnsatisfiedLinkError e) {
+                    throw new LoadLibraryException("Loading " + libraryFileName + " failed.");
+                }
             }
 
             loadedLibraries.add(libraryName);

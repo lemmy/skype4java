@@ -37,9 +37,12 @@ import org.eclipse.swt.widgets.Text;
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
 import com.skype.connector.MessageProcessor;
+import com.skype.connector.osx.OSXConnector;
 
 public class SkypeTracer extends Shell {
     public static void main(final String args[]) throws Exception {
+        OSXConnector.disableSkypeEventLoop();
+        
         final Display display = Display.getDefault();
         SkypeTracer shell = new SkypeTracer(display, SWT.SHELL_TRIM);
         shell.layout();

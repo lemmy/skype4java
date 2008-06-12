@@ -118,4 +118,22 @@ final class SkypeFramework {
     }
 
     private static native void dispose0();
+    
+    static int runCurrentEventLoop(double inTimeout) {
+        return runCurrentEventLoop0(inTimeout);
+    }
+
+    private static native int runCurrentEventLoop0(double inTimeout);
+    
+    static void runApplicationEventLoop() {
+        runApplicationEventLoop0();
+    }
+
+    private static native void runApplicationEventLoop0();
+    
+    static void quitApplicationEventLoop() {
+        quitApplicationEventLoop0();
+    }
+
+    private static native void quitApplicationEventLoop0();
 }

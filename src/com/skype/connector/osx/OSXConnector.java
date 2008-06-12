@@ -30,7 +30,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
-import com.skype.connector.ConnectorUtils;
 
 /**
  * Implementation of the connector for Mac OS X.
@@ -38,6 +37,8 @@ import com.skype.connector.ConnectorUtils;
 public final class OSXConnector extends Connector {
     /** Singleton instance. */
     private static OSXConnector _instance = null;
+    
+    private static boolean _skypeEventLoopEnabled = true;
 
     /**
      * Get singleton instance.
@@ -48,6 +49,10 @@ public final class OSXConnector extends Connector {
             _instance = new OSXConnector();
         }
         return _instance;
+    }
+    
+    public static void disableSkypeEventLoop() {
+        _skypeEventLoopEnabled = false;
     }
     
     private SkypeFrameworkListener listener = new AbstractSkypeFrameworkListener() {
@@ -96,6 +101,24 @@ public final class OSXConnector extends Connector {
     protected void initialize() throws ConnectorException {
         SkypeFramework.init(getApplicationName());
         SkypeFramework.addSkypeFrameworkListener(listener);
+        if (_skypeEventLoopEnabled) {
+            final CountDownLatch latch = new CountDownLatch(1);
+            Thread thread = new Thread("SkypeEventLoop") {
+                @Override
+                public void run() {
+                    latch.countDown();
+                    SkypeFramework.runApplicationEventLoop();
+                };
+            };
+            thread.setDaemon(true);
+            thread.start();
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                SkypeFramework.quitApplicationEventLoop();
+                throw new ConnectorException("The connector initialization was interrupted.", e);
+            }
+        }
     }
 
     /**
@@ -142,6 +165,11 @@ public final class OSXConnector extends Connector {
         }
     }
 
+    @Override
+    protected void sendProtocol() throws ConnectorException {
+        // changed not to send protocol because of Skype.framework event bugs(?)
+    }
+
     /**
      * Sends a command to the Skype client.
      * @param command The command to send.
@@ -156,5 +184,8 @@ public final class OSXConnector extends Connector {
     protected void disposeImpl() {
         SkypeFramework.removeSkypeFrameworkListener(listener);
         SkypeFramework.dispose();
+        if (_skypeEventLoopEnabled) {
+            SkypeFramework.quitApplicationEventLoop();
+        }
     }
 }

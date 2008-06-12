@@ -27,6 +27,8 @@
 		4CEBA79B08679F3E0015D03E /* SkypeFramework.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A52677B022AFE3B0CC91562 /* SkypeFramework.m */; };
 		4CEBA79C08679F510015D03E /* JavaVM.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AE2200B0208CA9C0CC91562 /* JavaVM.framework */; };
 		8266A0490DFEA813008EE468 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8266A0480DFEA813008EE468 /* Foundation.framework */; };
+		82BCD8DA0E00C3AC0028F983 /* ConnectorException.java in Sources */ = {isa = PBXBuildFile; fileRef = 82BCD8D90E00C3AC0028F983 /* ConnectorException.java */; };
+		82BCD8DC0E00C3C80028F983 /* LoadLibraryException.java in Sources */ = {isa = PBXBuildFile; fileRef = 82BCD8DB0E00C3C80028F983 /* LoadLibraryException.java */; };
 		82C1DC990DFCEEC300724F2F /* SkypeFrameworkTest.java in Sources */ = {isa = PBXBuildFile; fileRef = 82C1DC980DFCEEC300724F2F /* SkypeFrameworkTest.java */; };
 		82C1DC9B0DFCEEFC00724F2F /* SkypeFramework.java in Sources */ = {isa = PBXBuildFile; fileRef = 82C1DC9A0DFCEEFC00724F2F /* SkypeFramework.java */; };
 		82C1DD200DFD009A00724F2F /* Skype.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 82C1DD1F0DFD009A00724F2F /* Skype.framework */; };
@@ -78,6 +80,8 @@
 		6A52677B022AFE3B0CC91562 /* SkypeFramework.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SkypeFramework.m; sourceTree = "<group>"; };
 		6AE2200B0208CA9C0CC91562 /* JavaVM.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaVM.framework; path = /System/Library/Frameworks/JavaVM.framework; sourceTree = "<absolute>"; };
 		8266A0480DFEA813008EE468 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		82BCD8D90E00C3AC0028F983 /* ConnectorException.java */ = {isa = PBXFileReference; fileEncoding = "-2147483647"; lastKnownFileType = sourcecode.java; name = ConnectorException.java; path = ../src/com/skype/connector/ConnectorException.java; sourceTree = SOURCE_ROOT; };
+		82BCD8DB0E00C3C80028F983 /* LoadLibraryException.java */ = {isa = PBXFileReference; fileEncoding = "-2147483647"; lastKnownFileType = sourcecode.java; name = LoadLibraryException.java; path = ../src/com/skype/connector/LoadLibraryException.java; sourceTree = SOURCE_ROOT; };
 		82C1DC980DFCEEC300724F2F /* SkypeFrameworkTest.java */ = {isa = PBXFileReference; fileEncoding = "-2147483647"; lastKnownFileType = sourcecode.java; name = SkypeFrameworkTest.java; path = ../test/com/skype/connector/osx/SkypeFrameworkTest.java; sourceTree = SOURCE_ROOT; };
 		82C1DC9A0DFCEEFC00724F2F /* SkypeFramework.java */ = {isa = PBXFileReference; fileEncoding = "-2147483647"; lastKnownFileType = sourcecode.java; name = SkypeFramework.java; path = ../src/com/skype/connector/osx/SkypeFramework.java; sourceTree = SOURCE_ROOT; };
 		82C1DCDD0DFCFC6B00724F2F /* Headers/SkypeFramework.h */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = Headers/SkypeFramework.h; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -112,6 +116,8 @@
 		00E6828FFEC88D1A11DB9C8B = {
 			isa = PBXGroup;
 			children = (
+				82BCD8DB0E00C3C80028F983 /* LoadLibraryException.java */,
+				82BCD8D90E00C3AC0028F983 /* ConnectorException.java */,
 				82C1DDA30DFD237000724F2F /* ConnectorUtils.java */,
 				82C1DD3C0DFD06D300724F2F /* SkypeFrameworkListener.java */,
 				82C1DC9A0DFCEEFC00724F2F /* SkypeFramework.java */,
@@ -257,6 +263,8 @@
 				82C1DC9B0DFCEEFC00724F2F /* SkypeFramework.java in Sources */,
 				82C1DD3D0DFD06D300724F2F /* SkypeFrameworkListener.java in Sources */,
 				82C1DDA40DFD237000724F2F /* ConnectorUtils.java in Sources */,
+				82BCD8DA0E00C3AC0028F983 /* ConnectorException.java in Sources */,
+				82BCD8DC0E00C3C80028F983 /* LoadLibraryException.java in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

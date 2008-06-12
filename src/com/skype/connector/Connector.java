@@ -152,9 +152,9 @@ public abstract class Connector {
     private Object _isInitializedMutex = new Object();
 
     /** global connector timeout. */
-    private int _connectTimeout = 3000;
+    private int _connectTimeout = 10000;
     /** global command-reply timeout. */
-    private int _commandTimeout = 3000;
+    private int _commandTimeout = 10000;
 
     /** Collection of asynchronous event listeners for the connector. */
     private ConnectorListener[] _asyncListeners = new ConnectorListener[0];
@@ -381,7 +381,7 @@ public abstract class Connector {
         Status status = connect(timeout);
         if (status == Status.ATTACHED) {
             sendApplicationName(getApplicationName());
-            execute("PROTOCOL 9999", new String[] {"PROTOCOL "}, false);
+            sendProtocol();
         }
         return status;
     }
@@ -412,6 +412,10 @@ public abstract class Connector {
      * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
      */
     protected void sendApplicationName(String newApplicationName) throws ConnectorException {
+    }
+
+    protected void sendProtocol() throws ConnectorException {
+        execute("PROTOCOL 9999", new String[] {"PROTOCOL "}, false);
     }
 
     /**

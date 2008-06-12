@@ -239,3 +239,15 @@ JNIEXPORT void JNICALL Java_com_skype_connector_osx_SkypeFramework_dispose0(JNIE
 	free(_notificationStringBuffer);
 	_notificationStringBufferLength = 0;
 }
+
+JNIEXPORT jint JNICALL Java_com_skype_connector_osx_SkypeFramework_runCurrentEventLoop0(JNIEnv *env, jclass this, jdouble inTimeout) {
+	return RunCurrentEventLoop(inTimeout);
+}
+
+JNIEXPORT void JNICALL Java_com_skype_connector_osx_SkypeFramework_runApplicationEventLoop0(JNIEnv *env, jclass this) {
+	RunApplicationEventLoop();
+}
+
+JNIEXPORT void JNICALL Java_com_skype_connector_osx_SkypeFramework_quitApplicationEventLoop0(JNIEnv *env, jclass this) {
+	QuitApplicationEventLoop();
+}
