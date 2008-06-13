@@ -146,6 +146,10 @@ public final class SkypeClient {
         }
     }
 
+    public enum WindowState {
+        NORMAL, MINIMIZED, MAXIMIZED, HIDDEN;
+    }
+
     /**
      * Put focus on the Skype client window, not any Java window.
      * @throws SkypeException when connection has gone bad or ERROR reply.
@@ -487,5 +491,13 @@ public final class SkypeClient {
     
     public static void removeMenuItem(MenuItem menuItem) throws SkypeException {
         menuItem.dispose();
+    }
+    
+    public static void setMainWindowState(WindowState newValue) throws SkypeException {
+        Utils.setProperty("WINDOWSTATE", newValue.name());
+    }
+    
+    public static WindowState getMainWindowState() throws SkypeException {
+        return WindowState.valueOf(Utils.getProperty("WINDOWSTATE"));
     }
 }
