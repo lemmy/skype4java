@@ -57,7 +57,7 @@ static void fireStatusChanged(const char *methodName) {
 	}
 
 	jclass clazz  = (*env)->FindClass(env, SKYPE_FRAMEWORK_CLASS);
-	jmethodID method = (*env)->GetStaticMethodID(env, clazz, "fireBecameAvailable", "()V");
+	jmethodID method = (*env)->GetStaticMethodID(env, clazz, methodName, "()V");
 	(*env)->CallStaticVoidMethod(env, clazz, method);
 }
 
