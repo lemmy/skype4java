@@ -371,27 +371,29 @@ public abstract class Connector {
      * @throws ConnectorException thrown when a connection could not be made due to technical problems.
      */
     public final Status connect() throws ConnectorException {
-        int timeout = getConnectTimeout();
-        synchronized(_isInitializedMutex) {
-            if (!_isInitialized) {
-                initialize();
-                _isInitialized = true;
-            }
-        }
-        Status status = connect(timeout);
+        initialize();
+        Status status = connect(getConnectTimeout());
         if (status == Status.ATTACHED) {
             sendApplicationName(getApplicationName());
             sendProtocol();
         }
         return status;
     }
+
+    protected final void initialize() throws ConnectorException {
+        synchronized(_isInitializedMutex) {
+            if (!_isInitialized) {
+                initializeImpl();
+                _isInitialized = true;
+            }
+        }
+    }
     
     /**
      * Platform specific connector needs to implement it's own initialize method.
-     * @param timeout Timeout in milliseconds to use while initializing.
      * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
      */
-    protected abstract void initialize() throws ConnectorException;
+    protected abstract void initializeImpl() throws ConnectorException;
     
     /**
      * Platform specific connector needs to implement it's own connect method. 

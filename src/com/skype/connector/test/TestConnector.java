@@ -200,7 +200,7 @@ public final class TestConnector extends Connector {
     }
 
     @Override
-    protected void initialize() throws ConnectorException {
+    protected void initializeImpl() throws ConnectorException {
         setStatus(Status.ATTACHED);
     }
 

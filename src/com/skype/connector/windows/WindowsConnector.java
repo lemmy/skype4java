@@ -209,7 +209,7 @@ public final class WindowsConnector extends Connector {
      * @throws ConnectorException when initialization cannot be completed.
      */
     @Override
-    protected void initialize() throws ConnectorException {
+    protected void initializeImpl() throws ConnectorException {
         final Object wait = new Object();
         final String[] errorMessage = new String[1];
         Thread thread = new Thread("SkypeEventDispatcher") {

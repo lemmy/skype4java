@@ -79,6 +79,7 @@ public final class OSXConnector extends Connector {
     }
     
     public boolean isRunning() throws ConnectorException {
+        ((OSXConnector)getInstance()).initialize();
         return SkypeFramework.isRunning();
     }
 
@@ -98,7 +99,7 @@ public final class OSXConnector extends Connector {
     /**
      * Initializes this connector.
      */
-    protected void initialize() throws ConnectorException {
+    protected void initializeImpl() throws ConnectorException {
         SkypeFramework.init(getApplicationName());
         SkypeFramework.addSkypeFrameworkListener(listener);
         if (_skypeEventLoopEnabled) {

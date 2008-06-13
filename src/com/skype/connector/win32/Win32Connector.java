@@ -86,7 +86,7 @@ public final class Win32Connector extends Connector {
      * Initialize the connector.
      * @param timeout maximum time in miliseconds to initialize.
      */
-    protected void initialize() {
+    protected void initializeImpl() {
         // Loading DLL
     	try {
     		System.loadLibrary("JNIConnector");
