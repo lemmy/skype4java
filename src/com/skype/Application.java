@@ -139,17 +139,20 @@ public final class Application extends SkypeObject {
     void initialize() throws SkypeException {
         try {
             synchronized(isInitializedFieldMutex) {
+                String response = Connector.getInstance().execute("CREATE APPLICATION " + name);
+                // to support recreation
+                // TODO add a mechanism to handle status changes
+                if (response.startsWith("ERROR ") && !response.startsWith("ERROR 541 ")) {
+                    getAllStreams(); // to fire events
+                    Utils.checkError(response);
+                }
                 if (!isInitialized) {
                     Connector.getInstance().addConnectorListener(dataListener, false, true);
                     Runtime.getRuntime().addShutdownHook(shutdownHookForFinish);
-                    String response = Connector.getInstance().execute("CREATE APPLICATION " + name);
-                    Utils.checkError(response);
                     isInitialized = true;
                 }
             }
         } catch(ConnectorException e) {
-            Connector.getInstance().removeConnectorListener(dataListener);
-            Runtime.getRuntime().removeShutdownHook(shutdownHookForFinish);
             Utils.convertToSkypeException(e);
         }
     }
