@@ -142,8 +142,8 @@ public final class Application extends SkypeObject {
                 String response = Connector.getInstance().execute("CREATE APPLICATION " + name);
                 // to support recreation
                 // TODO add a mechanism to handle status changes
+                getAllStreams(); // to fire events
                 if (response.startsWith("ERROR ") && !response.startsWith("ERROR 541 ")) {
-                    getAllStreams(); // to fire events
                     Utils.checkError(response);
                 }
                 if (!isInitialized) {
