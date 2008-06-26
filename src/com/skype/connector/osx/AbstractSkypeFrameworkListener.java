@@ -17,8 +17,7 @@
  * in your web site or documents.
  * 
  * Contributors:
- * r-yu/xai - initial implementation
- * Koji Hisano - changed Skype event dispatch thread to a deamon thread
+ * Koji Hisano - initial API and implementation
  ******************************************************************************/
 package com.skype.connector.osx;
 
