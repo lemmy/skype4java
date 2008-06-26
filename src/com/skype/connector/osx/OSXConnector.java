@@ -1,6 +1,4 @@
 /*******************************************************************************
- * Copyright (c) 2006-2007 r-yu/xai
- *
  * Copyright (c) 2006-2007 Koji Hisano <hisano@gmail.com> - UBION Inc. Developer
  * Copyright (c) 2006-2007 UBION Inc. <http://www.ubion.co.jp/>
  * 
