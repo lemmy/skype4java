@@ -23,11 +23,15 @@ package com.skype;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import com.skype.connector.AbstractConnectorListener;
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
 import com.skype.connector.ConnectorMessageEvent;
+import com.skype.connector.NotificationChecker;
 
 /**
  * This class implements a simple way of sending and receiving AP2AP data.
@@ -117,61 +121,66 @@ public final class Stream extends SkypeObject {
     public void write(String text) throws SkypeException {
         Utils.checkNotNull(text, "text");
         try {
-            final Object wait = new Object();
-            AbstractConnectorListener connectorListener = new AbstractConnectorListener() {
-                @Override
-                public void messageReceived(ConnectorMessageEvent event) {
-                    String message = event.getMessage();
+            NotificationChecker checker = new NotificationChecker() {            
+                public boolean isTarget(String message) {
                     if (message.startsWith("APPLICATION " + getApplication().getName() + " SENDING ")) {
                         String data = message.substring(("APPLICATION " + getApplication().getName() + " SENDING ").length());
                         if ("".equals(data)) {
-                            synchronized(wait) {
-                                wait.notify();
-                            }
-                            return;
+                            return true;
                         }
                         String[] streams = data.split(" ");
                         for (String stream: streams) {
                             stream = stream.substring(0, stream.indexOf('='));
                             if (stream.equals(getId())) {
-                                return;
+                                return false;
                             }
                         }
-                        synchronized(wait) {
-                            wait.notify();
-                        }
+                        return true;
                     }
-                }
+                    return false;
+                }            
             };
-            ApplicationListener applicationListener = new ApplicationAdapter() {
-                @Override
-                public void disconnected(Stream stream) throws SkypeException {
-                    if (stream == Stream.this) {
-                        synchronized(wait) {
-                            wait.notify();
-                        }
-                    }
-                }
-            };
-            Connector.getInstance().addConnectorListener(connectorListener);
-            application.addApplicationListener(applicationListener);
             String header = "ALTER APPLICATION " + getApplication().getName() + " WRITE " + getId();
-            synchronized(wait) {
+            ApplicationListener applicationListener = null;
+            try {
+                final Future<String> future = Connector.getInstance().waitForEndWithId(header + " " + text, header, checker);
+                applicationListener = new ApplicationAdapter() {
+                    @Override
+                    public void disconnected(Stream stream) throws SkypeException {
+                        if (stream == Stream.this) {
+                            future.cancel(true);
+                        }
+                    }
+                };
+                application.addApplicationListener(applicationListener);
                 try {
-                    String result = Connector.getInstance().executeWithId(header + " " + text, header);
-                    Utils.checkError(result);
-                    // TODO must retun when Skype is not running
-                    wait.wait();
+                    Utils.checkError(future.get());
+                } catch (CancellationException e) {
+                    throw new SkypeException("The '" + getId() + "' stream is closed.", e);
+                } catch(ExecutionException e) {
+                    if (e.getCause() instanceof ConnectorException) {
+                        throw (ConnectorException)e.getCause();
+                    }
+                    throw new SkypeException("The '" + header + " " + text + "' command failed.", e);                    
                 } catch(InterruptedException e) {
-                    throw new SkypeException("The writing was interrupted.", e);
-                } finally {
-                    Connector.getInstance().removeConnectorListener(connectorListener);
-                    application.removeApplicationListener(applicationListener);
+                    Thread.currentThread().interrupt();
+                    throw new SkypeException("The thread is interrupted.", e);
                 }
+            } finally {
+                application.removeApplicationListener(applicationListener);
             }
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
         }
+    }
+
+    private boolean isClosed() throws SkypeException {
+        for (Stream stream: application.getAllStreams()) {
+            if (stream == this) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

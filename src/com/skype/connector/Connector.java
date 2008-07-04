@@ -162,10 +162,10 @@ public abstract class Connector {
     private ConnectorListener[] _syncListeners = new ConnectorListener[0];
 
     /** Command counter, can be used to identify message and reply pairs. */
-    private int _commandCount;
+    private AtomicInteger _commandCount = new AtomicInteger();
     
     /** Asynchronous message sender */
-    private ExecutorService _asyncSender = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 20, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+    private ExecutorService _asyncSender = Executors.newCachedThreadPool(new ThreadFactory() {
         private final AtomicInteger threadNumber = new AtomicInteger();
 
         public Thread newThread(Runnable r) {
@@ -178,6 +178,16 @@ public abstract class Connector {
     private Executor _syncSender = Executors.newSingleThreadExecutor(new ThreadFactory() {
         public Thread newThread(Runnable r) {
             Thread thread = new Thread(r, "SyncSkypeMessageSender");
+            thread.setDaemon(true);
+            return thread;
+        }
+    });
+    /** Command executor */
+    private ExecutorService _commandExecutor = Executors.newCachedThreadPool(new ThreadFactory() {
+        private final AtomicInteger threadNumber = new AtomicInteger();
+
+        public Thread newThread(Runnable r) {
+            Thread thread = new Thread(r, "CommandExecutor-" + threadNumber.getAndIncrement());
             thread.setDaemon(true);
             return thread;
         }
@@ -515,9 +525,60 @@ public abstract class Connector {
     public final String executeWithId(final String command, final String responseHeader) throws ConnectorException {
         ConnectorUtils.checkNotNull("command", command);
         ConnectorUtils.checkNotNull("responseHeader", responseHeader);
-        String header = "#" + (_commandCount++) + " ";
+        String header = "#" + _commandCount.getAndIncrement() + " ";
         String response = execute(header + command, new String[] { header + responseHeader, header + "ERROR " }, true);
         return response.substring(header.length());
+    }
+
+    /**
+     * Send a Skype command to the Skype client and wait for the reply, using an ID.
+     * @param command The command to send.
+     * @param responseHeader The expected reply header.
+     * @return The reply.
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
+    public final Future waitForEndWithId(final String command, final String responseHeader, final NotificationChecker checker) throws ConnectorException {
+        ConnectorUtils.checkNotNull("command", command);
+        ConnectorUtils.checkNotNull("responseHeader", responseHeader);
+        ConnectorUtils.checkNotNull("responseHeader", checker);
+        final String header = "#" + _commandCount.getAndIncrement() + " ";
+        NotificationChecker wrappedChecker = new NotificationChecker() {
+            public boolean isTarget(String message) {
+                if (checker.isTarget(message)) {
+                    return true;
+                }
+                return message.startsWith(header + "ERROR ");
+            }
+        };
+        final Future<String> future = execute(header + command, wrappedChecker, true, false);
+        return new Future<String>() {
+            public boolean isDone() {
+                return future.isDone();
+            }
+        
+            public boolean isCancelled() {
+                return future.isCancelled();
+            }
+        
+            public String get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+                return removeId(future.get(timeout, unit));
+            }
+        
+            public String get() throws InterruptedException, ExecutionException {
+                return removeId(future.get());
+            }
+        
+            private String removeId(String message) {
+                if (message.startsWith(header)) {
+                    return message.substring(header.length());
+                }
+                return message;
+            }
+
+            public boolean cancel(boolean mayInterruptIfRunning) {
+                return future.cancel(mayInterruptIfRunning);
+            }
+        };
     }
 
     /**
@@ -580,61 +641,89 @@ public abstract class Connector {
      * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
      */
     private String execute(final String command, final String[] responseHeaders, final boolean checkAttached, boolean withoutTimeout) throws ConnectorException {
+        NotificationChecker checker = new NotificationChecker() {
+            public boolean isTarget(String message) {
+                for (String responseHeader : responseHeaders) {
+                    if (message.startsWith(responseHeader)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        };
+        try {
+            return execute(command, checker, checkAttached, withoutTimeout).get();
+        } catch(InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ConnectorException("The '" + command + "' command was interrupted.", e);
+        } catch(ExecutionException e) {
+            if (e.getCause() instanceof ConnectorException) {
+                throw (ConnectorException)e.getCause();
+            }
+            throw new ConnectorException("The '" + command + "' command execution failed.", e);
+        }
+    }
+
+    /**
+     * Send a Skype command to Skype (actual implementation method) and wait for response.
+     * @param command the command to send.
+     * @param responseChecker the response checker.
+     * @param checkAttached if true the connector will first check if it is connected.
+     * @return the response future.
+     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     */
+    private Future<String> execute(final String command, final NotificationChecker responseChecker, final boolean checkAttached, boolean withoutTimeout) throws ConnectorException {
         ConnectorUtils.checkNotNull("command", command);
-        ConnectorUtils.checkNotNull("responseHeaders", responseHeaders);
+        ConnectorUtils.checkNotNull("responseChecker", responseChecker);
 
         if (checkAttached) {
             assureAttached();
         }
+        
+        return _commandExecutor.submit(new Callable<String>() {
+            public String call() throws Exception {
+                final BlockingQueue<String> responses = new LinkedBlockingQueue<String>();
 
-        final BlockingQueue<String> responses = new LinkedBlockingQueue<String>();
-
-        ConnectorListener listener = new AbstractConnectorListener() {
-            public void messageReceived(ConnectorMessageEvent event) {
-                String message = event.getMessage();
-                for (String responseHeader : responseHeaders) {
-                    if (message.startsWith(responseHeader) || message.startsWith("PONG")) {
-                        responses.add(message);
-                        return;
+                ConnectorListener listener = new AbstractConnectorListener() {
+                    public void messageReceived(ConnectorMessageEvent event) {
+                        String message = event.getMessage();
+                        if (responseChecker.isTarget(message) || message.startsWith("PONG")) {
+                            responses.add(message);
+                        }
                     }
-                }
-            }
-        };
-        addConnectorListener(listener, false);
+                };
+                addConnectorListener(listener, false);
 
-        fireMessageSent(command);
-        sendCommand(command);
-        try {
-            boolean pinged = false;
-            while (true) {
-                String response;
+                fireMessageSent(command);
+                sendCommand(command);
                 try {
-                    response = responses.poll(getCommandTimeout(), TimeUnit.MILLISECONDS);
-                } catch(InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new ConnectorException("The '" + command + "' command was interrupted.");
-                }
-                if (response == null) {
-                    if (pinged) {
-                        setStatus(Status.NOT_RUNNING);
-                        throw new NotAttachedException(Status.NOT_RUNNING);
-                    } else {
-                        fireMessageSent("PING");
-                        sendCommand("PING");
-                        pinged = true;
-                        continue;
+                    boolean pinged = false;
+                    while (true) {
+                        // to cancel getting responses, you must call Futrue#cancel(true)
+                        String response = responses.poll(getCommandTimeout(), TimeUnit.MILLISECONDS);
+                        if (response == null) {
+                            if (pinged) {
+                                setStatus(Status.NOT_RUNNING);
+                                throw new NotAttachedException(Status.NOT_RUNNING);
+                            } else {
+                                fireMessageSent("PING");
+                                sendCommand("PING");
+                                pinged = true;
+                                continue;
+                            }
+                        }
+                        if (response.startsWith("PONG")) {
+                            pinged = false;
+                            continue;
+                        } else {
+                            return response;
+                        }
                     }
-                }
-                if (response.startsWith("PONG")) {
-                    pinged = false;
-                    continue;
-                } else {
-                    return response;
+                } finally {
+                    removeConnectorListener(listener);
                 }
             }
-        } finally {
-            removeConnectorListener(listener);
-        }
+        });
     }
 
     /**
