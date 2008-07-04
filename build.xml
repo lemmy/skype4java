@@ -3,8 +3,6 @@
     <taskdef name="fmpp" classname="fmpp.tools.AntTask" classpath="lib/tools/fmpp.jar"/>
 	
     <target name="prepare">
-    	<copy todir="res" file="src_osx/build/Debug/libskype.jnilib"/>
-    	<copy todir="res/linux" file="src_linux/DBus/JNI/lib/libJSA.so"/>
         <copy todir="res/win32" file="src_win32/JNIConnector.dll"/>
     	
         <mkdir dir="build"/>

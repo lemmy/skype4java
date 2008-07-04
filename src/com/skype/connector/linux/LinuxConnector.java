@@ -1,5 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2006-2007 Bart Lamot <bart.almot@gmail.com> 
+ * Copyright (c) 2006-2007 Koji Hisano <hisano@gmail.com> - UBION Inc. Developer
+ * Copyright (c) 2006-2007 UBION Inc. <http://www.ubion.co.jp/>
  * 
  * Copyright (c) 2006-2007 Skype Technologies S.A. <http://www.skype.com/>
  * 
@@ -15,156 +16,128 @@
  * links to the Skype4Java web site <https://developer.skype.com/wiki/Java_API> 
  * in your web site or documents.
  * 
- * Contributors: 
- * Bart Lamot - initial API and implementation
+ * Contributors:
+ * Koji Hisano - initial API and implementation
  ******************************************************************************/
 package com.skype.connector.linux;
 
 import java.io.File;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
+import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
-import com.skype.connector.ConnectorUtils;
+
 /**
- * Implementation of the Linux connector class.
- * Only works for DBus 0.22 not newer DBus or X11 messaging.
+ * Implementation of the connector for Linux
  */
-public final class LinuxConnector extends com.skype.connector.Connector {
-    /** Filename of the DLL. */
-    private static final String LIBFILENAME = "libJSA.so";
+public final class LinuxConnector extends Connector {
+    private static LinuxConnector _instance = null;
+    
+    /**
+     * Get singleton instance.
+     * @return instance.
+     */
+    public static synchronized Connector getInstance() {
+        if(_instance == null) {
+            _instance = new LinuxConnector();
+        }
+        return _instance;
+    }
+    
+    private SkypeFrameworkListener listener = new SkypeFrameworkListener() {
+        public void notificationReceived(String notificationString) {
+            fireMessageReceived(notificationString);
+        }
+    };
 
-    /** Singleton instance of this connector. */
-	private static LinuxConnector _instance = null;
-	
-	/**
-	 * Private constructor to keep this a singleton.
-	 * Use getInstance to get an instance.
-	 */
-	private LinuxConnector(){
-		try {
-			System.loadLibrary("JSA");
-		} catch (Throwable e) {
-			try {
-				if (!ConnectorUtils.checkLibraryInPath(LIBFILENAME)) {
-		    		ConnectorUtils.extractFromJarToTemp(LIBFILENAME);   
-		    		
-		    		System.load(System.getProperty("java.io.tmpdir")+File.separatorChar+LIBFILENAME);
-				}
-			} catch (Exception e2) {
-				setStatus(Status.NOT_AVAILABLE);
-                return;
-			}
-		}   
-		setStatus(Status.PENDING_AUTHORIZATION);
-	}
-
-	/**
-	 * Get the singleton instance of this Connector.
-	 * @return the singleton instance.
-	 */
-	public static synchronized LinuxConnector getInstance() {
-		if (_instance == null) {
-			_instance = new LinuxConnector();
-		}
-		return _instance;
-	}
-
-	/**
-	 * Initialize the native library and connection with DBus.
-	 *
-	 */
-	public void init() {
-		init(getApplicationName());
-	}
-
-	/**
-	 * Send a command to the Skype client using the native DBus code.
-	 * @param command The command to send.
-	 */
-	protected void sendCommand(final String command) {
-		sendSkypeMessage(command);
-	}
-	
-	/**
-	 * Dispose the native DBus connection.
-	 */
-	protected void disposeImpl() {
-		setConnectedStatus(5);	
-		disposeNative();
-		_instance = null;
-	}
-
-	/**
-	 * send the application name to the Skype client.
-	 * @param newApplicationName the new application name.
-	 * @throws ConnectorException when the connection with the Skype client has gone bad.
-	 */
-    protected void sendApplicationName(String newApplicationName) throws ConnectorException {
-        execute("NAME " + newApplicationName, new String[] { "OK"  }, false);
+    /**
+     * Constructor.
+     */
+    private LinuxConnector() {
+    }
+    
+    public boolean isRunning() throws ConnectorException {
+        SkypeFramework.init();
+        return SkypeFramework.isRunning();
     }
 
-	/**
-	 * abstract method overridden.
-	 * @param timeout the maximum time to use in milliseconds to connect.
-	 * @return The status after connecting.
-	 */
-	protected Status connect(int timeout) {
-		if (getStatus() == Status.PENDING_AUTHORIZATION) {
-			return Status.ATTACHED;
-		}
-		return getStatus();
-	}
+    /**
+     * Gets the absolute path of Skype.
+     * @return the absolute path of Skype.
+     */
+    public String getInstalledPath() {
+        File application = new File("/usr/bin/skype");
+        if (application.exists()) {
+            return application.getAbsolutePath();
+        } else {
+            return null;
+        }
+    }
 
-	/**
-	 * overriden method to initialize.
-	 * @param timeout the maximum time in milliseconds to initialize.
-	 */
-	protected void initializeImpl() {
-		init();
-	}
-	
-	/**
-	 * Native init method.
-	 * @param applicationName Applicationname to set.
-	 */
-	private native void init(String applicationName);
-	
-	/**
-	 * Native sendSkypeMessage method.
-	 * @param message The message to send.
-	 */
-	public native void sendSkypeMessage(String message);
+    /**
+     * Initializes this connector.
+     */
+    protected void initializeImpl() throws ConnectorException {
+        SkypeFramework.init();
+        SkypeFramework.addSkypeFrameworkListener(listener);
+    }
 
-	/**
-	 * Native dispose method.
-	 * Cleans up and disconnects native library.
-	 */
-	public native void disposeNative();
+    /**
+     * Connects to Skype client.
+     * @param timeout the maximum time in milliseconds to connect.
+     * @return Status the status after connecting.
+     * @throws ConnectorException when connection can not be established.
+     */
+    protected Status connect(int timeout) throws ConnectorException {
+        if (!SkypeFramework.isRunning()) {
+            setStatus(Status.NOT_RUNNING);
+            return getStatus();
+        }
+        try {
+            final BlockingQueue<String> queue = new LinkedBlockingQueue<String>();
+            SkypeFrameworkListener initListener = new SkypeFrameworkListener() {
+                public void notificationReceived(String notification) {
+                    if ("OK".equals(notification) || "CONNSTATUS OFFLINE".equals(notification) || "ERROR 68".equals(notification)) {
+                        try {
+                            queue.put(notification);
+                        } catch(InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
+                }
+            };
+            setStatus(Status.PENDING_AUTHORIZATION);
+            SkypeFramework.addSkypeFrameworkListener(initListener);
+            SkypeFramework.sendCommand("NAME " + getApplicationName());
+            String result = queue.take();
+            SkypeFramework.removeSkypeFrameworkListener(initListener);
+            if ("OK".equals(result)) {
+                setStatus(Status.ATTACHED);
+            } else if ("CONNSTATUS OFFLINE".equals(result)) {
+                setStatus(Status.NOT_AVAILABLE);
+            } else if ("ERROR 68".equals(result)) {
+                setStatus(Status.REFUSED);
+            }
+            return getStatus();
+        } catch(InterruptedException e) {
+            throw new ConnectorException("Trying to connect was interrupted.", e);
+        }
+    }
 
-	/**
-	 * This method is used for callback by JNI code.
-	 * When a message is received.
-	 * @param message the received message.
-	 */
-	public static void receiveSkypeMessage(String message) {
-		if (_instance.getStatus() != Status.ATTACHED) {
-			setConnectedStatus(1);
-		}
-		_instance.fireMessageReceived(message);
-	}
+    /**
+     * Sends a command to the Skype client.
+     * @param command The command to send.
+     */
+    protected void sendCommand(final String command) {
+        SkypeFramework.sendCommand(command);
+    }
 
-	/**
-	 * This method is used for callback by JNI code to set the Status.
-	 * @param status status to be set.
-	 */
-	public static void setConnectedStatus(int status) {
-		switch(status) {
-			case 0:	_instance.setStatus(Status.PENDING_AUTHORIZATION);break;
-			case 1:	_instance.setStatus(Status.ATTACHED);break;
-			case 2:	_instance.setStatus(Status.REFUSED);break;
-			case 3:	_instance.setStatus(Status.NOT_AVAILABLE);break;	
-			case 4:	_instance.setStatus(Status.API_AVAILABLE);break;
-			case 5:	_instance.setStatus(Status.NOT_RUNNING);break;
-			default:	_instance.setStatus(Status.NOT_RUNNING);break;
-		}
-	}
+    /**
+     * Cleans up the connector and the native library.
+     */
+    protected void disposeImpl() {
+        SkypeFramework.removeSkypeFrameworkListener(listener);
+        SkypeFramework.dispose();
+    }
 }
