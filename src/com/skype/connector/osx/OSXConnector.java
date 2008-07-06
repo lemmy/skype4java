@@ -65,7 +65,6 @@ public final class OSXConnector extends Connector {
     
         @Override
         public void becameAvailable() {
-            setStatus(Status.API_AVAILABLE);
         }    
     };
 
@@ -130,33 +129,30 @@ public final class OSXConnector extends Connector {
             setStatus(Status.NOT_RUNNING);
             return getStatus();
         }
-        if (!SkypeFramework.isAvailable()) {
-            setStatus(Status.NOT_AVAILABLE);
-            return getStatus();
-        }
         try {
             final CountDownLatch latch = new CountDownLatch(1);
-            SkypeFrameworkListener listener = new AbstractSkypeFrameworkListener() {            
-               public void attachResponse(int attachResponseCode) {
-                   SkypeFramework.removeSkypeFrameworkListener(this);
-                   switch (attachResponseCode) {
-                       case 0:
-                           setStatus(Status.REFUSED);
-                           latch.countDown();
-                           break;
-                       case 1:
-                           setStatus(Status.ATTACHED);
-                           latch.countDown();
-                           break;
-                       default:
-                           throw new IllegalStateException("not supported attachResponseCode");
-                   }
-               }            
+            SkypeFrameworkListener listener = new AbstractSkypeFrameworkListener() {
+                @Override
+                public void attachResponse(int attachResponseCode) {
+                    SkypeFramework.removeSkypeFrameworkListener(this);
+                    switch(attachResponseCode) {
+                        case 0:
+                            setStatus(Status.REFUSED);
+                            latch.countDown();
+                            break;
+                        case 1:
+                            setStatus(Status.ATTACHED);
+                            latch.countDown();
+                            break;
+                        default:
+                            throw new IllegalStateException("not supported attachResponseCode");
+                    }
+                }
             };
             setStatus(Status.PENDING_AUTHORIZATION);
             SkypeFramework.addSkypeFrameworkListener(listener);
             SkypeFramework.connect();
-            latch.await(timeout, TimeUnit.MILLISECONDS);
+            latch.await();
             return getStatus();
         } catch(InterruptedException e) {
             throw new ConnectorException("Trying to connect was interrupted.", e);
