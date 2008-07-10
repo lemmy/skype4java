@@ -167,7 +167,9 @@ public final class Stream extends SkypeObject {
                     throw new SkypeException("The thread is interrupted.", e);
                 }
             } finally {
-                application.removeApplicationListener(applicationListener);
+                if (applicationListener != null) {
+                    application.removeApplicationListener(applicationListener);
+                }
             }
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
