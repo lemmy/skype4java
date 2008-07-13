@@ -45,6 +45,11 @@ public final class NotAttachedException extends ConnectorException {
         this.status = newStatus;
     }
 
+    NotAttachedException(Status newStatus, Throwable cause) {
+        this(newStatus);
+        initCause(cause);
+    }
+
     /**
      * Return the status at the moment of the exception.
      * @return Status.

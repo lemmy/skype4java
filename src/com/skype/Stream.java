@@ -158,6 +158,7 @@ public final class Stream extends SkypeObject {
                 } catch (CancellationException e) {
                     throw new SkypeException("The '" + getId() + "' stream is closed.", e);
                 } catch(ExecutionException e) {
+                    // TODO refactoring
                     if (e.getCause() instanceof ConnectorException) {
                         throw (ConnectorException)e.getCause();
                     }

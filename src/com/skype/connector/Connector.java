@@ -33,22 +33,22 @@ import java.util.concurrent.atomic.AtomicInteger;
  * A connector connects the Skype Java API with a running Skype client.
  */
 public abstract class Connector {
-	/**
-	 * Enumeration of the connector status.
-	 */
-	public enum Status {
-		/**
-		 * PENDING_AUTHORIZATION - The connector is waiting for the user to accept this app to connect to the Skype client.
-		 * ATTACHED - The connector is attached to the Skype client.
-		 * REFUSED - The user denied the application to connect to the Skype client.
-		 * NOT_AVAILABLE - The is no Skype client available to connect to.
-		 * API_AVAILABLE - Redundant of ATTACHED.
-		 * NOT_RUNNING - Connection can't be established. 
-		 */
+    /**
+     * Enumeration of the connector status.
+     */
+    public enum Status {
+        /**
+         * PENDING_AUTHORIZATION - The connector is waiting for the user to accept this app to connect to the Skype client.
+         * ATTACHED - The connector is attached to the Skype client.
+         * REFUSED - The user denied the application to connect to the Skype client.
+         * NOT_AVAILABLE - The is no Skype client available to connect to.
+         * API_AVAILABLE - Redundant of ATTACHED.
+         * NOT_RUNNING - Connection can't be established. 
+         */
         PENDING_AUTHORIZATION, ATTACHED, REFUSED, NOT_AVAILABLE, API_AVAILABLE, NOT_RUNNING;
     }
 
-	/** useJNIConnector if this is true on windows the connection will be made using a dll instead of using swt library. */
+    /** useJNIConnector if this is true on windows the connection will be made using a dll instead of using swt library. */
     private static boolean _useJNIConnector;
     /** Singleton instance of this class. */
     private static Connector _instance;
@@ -157,9 +157,9 @@ public abstract class Connector {
     private int _commandTimeout = 10000;
 
     /** Collection of asynchronous event listeners for the connector. */
-    private ConnectorListener[] _asyncListeners = new ConnectorListener[0];
+    private List<ConnectorListener> _asyncListeners = new CopyOnWriteArrayList<ConnectorListener>();
     /** Collection of synchronous event listeners for the connector. */
-    private ConnectorListener[] _syncListeners = new ConnectorListener[0];
+    private List<ConnectorListener> _syncListeners = new CopyOnWriteArrayList<ConnectorListener>();
 
     /** Command counter, can be used to identify message and reply pairs. */
     private AtomicInteger _commandCount = new AtomicInteger();
@@ -206,7 +206,7 @@ public abstract class Connector {
      * @return The absolute path to the Skype client executable.
      */
     public String getInstalledPath() {
-		return "skype";
+        return "skype";
     }
 
     /**
@@ -307,20 +307,20 @@ public abstract class Connector {
      */
     private void fireStatusChanged(final Status newStatus) {
         assert newStatus != null;
-        if (_syncListeners.length != 0) {
-            _syncSender.execute(new Runnable() {
-                public void run() {
-                    fireStatusChanged(_syncListeners, newStatus);
-                }
-            });
-        }
-        if (_asyncListeners.length != 0) {
-            _asyncSender.execute(new Runnable() {
-                public void run() {
-                    fireStatusChanged(_asyncListeners, newStatus);
-                }
-            });
-        }
+        _syncSender.execute(new Runnable() {
+            public void run() {
+                fireStatusChanged(toConnectorListenerArray(_syncListeners), newStatus);
+            }
+        });
+        _asyncSender.execute(new Runnable() {
+            public void run() {
+                fireStatusChanged(toConnectorListenerArray(_asyncListeners), newStatus);
+            }
+        });
+    }
+
+    private ConnectorListener[] toConnectorListenerArray(List<ConnectorListener> listeners) {
+        return listeners.toArray(new ConnectorListener[listeners.size()]);
     }
 
     /**
@@ -657,8 +657,12 @@ public abstract class Connector {
             Thread.currentThread().interrupt();
             throw new ConnectorException("The '" + command + "' command was interrupted.", e);
         } catch(ExecutionException e) {
-            if (e.getCause() instanceof ConnectorException) {
-                throw (ConnectorException)e.getCause();
+            if (e.getCause() instanceof NotAttachedException) {
+                NotAttachedException cause = (NotAttachedException)e.getCause();
+                throw new NotAttachedException(cause.getStatus(), cause);
+            } else if (e.getCause() instanceof ConnectorException) {
+                ConnectorException cause = (ConnectorException)e.getCause();
+                throw new ConnectorException(cause.getMessage(), cause);
             }
             throw new ConnectorException("The '" + command + "' command execution failed.", e);
         }
@@ -783,16 +787,10 @@ public abstract class Connector {
      */
     public final void addConnectorListener(final ConnectorListener listener, final boolean checkAttached, final boolean isSynchronous) throws ConnectorException {
         ConnectorUtils.checkNotNull("listener", listener);
-        if (isSynchronous) {
-            List<ConnectorListener> listeners = new ArrayList(Arrays.asList(_syncListeners));
-            if (listeners.add(listener)) {
-                _syncListeners = listeners.toArray(new ConnectorListener[0]);
-            }
+        if(isSynchronous) {
+            _syncListeners.add(listener);
         } else {
-            List<ConnectorListener> listeners = new ArrayList(Arrays.asList(_asyncListeners));
-            if (listeners.add(listener)) {
-                _asyncListeners = listeners.toArray(new ConnectorListener[0]);
-            }
+            _asyncListeners.add(listener);
         }
         if (checkAttached) {
             assureAttached();
@@ -805,18 +803,8 @@ public abstract class Connector {
      */
     public final void removeConnectorListener(final ConnectorListener listener) {
         ConnectorUtils.checkNotNull("listener", listener);
-        {
-            List<ConnectorListener> listeners = new ArrayList(Arrays.asList(_syncListeners));
-            if (listeners.remove(listener)) {
-                _syncListeners = listeners.toArray(new ConnectorListener[0]);
-            }
-        }
-        {
-            List<ConnectorListener> listeners = new ArrayList(Arrays.asList(_asyncListeners));
-            if (listeners.remove(listener)) {
-                _asyncListeners = listeners.toArray(new ConnectorListener[0]);
-            }
-        }
+        _syncListeners.remove(listener);
+        _asyncListeners.remove(listener);
     }
 
     /**
@@ -834,20 +822,16 @@ public abstract class Connector {
      */
     private void fireMessageEvent(final String message, final boolean isReceived) {
         ConnectorUtils.checkNotNull("message", message);
-        if (_syncListeners.length != 0) {
-            _syncSender.execute(new Runnable() {
-                public void run() {
-                    fireMessageEvent(_syncListeners, message, isReceived);
-                }
-            });
-        }
-        if (_asyncListeners.length != 0) {
-            _asyncSender.execute(new Runnable() {
-                public void run() {
-                    fireMessageEvent(_asyncListeners, message, isReceived);
-                }
-            });
-        }
+        _syncSender.execute(new Runnable() {
+            public void run() {
+                fireMessageEvent(toConnectorListenerArray(_syncListeners), message, isReceived);
+            }
+        });
+        _asyncSender.execute(new Runnable() {
+            public void run() {
+                fireMessageEvent(toConnectorListenerArray(_asyncListeners), message, isReceived);
+            }
+        });
     }
 
     /**
@@ -858,9 +842,8 @@ public abstract class Connector {
      */
     private void fireMessageEvent(final ConnectorListener[] listeners, final String message, final boolean isReceived) {
         ConnectorMessageEvent event = new ConnectorMessageEvent(this, message);
-        boolean fireMessageReceived = isReceived;
         for (int i = listeners.length - 1; 0 <= i; i--) {
-            if (fireMessageReceived) {
+            if (isReceived) {
                 listeners[i].messageReceived(event);
             } else {
                 listeners[i].messageSent(event);
