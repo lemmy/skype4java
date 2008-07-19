@@ -31,7 +31,7 @@ public class AutoDebugOutTest extends TestCaseByCSVFile {
 
     @Override
     protected void setUp() throws Exception {
-        setRecordingMode(true);
+        setRecordingMode(false);
 
         if (!isRecordingMode()) {
             initSysOutRecorder();
@@ -49,7 +49,7 @@ public class AutoDebugOutTest extends TestCaseByCSVFile {
 
         Skype.setDebug(true);
         Skype.getVersion();
-        outputsAre("-> GET SKYPEVERSION", "<- SKYPEVERSION 3.8.0.139");
+        outputsAre("-> GET SKYPEVERSION ", "<- SKYPEVERSION 3.8.0.139");
 
         Skype.setDebug(false);
         Skype.getVersion();
