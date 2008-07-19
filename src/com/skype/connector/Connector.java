@@ -320,7 +320,7 @@ public abstract class Connector {
     }
 
     private ConnectorListener[] toConnectorListenerArray(List<ConnectorListener> listeners) {
-        return listeners.toArray(new ConnectorListener[listeners.size()]);
+        return listeners.toArray(new ConnectorListener[0]);
     }
 
     /**
