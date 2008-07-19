@@ -272,20 +272,25 @@ public abstract class Connector {
     }
 
     /**
-     * Set the application name for this application.
-     * This is what the User will see in the Allow/Deny dialog.
-     * @param newApplicationName Name of this application.
+     * Sets the application name used to get the access grant of Skype API.
+     * <p>
+     * The specified name is what the User will see in the Skype API Allow/Deny dialog.
+     * </p>
+     * @param newApplicationName the application name
+     * @throws NullPointerException if the specified new debug out is null
+     * @see #getApplicationName()
      */
-    public final void setApplicationName(final String newApplicationName) {
+    public final synchronized void setApplicationName(final String newApplicationName) {
         ConnectorUtils.checkNotNull("applicationName", newApplicationName);
         _applicationName = newApplicationName;
     }
 
     /**
-     * Return the current application name.
-     * @return applicationName.
+     * Gets the application name used to get the access grant of Skype API.
+     * @return the application name
+     * @see #setApplicationName(String)
      */
-    public final String getApplicationName() {
+    public final synchronized String getApplicationName() {
         return _applicationName;
     }
 
