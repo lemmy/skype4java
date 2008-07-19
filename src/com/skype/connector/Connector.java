@@ -128,18 +128,17 @@ public abstract class Connector {
     }
 
     /**
+     * The connector listener for debug out
+     */
+    private ConnectorListener _debugListener;
+    /**
      * The debug output stream.
      * <p>
-     * This stream is initialized by
-     * <code>new PrintWriter(System.out, true)</code>.
+     * This stream is initialized by <tt>new PrintWriter(System.out, true)</tt>.
      * </p>
      */
     private PrintWriter _debugOut = new PrintWriter(System.out, true);
-    /** debugListener. */
-    private ConnectorListener _debugListener;
-    /** debug printer lock object. */
-    private Object _debugFieldMutex = new Object();
-    
+
     /** application name to send to Skype client. */
     private String _applicationName = "Skype4Java";
 
@@ -214,27 +213,26 @@ public abstract class Connector {
      * @param on if true debug output will be written to System.out
      * @throws ConnectorException thrown when connection to Skype Client has gone bad.
      */
-    public final void setDebug(final boolean on) throws ConnectorException {
-        synchronized (_debugFieldMutex) {
-            if (on) {
-                if (_debugListener == null) {
-                    _debugListener = new AbstractConnectorListener() {
-                        @Override
-                        public void messageReceived(final ConnectorMessageEvent event) {
-                            getDebugOut().println("<- " + event.getMessage());
-                        }
-                        
-                        @Override
-                        public void messageSent(final ConnectorMessageEvent event) {
-                            getDebugOut().println("-> " + event.getMessage());
-                        }
-                    };
-                    addConnectorListener(_debugListener, true, true);
-                }
-            } else {
-                if (_debugListener != null) {
-                    removeConnectorListener(_debugListener);
-                }
+    public final synchronized void setDebug(final boolean on) throws ConnectorException {
+        if (on) {
+            if (_debugListener == null) {
+                _debugListener = new AbstractConnectorListener() {
+                    @Override
+                    public void messageReceived(final ConnectorMessageEvent event) {
+                        getDebugOut().println("<- " + event.getMessage());
+                    }
+
+                    @Override
+                    public void messageSent(final ConnectorMessageEvent event) {
+                        getDebugOut().println("-> " + event.getMessage());
+                    }
+                };
+                addConnectorListener(_debugListener, true, true);
+            }
+        } else {
+            if (_debugListener != null) {
+                removeConnectorListener(_debugListener);
+                _debugListener = null;
             }
         }
     }
@@ -242,23 +240,23 @@ public abstract class Connector {
     /**
      * Sets the debug output stream.
      * @param newDebugOut the new debug output stream
-     * throws NullPointerException if <code>debugOut</code> is null.
+     * @throws NullPointerException if the specified new debug out is null
      * @see #setDebugOut(PrintStream)
      * @see #getDebugOut()
      */
-    public final void setDebugOut(final PrintWriter newDebugOut) {
+    public final synchronized void setDebugOut(final PrintWriter newDebugOut) {
         ConnectorUtils.checkNotNull("debugOut", newDebugOut);
-        this._debugOut = newDebugOut;
+        _debugOut = newDebugOut;
     }
 
     /**
      * Sets the debug output stream.
      * @param newDebugOut the new debug output stream
-     * throws NullPointerException if <code>debugOut</code> is null.
+     * @throws NullPointerException if the specified new debug out is null
      * @see #setDebugOut(PrintWriter)
      * @see #getDebugOut()
      */
-    public final void setDebugOut(final PrintStream newDebugOut) {
+    public final synchronized void setDebugOut(final PrintStream newDebugOut) {
         ConnectorUtils.checkNotNull("debugOut", newDebugOut);
         setDebugOut(new PrintWriter(newDebugOut, true));
     }
@@ -269,7 +267,7 @@ public abstract class Connector {
      * @see #setDebugOut(PrintWriter)
      * @see #setDebugOut(PrintStream)
      */
-    public final PrintWriter getDebugOut() {
+    public final synchronized PrintWriter getDebugOut() {
         return _debugOut;
     }
 
