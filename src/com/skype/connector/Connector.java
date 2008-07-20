@@ -18,20 +18,19 @@
  * 
  * Contributors:
  * Koji Hisano - initial API and implementation
+ * Bart Lamot - changed package and class of the MacOS to OSX
  ******************************************************************************/
 package com.skype.connector;
 
 import java.io.*;
 import java.lang.reflect.Method;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Base class for all platform specific connectors.
  * A connector connects the Skype Java API with a running Skype client.
- * 
- * @author Koji Hisano <hisano@gmail.com>
  */
 public abstract class Connector {
     /**
@@ -129,17 +128,18 @@ public abstract class Connector {
     }
 
     /**
-     * The connector listener for debug out
-     */
-    private ConnectorListener _debugListener;
-    /**
      * The debug output stream.
      * <p>
-     * This stream is initialized by <tt>new PrintWriter(System.out, true)</tt>.
+     * This stream is initialized by
+     * <code>new PrintWriter(System.out, true)</code>.
      * </p>
      */
     private PrintWriter _debugOut = new PrintWriter(System.out, true);
-
+    /** debugListener. */
+    private ConnectorListener _debugListener;
+    /** debug printer lock object. */
+    private Object _debugFieldMutex = new Object();
+    
     /** application name to send to Skype client. */
     private String _applicationName = "Skype4Java";
 
@@ -214,26 +214,27 @@ public abstract class Connector {
      * @param on if true debug output will be written to System.out
      * @throws ConnectorException thrown when connection to Skype Client has gone bad.
      */
-    public final synchronized void setDebug(final boolean on) throws ConnectorException {
-        if (on) {
-            if (_debugListener == null) {
-                _debugListener = new AbstractConnectorListener() {
-                    @Override
-                    public void messageReceived(final ConnectorMessageEvent event) {
-                        getDebugOut().println("<- " + event.getMessage());
-                    }
-
-                    @Override
-                    public void messageSent(final ConnectorMessageEvent event) {
-                        getDebugOut().println("-> " + event.getMessage());
-                    }
-                };
-                addConnectorListener(_debugListener, true, true);
-            }
-        } else {
-            if (_debugListener != null) {
-                removeConnectorListener(_debugListener);
-                _debugListener = null;
+    public final void setDebug(final boolean on) throws ConnectorException {
+        synchronized (_debugFieldMutex) {
+            if (on) {
+                if (_debugListener == null) {
+                    _debugListener = new AbstractConnectorListener() {
+                        @Override
+                        public void messageReceived(final ConnectorMessageEvent event) {
+                            getDebugOut().println("<- " + event.getMessage());
+                        }
+                        
+                        @Override
+                        public void messageSent(final ConnectorMessageEvent event) {
+                            getDebugOut().println("-> " + event.getMessage());
+                        }
+                    };
+                    addConnectorListener(_debugListener, true, true);
+                }
+            } else {
+                if (_debugListener != null) {
+                    removeConnectorListener(_debugListener);
+                }
             }
         }
     }
@@ -241,23 +242,23 @@ public abstract class Connector {
     /**
      * Sets the debug output stream.
      * @param newDebugOut the new debug output stream
-     * @throws NullPointerException if the specified new debug out is null
+     * throws NullPointerException if <code>debugOut</code> is null.
      * @see #setDebugOut(PrintStream)
      * @see #getDebugOut()
      */
-    public final synchronized void setDebugOut(final PrintWriter newDebugOut) {
+    public final void setDebugOut(final PrintWriter newDebugOut) {
         ConnectorUtils.checkNotNull("debugOut", newDebugOut);
-        _debugOut = newDebugOut;
+        this._debugOut = newDebugOut;
     }
 
     /**
      * Sets the debug output stream.
      * @param newDebugOut the new debug output stream
-     * @throws NullPointerException if the specified new debug out is null
+     * throws NullPointerException if <code>debugOut</code> is null.
      * @see #setDebugOut(PrintWriter)
      * @see #getDebugOut()
      */
-    public final synchronized void setDebugOut(final PrintStream newDebugOut) {
+    public final void setDebugOut(final PrintStream newDebugOut) {
         ConnectorUtils.checkNotNull("debugOut", newDebugOut);
         setDebugOut(new PrintWriter(newDebugOut, true));
     }
@@ -268,90 +269,77 @@ public abstract class Connector {
      * @see #setDebugOut(PrintWriter)
      * @see #setDebugOut(PrintStream)
      */
-    public final synchronized PrintWriter getDebugOut() {
+    public final PrintWriter getDebugOut() {
         return _debugOut;
     }
 
     /**
-     * Sets the application name used to get the access grant of Skype API.
-     * The specified name is what the User will see in the Skype API Allow/Deny dialog.
-     * @param newApplicationName the application name
-     * @throws NullPointerException if the specified application name is null
-     * @see #getApplicationName()
+     * Set the application name for this application.
+     * This is what the User will see in the Allow/Deny dialog.
+     * @param newApplicationName Name of this application.
      */
-    public final synchronized void setApplicationName(final String newApplicationName) {
+    public final void setApplicationName(final String newApplicationName) {
         ConnectorUtils.checkNotNull("applicationName", newApplicationName);
         _applicationName = newApplicationName;
     }
 
     /**
-     * Gets the application name used to get the access grant of Skype API.
-     * @return the application name
-     * @see #setApplicationName(String)
+     * Return the current application name.
+     * @return applicationName.
      */
-    public final synchronized String getApplicationName() {
+    public final String getApplicationName() {
         return _applicationName;
     }
 
     /**
-     * Sets the status of this connector.
-     * After setting, an status changed event will be sent to the all listeners.
-     * @param newValue the new status
-     * @throws NullPointerException if the specified status is null
-     * @see #getStatus()
+     * Set the status of this connector instance.
+     * @param newValue The new status.
      */
-    protected final synchronized void setStatus(final Status newStatus) {
-        ConnectorUtils.checkNotNull("status", newStatus);
-        _status = newStatus;
-        fireStatusChanged(newStatus);
+    protected final void setStatus(final Status newValue) {
+        ConnectorUtils.checkNotNull("newValue", newValue);
+        _status = newValue;
+        fireStatusChanged(newValue);
     }
 
     /**
-     * Sends a status change event to the all listeners.
-     * @param newStatus the new status
+     * Fire a status change event.
+     * @param newStatus the new status that triggered this event.
      */
     private void fireStatusChanged(final Status newStatus) {
+        assert newStatus != null;
         _syncSender.execute(new Runnable() {
             public void run() {
-                // use listener array instead of list because of reverse iteration
                 fireStatusChanged(toConnectorListenerArray(_syncListeners), newStatus);
             }
         });
         _asyncSender.execute(new Runnable() {
             public void run() {
-                // use listener array instead of list because of reverse iteration
                 fireStatusChanged(toConnectorListenerArray(_asyncListeners), newStatus);
             }
         });
     }
 
-    /**
-     * Converts the specified listener list to an listener array.
-     * @param listeners the listener list
-     * @return an listener array
-     */
     private ConnectorListener[] toConnectorListenerArray(List<ConnectorListener> listeners) {
         return listeners.toArray(new ConnectorListener[0]);
     }
 
     /**
-     * Sends a status change event to the specified listeners.
-     * @param listeners the event listeners
-     * @param newStatus the new status
+     * Fire a status changed event.
+     * @param listenerList the event listener list
+     * @param status the new status.
      */
-    private void fireStatusChanged(final ConnectorListener[] listeners, final Status newStatus) {
-        ConnectorStatusEvent event = new ConnectorStatusEvent(this, newStatus);
+    private void fireStatusChanged(final ConnectorListener[] listeners, final Status status) {
+        ConnectorStatusEvent event = new ConnectorStatusEvent(this, status);
         for (int i = listeners.length - 1; 0 <= i; i--) {
             listeners[i].statusChanged(event);
         }
     }
 
     /**
-     * Gets the status of this connector.
-     * @return status the status of this connector
-     * @see #setStatus(com.skype.connector.Connector.Status)
+     * Return the status of this connector instance.
+     * @return status.
      */
-    public final synchronized Status getStatus() {
+    public final Status getStatus() {
         return _status;
     }
 
