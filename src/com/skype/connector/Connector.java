@@ -18,19 +18,20 @@
  * 
  * Contributors:
  * Koji Hisano - initial API and implementation
- * Bart Lamot - changed package and class of the MacOS to OSX
  ******************************************************************************/
 package com.skype.connector;
 
 import java.io.*;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Base class for all platform specific connectors.
  * A connector connects the Skype Java API with a running Skype client.
+ * 
+ * @author Koji Hisano <hisano@gmail.com>
  */
 public abstract class Connector {
     /**
@@ -273,11 +274,9 @@ public abstract class Connector {
 
     /**
      * Sets the application name used to get the access grant of Skype API.
-     * <p>
      * The specified name is what the User will see in the Skype API Allow/Deny dialog.
-     * </p>
      * @param newApplicationName the application name
-     * @throws NullPointerException if the specified new debug out is null
+     * @throws NullPointerException if the specified application name is null
      * @see #getApplicationName()
      */
     public final synchronized void setApplicationName(final String newApplicationName) {
@@ -295,54 +294,64 @@ public abstract class Connector {
     }
 
     /**
-     * Set the status of this connector instance.
-     * @param newValue The new status.
+     * Sets the status of this connector.
+     * After setting, an status changed event will be sent to the all listeners.
+     * @param newValue the new status
+     * @throws NullPointerException if the specified status is null
+     * @see #getStatus()
      */
-    protected final void setStatus(final Status newValue) {
-        ConnectorUtils.checkNotNull("newValue", newValue);
-        _status = newValue;
-        fireStatusChanged(newValue);
+    protected final synchronized void setStatus(final Status newStatus) {
+        ConnectorUtils.checkNotNull("status", newStatus);
+        _status = newStatus;
+        fireStatusChanged(newStatus);
     }
 
     /**
-     * Fire a status change event.
-     * @param newStatus the new status that triggered this event.
+     * Sends a status change event to the all listeners.
+     * @param newStatus the new status
      */
     private void fireStatusChanged(final Status newStatus) {
-        assert newStatus != null;
         _syncSender.execute(new Runnable() {
             public void run() {
+                // use listener array instead of list because of reverse iteration
                 fireStatusChanged(toConnectorListenerArray(_syncListeners), newStatus);
             }
         });
         _asyncSender.execute(new Runnable() {
             public void run() {
+                // use listener array instead of list because of reverse iteration
                 fireStatusChanged(toConnectorListenerArray(_asyncListeners), newStatus);
             }
         });
     }
 
+    /**
+     * Converts the specified listener list to an listener array.
+     * @param listeners the listener list
+     * @return an listener array
+     */
     private ConnectorListener[] toConnectorListenerArray(List<ConnectorListener> listeners) {
         return listeners.toArray(new ConnectorListener[0]);
     }
 
     /**
-     * Fire a status changed event.
-     * @param listenerList the event listener list
-     * @param status the new status.
+     * Sends a status change event to the specified listeners.
+     * @param listeners the event listeners
+     * @param newStatus the new status
      */
-    private void fireStatusChanged(final ConnectorListener[] listeners, final Status status) {
-        ConnectorStatusEvent event = new ConnectorStatusEvent(this, status);
+    private void fireStatusChanged(final ConnectorListener[] listeners, final Status newStatus) {
+        ConnectorStatusEvent event = new ConnectorStatusEvent(this, newStatus);
         for (int i = listeners.length - 1; 0 <= i; i--) {
             listeners[i].statusChanged(event);
         }
     }
 
     /**
-     * Return the status of this connector instance.
-     * @return status.
+     * Gets the status of this connector.
+     * @return status the status of this connector
+     * @see #setStatus(com.skype.connector.Connector.Status)
      */
-    public final Status getStatus() {
+    public final synchronized Status getStatus() {
         return _status;
     }
 
