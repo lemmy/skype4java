@@ -24,6 +24,7 @@
 package com.skype.connector.windows;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
 
 import org.eclipse.swt.internal.Callback;
 import org.eclipse.swt.internal.win32.OS;
@@ -201,6 +202,19 @@ public final class WindowsConnector extends Connector {
             OS.RegCloseKey(phkResult[0]);
         }
         return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isRunning() throws ConnectorException {
+        try {
+            Class clazz = Class.forName("com.skype.connector.windows.SkypeFramework");
+            Method method = clazz.getDeclaredMethod("isRunning");
+            return ((Boolean)method.invoke(null)).booleanValue();
+        } catch(Exception e) {
+            throw new UnsupportedOperationException("The winp-1.5.jar <https://winp.dev.java.net/> is not contained in the classpath.");
+        }
     }
 
     /**
