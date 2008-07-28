@@ -22,6 +22,7 @@
  ******************************************************************************/
 package com.skype;
 
+import java.io.File;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -135,7 +136,11 @@ public final class Skype {
      * @return true if Skype client is installed.
      */
     public static boolean isInstalled() {
-        return getInstalledPath() != null;
+        String path = getInstalledPath();
+        if(path == null) {
+            return false;
+        }
+        return new File(path).exists();
     }
 
     /**
