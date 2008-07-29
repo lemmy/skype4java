@@ -594,7 +594,31 @@ public final class Skype {
         }
         return profile;
     }
-    
+
+    /**
+     * Gets all the active calls visible on calltabs.
+     *
+     * @return all the active calls visible on calltabs
+     * @throws SkypeException thrown when Skype API is unavailable or getting an Skype API error.
+     */
+    public static Call[] getAllActiveCalls() throws SkypeException {
+        try {
+            String command = "SEARCH ACTIVECALLS";
+            String responseHeader = "CALLS ";
+            String response = Connector.getInstance().execute(command, responseHeader);
+            String data = response.substring(responseHeader.length());
+            String[] ids = Utils.convertToArray(data);
+            Call[] calls = new Call[ids.length];
+            for (int i = 0; i < ids.length; ++i) {
+                calls[i] = Call.getInstance(ids[i]);
+            }
+            return calls;
+        } catch (ConnectorException ex) {
+            Utils.convertToSkypeException(ex);
+            return null;
+        }
+    }
+
     /**
      * Gets the all chats.
      *
