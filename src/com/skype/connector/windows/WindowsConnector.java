@@ -25,6 +25,7 @@ package com.skype.connector.windows;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
+import java.util.concurrent.*;
 
 import org.eclipse.swt.internal.Callback;
 import org.eclipse.swt.internal.win32.*;
@@ -175,12 +176,12 @@ public final class WindowsConnector extends Connector {
      *         <code>null</code>.
      */
     private String getRegistryValue(final int hKey, final String keyName, final String dataName) {
-        int[] phkResult = new int[1];
+        final int[] phkResult = new int[1];
         if (OS.RegOpenKeyEx(hKey, new TCHAR(0, keyName, true), 0, OS.KEY_READ, phkResult) != 0) {
             return null;
         }
         String result = null;
-        int[] lpcbData = new int[1];
+        final int[] lpcbData = new int[1];
         if (OS.RegQueryValueEx(phkResult[0], new TCHAR(0, dataName, true), 0, null, (TCHAR) null, lpcbData) == 0) {
             result = "";
             int length = lpcbData[0] / TCHAR.sizeof;
@@ -203,8 +204,8 @@ public final class WindowsConnector extends Connector {
      */
     public boolean isRunning() throws ConnectorException {
         try {
-            Class clazz = Class.forName("com.skype.connector.windows.SkypeFramework");
-            Method method = clazz.getDeclaredMethod("isRunning");
+            final Class clazz = Class.forName("com.skype.connector.windows.SkypeFramework");
+            final Method method = clazz.getDeclaredMethod("isRunning");
             return ((Boolean)method.invoke(null)).booleanValue();
         } catch(Exception e) {
             throw new UnsupportedOperationException("The winp-1.5.jar <https://winp.dev.java.net/> is not contained in the classpath.");
@@ -218,7 +219,7 @@ public final class WindowsConnector extends Connector {
      */
     @Override
     protected void initializeImpl() throws ConnectorException {
-        final Object wait = new Object();
+        final CountDownLatch latch = new CountDownLatch(1);
         final String[] errorMessage = new String[1];
         Thread thread = new Thread("SkypeEventDispatcher") {
             @Override
@@ -267,9 +268,7 @@ public final class WindowsConnector extends Connector {
                         return;
                     }
                 } finally {
-                    synchronized (wait) {
-                        wait.notify();
-                    }
+                    latch.countDown();
                 }
                 while (true) {
                     if (!display.readAndDispatch()) {
@@ -283,16 +282,14 @@ public final class WindowsConnector extends Connector {
             }
         };
         thread.setDaemon(true);
-        synchronized (wait) {
-            try {
-                thread.start();
-                wait.wait();
-                if (errorMessage[0] != null) {
-                    throw new ConnectorException(errorMessage[0]);
-                }
-            } catch (InterruptedException e) {
-                throw new ConnectorException("The Windows connector initialization was interrupted.", e);
+        try {
+            thread.start();
+            latch.await();
+            if (errorMessage[0] != null) {
+                throw new ConnectorException(errorMessage[0]);
             }
+        } catch (InterruptedException e) {
+            throw new ConnectorException("The Windows connector initialization was interrupted.", e);
         }
     }
 
@@ -303,36 +300,31 @@ public final class WindowsConnector extends Connector {
      * @throws ConnectorException when connection could not be established.
      */
     protected Status connect(final int timeout) throws ConnectorException {
-        final Object wait = new Object();
-        ConnectorListener listener = new AbstractConnectorListener() {
+        final BlockingQueue<Status> queue = new LinkedBlockingQueue<Status>();
+        final ConnectorListener listener = new AbstractConnectorListener() {
             @Override
             public void statusChanged(ConnectorStatusEvent event) {
-                synchronized (wait) {
-                    wait.notify();
-                }
+                queue.add(event.getStatus());
             }
         };
         addConnectorListener(listener, false);
-        synchronized (wait) {
-            try {
-                while (true) {
-                    OS.SendMessage(HWND_BROADCAST, DISCOVER_MESSAGE_ID, windowHandle, 0);
-                    long start = System.currentTimeMillis();
-                    wait.wait(timeout);
-                    if (timeout <= System.currentTimeMillis() - start) {
-                        setStatus(Status.NOT_RUNNING);
-                    }
-                    Status status = getStatus();
-                    if (status != Status.PENDING_AUTHORIZATION) {
-                        return status;
-                    }
-                    Thread.sleep(1000);
+        try {
+            while (true) {
+                OS.SendMessage(HWND_BROADCAST, DISCOVER_MESSAGE_ID, windowHandle, 0);
+                final Status status = queue.poll(timeout, TimeUnit.MILLISECONDS);
+                if (status == null) {
+                    setStatus(Status.NOT_RUNNING);
                 }
-            } catch (InterruptedException e) {
-                throw new ConnectorException("Trying to connect was interrupted.", e);
-            } finally {
-                removeConnectorListener(listener);
+                if (status != Status.PENDING_AUTHORIZATION) {
+                    return status;
+                }
+                Thread.sleep(1000);
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ConnectorException("Trying to connect was interrupted.", e);
+        } finally {
+            removeConnectorListener(listener);
         }
     }
 
@@ -342,7 +334,7 @@ public final class WindowsConnector extends Connector {
      * @throws ConnectorException when connection to Skype client has gone bad.
      */
     protected void sendApplicationName(final String applicationName) throws ConnectorException {
-        String command = "NAME " + applicationName;
+        final String command = "NAME " + applicationName;
         execute(command, new String[] {command}, false);
     }
     
@@ -381,17 +373,17 @@ public final class WindowsConnector extends Connector {
             return 1;
         } else if(msg == WM_COPYDATA) {
             if(wParam == skypeWindowHandle) {
-                int[] data = new int[3];
+                final int[] data = new int[3];
                 OS.MoveMemory(data, lParam, 12);
-                int cbData = data[1];
-                int lpData = data[2];
-                int length = cbData;
-                byte[] buffer = new byte[length];
+                final int cbData = data[1];
+                final int lpData = data[2];
+                final int length = cbData;
+                final byte[] buffer = new byte[length];
                 OS.MoveMemory(buffer, lpData, length);
-                byte[] string = new byte[buffer.length - 1];
+                final byte[] string = new byte[buffer.length - 1];
                 System.arraycopy(buffer, 0, string, 0, string.length);
                 try {
-                    String message = new String(string, "UTF-8");
+                    final String message = new String(string, "UTF-8");
                     fireMessageReceived(message);
                     return 1;
                 } catch(UnsupportedEncodingException e) {
@@ -417,9 +409,9 @@ public final class WindowsConnector extends Connector {
         display.asyncExec(new Runnable() {
             public void run() {
                 try {
-                    byte[] data = (command + "\u0000").getBytes("UTF-8");
-                    int hHeap = OS.GetProcessHeap();
-                    int pMessage = OS.HeapAlloc(hHeap, OS.HEAP_ZERO_MEMORY, data.length);
+                    final byte[] data = (command + "\u0000").getBytes("UTF-8");
+                    final int hHeap = OS.GetProcessHeap();
+                    final int pMessage = OS.HeapAlloc(hHeap, OS.HEAP_ZERO_MEMORY, data.length);
                     OS.MoveMemory(pMessage, data, data.length);
                     OS.SendMessage(skypeWindowHandle, WM_COPYDATA, windowHandle, new int[] { 0, data.length, pMessage });
                     OS.HeapFree(hHeap, 0, pMessage);
