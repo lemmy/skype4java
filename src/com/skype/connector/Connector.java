@@ -18,19 +18,20 @@
  * 
  * Contributors:
  * Koji Hisano - initial API and implementation
- * Bart Lamot - changed package and class of the MacOS to OSX
  ******************************************************************************/
 package com.skype.connector;
 
 import java.io.*;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Base class for all platform specific connectors.
  * A connector connects the Skype Java API with a running Skype client.
+ * 
+ * @author Koji Hisano <hisano@gmail.com>
  */
 public abstract class Connector {
     /**
@@ -65,7 +66,7 @@ public abstract class Connector {
     }
     
     /**
-     * Initialize a platform specific connection.
+     * Initializes a platform specific connection.
      * This method will select a connector based on the os.name.
      * Windows has two versions see useJNIConnector.
      * @return an initialized connection.
@@ -103,8 +104,8 @@ public abstract class Connector {
     }
 
     /**
-     * This method checks if SWT is available in the classpath.
-     * @return true if SWT is found.
+     * Checks if SWT is available in the classpath.
+     * @return true if SWT is found
      */
     private static boolean isSWTAvailable() {
         try {
@@ -116,7 +117,7 @@ public abstract class Connector {
     }
     
     /**
-     * Set the instance of the connector for testcases.
+     * Sets the instance of the connector for test cases.
      * @param newInstance The new instance.
      * @throws ConnectorException thrown when instance is not valid.
      */
@@ -128,41 +129,55 @@ public abstract class Connector {
     }
 
     /**
-     * The debug output stream.
-     * <p>
-     * This stream is initialized by
-     * <code>new PrintWriter(System.out, true)</code>.
-     * </p>
+     * The mutex object for the _debugListener field.
      */
-    private PrintWriter _debugOut = new PrintWriter(System.out, true);
-    /** debugListener. */
+    private final Object _debugListenerMutex = new Object();
+    /**
+     * The connector listener for debug out.
+     */
     private ConnectorListener _debugListener;
-    /** debug printer lock object. */
-    private Object _debugFieldMutex = new Object();
-    
-    /** application name to send to Skype client. */
-    private String _applicationName = "Skype4Java";
 
-    /** Initialize the status of the connector. */
-    private Status _status = Status.NOT_RUNNING;
-    
-    /** Boolean to check if the connector is already initialized. */
+    /**
+     * The debug output stream.
+     * This stream is initialized by <tt>new PrintWriter(System.out, true)</tt>.
+     */
+    private volatile PrintWriter _debugOut = new PrintWriter(System.out, true);
+
+    /**
+     * The application name used to get the access grant of Skype API.
+     */
+    private volatile String _applicationName = "Skype4Java";
+
+    /**
+     * The status of this connector.
+     */
+    private volatile Status _status = Status.NOT_RUNNING;
+
+    /**
+     * The connect timeout in milliseconds.
+     */
+    private volatile int _connectTimeout = 10000;
+    /**
+     * The command reply timeout in milliseconds.
+     */
+    private volatile int _commandTimeout = 10000;
+
+    /**
+     * The mutex object for the _isInitialized field.
+     */
+    private final Object _isInitializedMutex = new Object();
+    /**
+     * The flag to check if the connector is already initialized.
+     */
     private boolean _isInitialized;
-    /** initialization field mutex. */
-    private Object _isInitializedMutex = new Object();
-
-    /** global connector timeout. */
-    private int _connectTimeout = 10000;
-    /** global command-reply timeout. */
-    private int _commandTimeout = 10000;
 
     /** Collection of asynchronous event listeners for the connector. */
-    private List<ConnectorListener> _asyncListeners = new CopyOnWriteArrayList<ConnectorListener>();
+    private final List<ConnectorListener> _asyncListeners = new CopyOnWriteArrayList<ConnectorListener>();
     /** Collection of synchronous event listeners for the connector. */
-    private List<ConnectorListener> _syncListeners = new CopyOnWriteArrayList<ConnectorListener>();
+    private final List<ConnectorListener> _syncListeners = new CopyOnWriteArrayList<ConnectorListener>();
 
     /** Command counter, can be used to identify message and reply pairs. */
-    private AtomicInteger _commandCount = new AtomicInteger();
+    private final AtomicInteger _commandCount = new AtomicInteger();
     
     /** Asynchronous message sender */
     private ExecutorService _asyncSender = Executors.newCachedThreadPool(new ThreadFactory() {
@@ -215,7 +230,7 @@ public abstract class Connector {
      * @throws ConnectorException thrown when connection to Skype Client has gone bad.
      */
     public final void setDebug(final boolean on) throws ConnectorException {
-        synchronized (_debugFieldMutex) {
+        synchronized (_debugListenerMutex) {
             if (on) {
                 if (_debugListener == null) {
                     _debugListener = new AbstractConnectorListener() {
@@ -223,7 +238,7 @@ public abstract class Connector {
                         public void messageReceived(final ConnectorMessageEvent event) {
                             getDebugOut().println("<- " + event.getMessage());
                         }
-                        
+
                         @Override
                         public void messageSent(final ConnectorMessageEvent event) {
                             getDebugOut().println("-> " + event.getMessage());
@@ -234,6 +249,7 @@ public abstract class Connector {
             } else {
                 if (_debugListener != null) {
                     removeConnectorListener(_debugListener);
+                    _debugListener = null;
                 }
             }
         }
@@ -242,19 +258,19 @@ public abstract class Connector {
     /**
      * Sets the debug output stream.
      * @param newDebugOut the new debug output stream
-     * throws NullPointerException if <code>debugOut</code> is null.
+     * @throws NullPointerException if the specified new debug out is null
      * @see #setDebugOut(PrintStream)
      * @see #getDebugOut()
      */
     public final void setDebugOut(final PrintWriter newDebugOut) {
         ConnectorUtils.checkNotNull("debugOut", newDebugOut);
-        this._debugOut = newDebugOut;
+        _debugOut = newDebugOut;
     }
 
     /**
      * Sets the debug output stream.
      * @param newDebugOut the new debug output stream
-     * throws NullPointerException if <code>debugOut</code> is null.
+     * @throws NullPointerException if the specified new debug out is null
      * @see #setDebugOut(PrintWriter)
      * @see #getDebugOut()
      */
@@ -274,9 +290,11 @@ public abstract class Connector {
     }
 
     /**
-     * Set the application name for this application.
-     * This is what the User will see in the Allow/Deny dialog.
-     * @param newApplicationName Name of this application.
+     * Sets the application name used to get the access grant of Skype API.
+     * The specified name is what the User will see in the Skype API Allow/Deny dialog.
+     * @param newApplicationName the application name
+     * @throws NullPointerException if the specified application name is null
+     * @see #getApplicationName()
      */
     public final void setApplicationName(final String newApplicationName) {
         ConnectorUtils.checkNotNull("applicationName", newApplicationName);
@@ -284,101 +302,125 @@ public abstract class Connector {
     }
 
     /**
-     * Return the current application name.
-     * @return applicationName.
+     * Gets the application name used to get the access grant of Skype API.
+     * @return the application name
+     * @see #setApplicationName(String)
      */
     public final String getApplicationName() {
         return _applicationName;
     }
 
     /**
-     * Set the status of this connector instance.
-     * @param newValue The new status.
+     * Sets the status of this connector.
+     * After setting, an status changed event will be sent to the all listeners.
+     * @param newValue the new status
+     * @throws NullPointerException if the specified status is null
+     * @see #getStatus()
      */
-    protected final void setStatus(final Status newValue) {
-        ConnectorUtils.checkNotNull("newValue", newValue);
-        _status = newValue;
-        fireStatusChanged(newValue);
+    protected final void setStatus(final Status newStatus) {
+        ConnectorUtils.checkNotNull("status", newStatus);
+        _status = newStatus;
+        fireStatusChanged(newStatus);
     }
 
     /**
-     * Fire a status change event.
-     * @param newStatus the new status that triggered this event.
+     * Sends a status change event to the all listeners.
+     * @param newStatus the new status
      */
     private void fireStatusChanged(final Status newStatus) {
-        assert newStatus != null;
         _syncSender.execute(new Runnable() {
             public void run() {
+                // use listener array instead of list because of reverse iteration
                 fireStatusChanged(toConnectorListenerArray(_syncListeners), newStatus);
             }
         });
         _asyncSender.execute(new Runnable() {
             public void run() {
+                // use listener array instead of list because of reverse iteration
                 fireStatusChanged(toConnectorListenerArray(_asyncListeners), newStatus);
             }
         });
     }
 
-    private ConnectorListener[] toConnectorListenerArray(List<ConnectorListener> listeners) {
+    /**
+     * Converts the specified listener list to an listener array.
+     * @param listeners the listener list
+     * @return an listener array
+     */
+    private ConnectorListener[] toConnectorListenerArray(final List<ConnectorListener> listeners) {
         return listeners.toArray(new ConnectorListener[0]);
     }
 
     /**
-     * Fire a status changed event.
-     * @param listenerList the event listener list
-     * @param status the new status.
+     * Sends a status change event to the specified listeners.
+     * @param listeners the event listeners
+     * @param newStatus the new status
      */
-    private void fireStatusChanged(final ConnectorListener[] listeners, final Status status) {
-        ConnectorStatusEvent event = new ConnectorStatusEvent(this, status);
+    private void fireStatusChanged(final ConnectorListener[] listeners, final Status newStatus) {
+        final ConnectorStatusEvent event = new ConnectorStatusEvent(this, newStatus);
         for (int i = listeners.length - 1; 0 <= i; i--) {
             listeners[i].statusChanged(event);
         }
     }
 
     /**
-     * Return the status of this connector instance.
-     * @return status.
+     * Gets the status of this connector.
+     * @return status the status of this connector
+     * @see #setStatus(com.skype.connector.Connector.Status)
      */
     public final Status getStatus() {
         return _status;
     }
 
     /**
-     * Change the connect timeout of this connector instance.
-     * @param newValue the new timeout value in milliseconds.
+     * Sets the connect timeout of this connector.
+     * @param newConnectTimeout the new connect timeout in milliseconds
+     * @throws IllegalArgumentException if the new connect timeout is not more than 0
+     * @see #getConnectTimeout()
      */
-    public final void setConnectTimeout(final int newValue) {
-        _connectTimeout = newValue;
+    public final void setConnectTimeout(final int newConnectTimeout) {
+        if (newConnectTimeout < 0) {
+            throw new IllegalArgumentException("The connect timeout must be more than 0.");
+        }
+        _connectTimeout = newConnectTimeout;
     }
 
     /**
-     * Return the current connect timeout settings of the connector instance.
-     * @return current connect timeout.
+     * Gets the connect timeout of this connector.
+     * @return the connect timeout in milliseconds
+     * @see #setConnectTimeout(int)
      */
     public final int getConnectTimeout() {
         return _connectTimeout;
     }
 
     /**
-     * Change the command timeout value.
-     * @param newValue The new timeout value in milliseconds.
+     * Sets the command reply timeout of this connector.
+     * @param newCommandTimeout the new command reply timeout in milliseconds
+     * @throws IllegalArgumentException if the new command reply timeout is not more than 0
+     * @see #getCommandTimeout()
      */
-    public final void setCommandTimeout(final int newValue) {
-        _commandTimeout = newValue;
+    public final void setCommandTimeout(final int newCommandTimeout) {
+        if (newCommandTimeout < 0) {
+            throw new IllegalArgumentException("The connect timeout must be more than 0.");
+        }
+        _commandTimeout = newCommandTimeout;
     }
 
     /**
-     * Return the current command timeout setting.
-     * @return command timeout value.
+     * Gets the command reply timeout of this connector.
+     * @return the command reply timeout in milliseconds
+     * @see #setCommandTimeout(int)
      */
     public final int getCommandTimeout() {
         return _commandTimeout;
     }
 
     /**
-     * Connect the connector instance to the Skype client.
-     * @return the status after connecting.
-     * @throws ConnectorException thrown when a connection could not be made due to technical problems.
+     * Tries to connect this connector to the Skype client.
+     * @return the status after trying to connect.
+     * @throws ConnectorException if trying to connect failed
+     * @throws NotAttachedException if the Skype client is not running
      */
     public final Status connect() throws ConnectorException {
         initialize();
@@ -390,54 +432,57 @@ public abstract class Connector {
         return status;
     }
 
+    /**
+     * Initializes this connector.
+     * @throws ConnectorException if the initialization failed.
+     */
     protected final void initialize() throws ConnectorException {
-        synchronized(_isInitializedMutex) {
+        synchronized (_isInitializedMutex) {
             if (!_isInitialized) {
                 initializeImpl();
                 _isInitialized = true;
             }
         }
     }
-    
+
     /**
-     * Platform specific connector needs to implement it's own initialize method.
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     * Initializes the platform specific resources.
+     * @throws ConnectorException if the initialization failed.
      */
     protected abstract void initializeImpl() throws ConnectorException;
-    
+
     /**
-     * Platform specific connector needs to implement it's own connect method. 
-     * @param timeout Timeout is milliseconds to use while connecting.
-     * @return Status after connecting.
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     * Tries to connect this connector to the Skype client on the platform mechanism.
+     * @param timeout the connect timeout in milliseconds to use while connecting.
+     * @return the status after trying to connect
+     * @throws ConnectorException if the trying to connect failed.
      */
     protected abstract Status connect(int timeout) throws ConnectorException;
-    
+
     /**
-     * Clean-up and disconnect from Skype client.
+     * Sends the application name to the Skype client.
+     * The default implementation does nothing.
+     * @param applicationName the application name
+     * @throws ConnectorException if sending the specified application name failed
      */
-    protected abstract void disposeImpl();
-    
-    /**
-     * Send the application name to the Skype client.
-     * @param newApplicationName new application name.
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
-     */
-    protected void sendApplicationName(String newApplicationName) throws ConnectorException {
+    protected void sendApplicationName(String applicationName) throws ConnectorException {
     }
 
+    /**
+     * Sends the Skype API protocol version to use.
+     * The default implementation uses the latest version of the Skype API.
+     * @throws ConnectorException if sending the protocol version failed
+     */
     protected void sendProtocol() throws ConnectorException {
         execute("PROTOCOL 9999", new String[] {"PROTOCOL "}, false);
     }
 
     /**
-     * Clean up this connection instance and the platform specific one.
-     * IMPORTANT!
-     * This allows all native code to clean up and disconnect in a nice way.
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     * Disconnects from the Skype client and clean up the resources.
+     * @throws ConnectorException if cleaning up the resources failed
      */
     public final void dispose() throws ConnectorException {
-        synchronized(_isInitializedMutex) {
+        synchronized (_isInitializedMutex) {
             if (!_isInitialized) {
                 return;
             }
@@ -446,11 +491,16 @@ public abstract class Connector {
         }
     }
 
-    
     /**
-     * Check if connector is connected to the Skype Client.
-     * @return true if connector is connected.
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     * Disconnects from the Skype client and clean up the resources of the platfrom.
+     * @throws ConnectorException if cleaning up the resources failed
+     */
+    protected abstract void disposeImpl() throws ConnectorException;
+
+    /**
+     * Checks if the Skype client is running or not.
+     * @return true if the Skype client is runnunig; false otherwise
+     * @throws ConnectorException if checking the Skype client status failed
      */
     public boolean isRunning() throws ConnectorException {
         try {
@@ -462,12 +512,11 @@ public abstract class Connector {
     }
 
     /**
-     * Send a Skype command to the Skype client and handle responses by a message processor.
-     * This method is not event-save. another reply could be picked-up.
-     * Please use executeWithID or execute with responseheader instead.
-     * @param command the command to send.
+     * Executes the specified command and handles the response by the specified message processor.
+     * @param command the command to execute
      * @param processor the message processor
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     * @throws NullPointerException if the specified command or processor is null
+     * @throws ConnectorException if executing the command failed
      */
     @Deprecated
     public final void execute(final String command, final MessageProcessor processor) throws ConnectorException {
@@ -494,6 +543,7 @@ public abstract class Connector {
                     throw new NotAttachedException(Status.NOT_RUNNING);
                 }
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 throw new ConnectorException("The '" + command + "' command was interrupted.", e);
             } finally {
                 removeConnectorListener(listener);
@@ -501,14 +551,14 @@ public abstract class Connector {
         }
     }
 
-
     /**
-     * Send a Skype command to the Skype client and wait for the reply.
-     * This method is not event-save. another reply could be picked-up.
-     * Please use executeWithID or execute with responseheader instead.
-     * @param command the command to send.
-     * @return the reply message.
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     * Executes the specified command and gets the response.
+     * It is better to use {@link #executeWithId(String, String)} because it returns the accurate response.
+     * @param command the command to execute
+     * @return the response after execution
+     * @throws NullPointerException if the specified command is null
+     * @throws ConnectorException if executing the command failed
+     * @see #executeWithId(String, String)
      */
     public final String execute(final String command) throws ConnectorException {
         ConnectorUtils.checkNotNull("command", command);
@@ -516,33 +566,36 @@ public abstract class Connector {
     }
 
     /**
-     * Send a Skype command to the Skype client and wait for the reply, using an ID.
-     * @param command The command to send.
-     * @param responseHeader The expected reply header.
-     * @return The reply.
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     * Executes the specified command and gets the response using a command ID.
+     * @param command the command to execute
+     * @param responseHeader the response header to get the accurate response
+     * @return the response after execution
+     * @throws NullPointerException if the specified command or responseHeader is null
+     * @throws ConnectorException if executing the command failed
      */
     public final String executeWithId(final String command, final String responseHeader) throws ConnectorException {
         ConnectorUtils.checkNotNull("command", command);
         ConnectorUtils.checkNotNull("responseHeader", responseHeader);
-        String header = "#" + _commandCount.getAndIncrement() + " ";
-        String response = execute(header + command, new String[] { header + responseHeader, header + "ERROR " }, true);
+        final String header = "#" + _commandCount.getAndIncrement() + " ";
+        final String response = execute(header + command, new String[] { header + responseHeader, header + "ERROR " }, true);
         return response.substring(header.length());
     }
 
     /**
-     * Send a Skype command to the Skype client and wait for the reply, using an ID.
-     * @param command The command to send.
-     * @param responseHeader The expected reply header.
-     * @return The reply.
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     * Executes the specified command and gets the future using a command ID.
+     * @param command the command to execute
+     * @param responseHeader the response header to get the accurate first response
+     * @param checker the notification checker to detect the end
+     * @return the future to wait for the end of the execution
+     * @throws NullPointerException if the specified command, responseHeader or checker is null
+     * @throws ConnectorException if executing the command failed
      */
     public final Future waitForEndWithId(final String command, final String responseHeader, final NotificationChecker checker) throws ConnectorException {
         ConnectorUtils.checkNotNull("command", command);
         ConnectorUtils.checkNotNull("responseHeader", responseHeader);
         ConnectorUtils.checkNotNull("responseHeader", checker);
         final String header = "#" + _commandCount.getAndIncrement() + " ";
-        NotificationChecker wrappedChecker = new NotificationChecker() {
+        final NotificationChecker wrappedChecker = new NotificationChecker() {
             public boolean isTarget(String message) {
                 if (checker.isTarget(message)) {
                     return true;
@@ -582,11 +635,12 @@ public abstract class Connector {
     }
 
     /**
-     * Send a Skype command to the Skype client and wait for the reply based on the responseheader without timeout.
-     * @param command the command to send.
-     * @param responseHeader the expected reply header.
-     * @return the reply.
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     * Executes the specified command and waits for the response without timeout.
+     * @param command the command to execute
+     * @param responseHeader the response header to get the accurate response
+     * @return the response after execution
+     * @throws NullPointerException if the specified command or responseHeader is null
+     * @throws ConnectorException if executing the command failed
      */
     public final String executeWithoutTimeout(final String command, final String responseHeader) throws ConnectorException {
         ConnectorUtils.checkNotNull("command", command);
@@ -595,11 +649,12 @@ public abstract class Connector {
     }
 
     /**
-     * Send a Skype command to the Skype client and wait for the reply based on the responseheader.
-     * @param command the command to send.
-     * @param responseHeader the expected reply header.
-     * @return the reply.
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     * Executes the specified command and gets the response.
+     * @param command the command to execute
+     * @param responseHeader the response header to get the accurate response
+     * @return the response after execution
+     * @throws NullPointerException if the specified command or responseHeader is null
+     * @throws ConnectorException if executing the command failed
      */
     public final String execute(final String command, final String responseHeader) throws ConnectorException {
         ConnectorUtils.checkNotNull("command", command);
@@ -608,11 +663,12 @@ public abstract class Connector {
     }
 
     /**
-     * Send a Skype command to Skype client and allow for several reply headers.
-     * @param command the command to send.
-     * @param responseHeaders the expected response headers.
-     * @return the reply.
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     * Executes the specified command and gets the response.
+     * @param command the command to execute
+     * @param responseHeaders the response headers to get the accurate response
+     * @return the response after execution
+     * @throws NullPointerException if the specified command or responseHeader is null
+     * @throws ConnectorException if executing the command failed
      */
     public final String execute(final String command, final String[] responseHeaders) throws ConnectorException {
         ConnectorUtils.checkNotNull("command", command);
@@ -621,27 +677,30 @@ public abstract class Connector {
     }
 
     /**
-     * Send a Skype command to Skype (actual implementation method) and wait for response.
-     * @param command the command to send.
-     * @param responseHeaders The expected response headers.
-     * @param checkAttached if true the connector will first check if it is connected.
-     * @return the response.
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     * Executes the specified command and gets the response.
+     * @param command the command to execute
+     * @param responseHeaders the response headers to get the accurate response
+     * @param checkAttached if true check if this connector is attached
+     * @return the response after execution
+     * @throws NullPointerException if the specified command or responseHeader is null
+     * @throws ConnectorException if executing the command failed
      */
     protected final String execute(final String command, final String[] responseHeaders, final boolean checkAttached) throws ConnectorException {
         return execute(command, responseHeaders, checkAttached, false);
     }
 
     /**
-     * Send a Skype command to Skype (actual implementation method) and wait for response.
-     * @param command the command to send.
-     * @param responseHeaders The expected response headers.
-     * @param checkAttached if true the connector will first check if it is connected.
-     * @return the response.
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     * Executes the specified command and gets the response.
+     * @param command the command to execute
+     * @param responseHeaders the response headers to get the accurate response
+     * @param checkAttached if true check if this connector is attached
+     * @param withoutTimeout if true it will not be time out
+     * @return the response after execution
+     * @throws NullPointerException if the specified command or responseHeader is null
+     * @throws ConnectorException if executing the command failed
      */
     private String execute(final String command, final String[] responseHeaders, final boolean checkAttached, boolean withoutTimeout) throws ConnectorException {
-        NotificationChecker checker = new NotificationChecker() {
+        final NotificationChecker checker = new NotificationChecker() {
             public boolean isTarget(String message) {
                 for (String responseHeader : responseHeaders) {
                     if (message.startsWith(responseHeader)) {
@@ -669,12 +728,13 @@ public abstract class Connector {
     }
 
     /**
-     * Send a Skype command to Skype (actual implementation method) and wait for response.
-     * @param command the command to send.
-     * @param responseChecker the response checker.
-     * @param checkAttached if true the connector will first check if it is connected.
-     * @return the response future.
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     * Executes the specified command and gets the future using a command ID.
+     * @param command the command to execute
+     * @param responseChecker the notification checker to detect the end
+     * @param checkAttached if true check if this connector is attached
+     * @return the future to wait for the end of the execution
+     * @throws NullPointerException if the specified command or responseChecker is null
+     * @throws ConnectorException if executing the command failed
      */
     private Future<String> execute(final String command, final NotificationChecker responseChecker, final boolean checkAttached, boolean withoutTimeout) throws ConnectorException {
         ConnectorUtils.checkNotNull("command", command);
@@ -731,23 +791,22 @@ public abstract class Connector {
     }
 
     /**
-     * Event trigger called when a command is send to the Skype client.
-     * @param message the message that has been send.
+     * Fires a message sent event.
+     * @param message the message that triggered the event
      */
     private void fireMessageSent(final String message) {
         fireMessageEvent(message, false);
     }
 
     /**
-     * Send a command message to the Skype client.
-     * @param command the command message to send.
+     * Sends the specified command to the Skype client on the platform dependent communication layer.
+     * @param command the command to be executed
      */
     protected abstract void sendCommand(String command);
 
     /**
-     * Method to check the attached status of the connector to the Skype Client.
-     * If it isn't connected it will connect.
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     * Assures the attached status.
+     * @throws ConnectorException if this connector is not attached or trying to connect failed.
      */
     private void assureAttached() throws ConnectorException {
         Status attachedStatus = getStatus();
@@ -760,30 +819,36 @@ public abstract class Connector {
     }
 
     /**
-     * Add a listener to this connector instance.
-     * @param listener the listener to add.
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     * Adds the specified listener to this connector.
+     * @param listener the listener to be added
+     * @throws NullPointerException if the specified listener is null
+     * @throws ConnectorException if trying to connect failed
+     * @see #removeConnectorListener(ConnectorListener)
      */
     public final void addConnectorListener(final ConnectorListener listener) throws ConnectorException {
         addConnectorListener(listener, true);
     }
 
     /**
-     * Add a listener to this connector if the connector is attached.
-     * @param listener The listener to add.
-     * @param checkAttached if true check if connector is attached.
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     * Adds the specified listener to this connector.
+     * @param listener the listener to be added
+     * @param checkAttached if true checks if this connector is attached
+     * @throws NullPointerException if the specified listener is null
+     * @throws ConnectorException if trying to connect failed
+     * @see #removeConnectorListener(ConnectorListener)
      */
     public final void addConnectorListener(final ConnectorListener listener, final boolean checkAttached) throws ConnectorException {
         addConnectorListener(listener, checkAttached, false);
     }
 
     /**
-     * Add a listener to this connector if the connector is attached.
-     * @param listener The listener to add.
-     * @param checkAttached if true check if connector is attached.
-     * @param isSynchronous if true the listener is handled synchronously.
-     * @throws ConnectorException thrown when the connection to the Skype client has gone bad.
+     * Adds the specified listener to this connector.
+     * @param listener the listener to be added
+     * @param checkAttached if true checks if this connector is attached
+     * @param isSynchronous if true the listener will be handled synchronously
+     * @throws NullPointerException if the specified listener is null
+     * @throws ConnectorException if trying to connect failed
+     * @see #removeConnectorListener(ConnectorListener)
      */
     public final void addConnectorListener(final ConnectorListener listener, final boolean checkAttached, final boolean isSynchronous) throws ConnectorException {
         ConnectorUtils.checkNotNull("listener", listener);
@@ -798,8 +863,10 @@ public abstract class Connector {
     }
 
     /**
-     * Remove a listener from the collection of listeners. The listener will no longer be triggered when a event happens.
-     * @param listener The listener to remove.
+     * Removes the specified listener from this connector.
+     * @param listener the listener to be removed
+     * @throws NullPointerException if the specified listener is null
+     * @see #addConnectorListener(ConnectorListener)
      */
     public final void removeConnectorListener(final ConnectorListener listener) {
         ConnectorUtils.checkNotNull("listener", listener);
@@ -808,17 +875,17 @@ public abstract class Connector {
     }
 
     /**
-     * Fire a message received event.
-     * @param message the message that triggered the event.
+     * Fires a message received event.
+     * @param message the message that triggered the event
      */
     protected final void fireMessageReceived(final String message) {
         fireMessageEvent(message, true);
     }
 
     /**
-     * Fire a message event.
-     * @param message the message that triggered the event.
-     * @param isReceived the message is a received type or not.
+     * Fires a message event.
+     * @param message the message that triggered the event
+     * @param isReceived the message is a received type or not
      */
     private void fireMessageEvent(final String message, final boolean isReceived) {
         ConnectorUtils.checkNotNull("message", message);
@@ -835,10 +902,10 @@ public abstract class Connector {
     }
 
     /**
-     * Fire a message event.
+     * Fires a message event.
      * @param listenerList the event listener list
-     * @param message the message that triggered the event.
-     * @param isReceived the message is a received type or not.
+     * @param message the message that triggered the event
+     * @param isReceived the message is a received type or not
      */
     private void fireMessageEvent(final ConnectorListener[] listeners, final String message, final boolean isReceived) {
         ConnectorMessageEvent event = new ConnectorMessageEvent(this, message);
