@@ -100,15 +100,15 @@ public final class OSXConnector extends Connector {
         SkypeFramework.addSkypeFrameworkListener(listener);
         if (_skypeEventLoopEnabled) {
             final CountDownLatch latch = new CountDownLatch(1);
-            Thread thread = new Thread("SkypeEventLoop") {
+            Thread eventLoop = new Thread("SkypeEventLoop") {
                 @Override
                 public void run() {
                     latch.countDown();
                     SkypeFramework.runApplicationEventLoop();
                 };
             };
-            thread.setDaemon(true);
-            thread.start();
+            eventLoop.setDaemon(true);
+            eventLoop.start();
             try {
                 latch.await();
             } catch (InterruptedException e) {
