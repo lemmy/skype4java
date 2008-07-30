@@ -171,6 +171,11 @@ public abstract class Connector {
      */
     private boolean _isInitialized;
 
+    /** Asynchronous message sender */
+    private ExecutorService _asyncSender;
+    /** Synchronous message sender */
+    private ExecutorService _syncSender;
+
     /** Collection of asynchronous event listeners for the connector. */
     private final List<ConnectorListener> _asyncListeners = new CopyOnWriteArrayList<ConnectorListener>();
     /** Collection of synchronous event listeners for the connector. */
@@ -178,35 +183,9 @@ public abstract class Connector {
 
     /** Command counter, can be used to identify message and reply pairs. */
     private final AtomicInteger _commandCount = new AtomicInteger();
-    
-    /** Asynchronous message sender */
-    private ExecutorService _asyncSender = Executors.newCachedThreadPool(new ThreadFactory() {
-        private final AtomicInteger threadNumber = new AtomicInteger();
 
-        public Thread newThread(Runnable r) {
-            Thread thread = new Thread(r, "AsyncSkypeMessageSender-" + threadNumber.getAndIncrement());
-            thread.setDaemon(true);
-            return thread;
-        }
-    });
-    /** Synchronous message sender */
-    private Executor _syncSender = Executors.newSingleThreadExecutor(new ThreadFactory() {
-        public Thread newThread(Runnable r) {
-            Thread thread = new Thread(r, "SyncSkypeMessageSender");
-            thread.setDaemon(true);
-            return thread;
-        }
-    });
     /** Command executor */
-    private ExecutorService _commandExecutor = Executors.newCachedThreadPool(new ThreadFactory() {
-        private final AtomicInteger threadNumber = new AtomicInteger();
-
-        public Thread newThread(Runnable r) {
-            Thread thread = new Thread(r, "CommandExecutor-" + threadNumber.getAndIncrement());
-            thread.setDaemon(true);
-            return thread;
-        }
-    });
+    private ExecutorService _commandExecutor;
 
     /**
      * Because this object should be a singleton the constructor is protected.
@@ -439,7 +418,34 @@ public abstract class Connector {
     protected final void initialize() throws ConnectorException {
         synchronized (_isInitializedMutex) {
             if (!_isInitialized) {
+                _asyncSender = Executors.newCachedThreadPool(new ThreadFactory() {
+                    private final AtomicInteger threadNumber = new AtomicInteger();
+
+                    public Thread newThread(Runnable r) {
+                        Thread thread = new Thread(r, "AsyncSkypeMessageSender-" + threadNumber.getAndIncrement());
+                        thread.setDaemon(true);
+                        return thread;
+                    }
+                });
+                _syncSender = Executors.newSingleThreadExecutor(new ThreadFactory() {
+                    public Thread newThread(Runnable r) {
+                        Thread thread = new Thread(r, "SyncSkypeMessageSender");
+                        thread.setDaemon(true);
+                        return thread;
+                    }
+                });
+                _commandExecutor = Executors.newCachedThreadPool(new ThreadFactory() {
+                    private final AtomicInteger threadNumber = new AtomicInteger();
+
+                    public Thread newThread(Runnable r) {
+                        Thread thread = new Thread(r, "CommandExecutor-" + threadNumber.getAndIncrement());
+                        thread.setDaemon(true);
+                        return thread;
+                    }
+                });
+
                 initializeImpl();
+
                 _isInitialized = true;
             }
         }
@@ -487,6 +493,21 @@ public abstract class Connector {
                 return;
             }
             disposeImpl();
+            setStatus(Status.NOT_RUNNING);
+            _commandExecutor.shutdown();
+
+            _syncSender.shutdown();
+            _asyncSender.shutdown();
+
+            _syncListeners.clear();
+            _asyncListeners.clear();
+
+            synchronized(_debugListenerMutex) {
+                if (_debugListener != null) {
+                    addConnectorListener(_debugListener, false, true);
+                }
+            }
+
             _isInitialized = false;
         }
     }

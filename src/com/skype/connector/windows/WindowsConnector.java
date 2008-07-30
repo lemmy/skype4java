@@ -137,6 +137,9 @@ public final class WindowsConnector extends Connector {
     /** Skype Client window handle. */
     private int skypeWindowHandle;
 
+    private Thread eventLoop;
+    private CountDownLatch eventLoopFinishedLatch;
+
     /**
      * Constructor.
      */
@@ -221,7 +224,8 @@ public final class WindowsConnector extends Connector {
     protected void initializeImpl() throws ConnectorException {
         final CountDownLatch latch = new CountDownLatch(1);
         final String[] errorMessage = new String[1];
-        Thread thread = new Thread("SkypeEventDispatcher") {
+        eventLoopFinishedLatch = new CountDownLatch(1);
+        eventLoop = new Thread("SkypeEventLoop") {
             @Override
             public void run() {
                 try {
@@ -273,23 +277,28 @@ public final class WindowsConnector extends Connector {
                 while (true) {
                     if (!display.readAndDispatch()) {
                         display.sleep();
+
+                        if (Thread.currentThread().isInterrupted()) {
+                            break;
+                        }
                     }
                 }
+                eventLoopFinishedLatch.countDown();
             };
 
             private void setErrorMessage(String message) {
                 errorMessage[0] = message;
             }
         };
-        thread.setDaemon(true);
+        eventLoop.setDaemon(true);
+        eventLoop.start();
         try {
-            thread.start();
             latch.await();
-            if (errorMessage[0] != null) {
-                throw new ConnectorException(errorMessage[0]);
-            }
         } catch (InterruptedException e) {
             throw new ConnectorException("The Windows connector initialization was interrupted.", e);
+        }
+        if (errorMessage[0] != null) {
+            throw new ConnectorException(errorMessage[0]);
         }
     }
 
@@ -397,8 +406,13 @@ public final class WindowsConnector extends Connector {
      * Clean up and disconnect.
      */
     protected void disposeImpl() {
-        // TODO WindowsConnector#disposeImpl()
-        throw new UnsupportedOperationException("WindowsConnector#disposeImpl() is not implemented yet.");
+        eventLoop.interrupt();
+        display.wake();
+        try {
+            eventLoopFinishedLatch.await();
+        } catch(InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     /**
