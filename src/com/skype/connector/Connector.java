@@ -23,7 +23,7 @@ package com.skype.connector;
 
 import java.io.*;
 import java.lang.reflect.Method;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -186,6 +186,9 @@ public abstract class Connector {
 
     /** Command executor */
     private ExecutorService _commandExecutor;
+    
+    /** The properties of this connector **/
+    private Map<String, String> properties = new ConcurrentHashMap<String, String>();
 
     /**
      * Because this object should be a singleton the constructor is protected.
@@ -937,5 +940,34 @@ public abstract class Connector {
                 listeners[i].messageSent(event);
             }
         }
+    }
+
+    /**
+     * Sets the specified property.
+     * If the specified value is null, the property is removed.
+     * @param name the property name
+     * @param value the property value
+     * @throws NullPointerException if the specified name is null
+     * @see #getStringProperty(String)
+     */
+    public final void setStringProperty(final String name, final String value) {
+        ConnectorUtils.checkNotNull("name", name);
+        if (value != null) {
+            properties.put(name, value);
+        } else {
+            properties.remove(name);
+        }
+    }
+
+    /**
+     * Gets the specified property value.
+     * @param name the property name
+     * @return the property value
+     * @throws NullPointerException if the specified name is null
+     * @see #setStringProperty(String, String)
+     */
+    public final String getStringProperty(final String name) {
+        ConnectorUtils.checkNotNull("name", name);
+        return properties.get(name);
     }
 }
