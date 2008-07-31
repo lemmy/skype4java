@@ -188,7 +188,7 @@ public abstract class Connector {
     private ExecutorService _commandExecutor;
     
     /** The properties of this connector **/
-    private Map<String, String> properties = new ConcurrentHashMap<String, String>();
+    private final Map<String, String> properties = new ConcurrentHashMap<String, String>();
 
     /**
      * Because this object should be a singleton the constructor is protected.
