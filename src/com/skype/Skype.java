@@ -83,10 +83,19 @@ public final class Skype {
     private static SkypeExceptionHandler exceptionHandler = defaultExceptionHandler;
 
     /**
-     * Sets the thread of Skype4Java to deamon mode or not.
-     * @param on true to set the thread to "deamon mode"
+     * Sets the thread of Skype4Java to "daemon mode" or not.
+     * @param on true to set the thread to "daemon mode"
      */
+    @Deprecated
     public static void setDeamon(boolean on) {
+        setDaemon(on);
+    }
+
+    /**
+     * Sets the thread of Skype4Java to "daemon mode" or not.
+     * @param on true to set the thread to "daemon mode"
+     */
+    public static void setDaemon(boolean on) {
         synchronized (userThreadFieldMutex) {
             if (!on && userThread == null) {
                 userThread = new Thread("SkypeUserThread") {
