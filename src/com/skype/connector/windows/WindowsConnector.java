@@ -319,7 +319,7 @@ public final class WindowsConnector extends Connector {
         addConnectorListener(listener, false);
         try {
             while (true) {
-                OS.SendMessage(HWND_BROADCAST, DISCOVER_MESSAGE_ID, windowHandle, 0);
+                OS.PostMessage(HWND_BROADCAST, DISCOVER_MESSAGE_ID, windowHandle, 0);
                 final Status status = queue.poll(timeout, TimeUnit.MILLISECONDS);
                 if (status == null) {
                     setStatus(Status.NOT_RUNNING);
