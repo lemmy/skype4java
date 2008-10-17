@@ -9,7 +9,7 @@
     </target>
 
     <target name="compile" depends="prepare">
-        <javac srcdir="src" destdir="build" classpath="lib/windows/swt.jar" encoding="UTF-8"/>
+        <javac srcdir="src" destdir="build" classpath="lib/windows/swt.jar;lib/windows/winp.jar" encoding="UTF-8"/>
     	
     	<copy todir="build">
     		<fileset dir="res"/>
