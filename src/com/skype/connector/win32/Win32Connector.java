@@ -48,7 +48,7 @@ public final class Win32Connector extends Connector {
     /** Status ATTACH_API_AVAILABLE value. */
     private static final int ATTACH_API_AVAILABLE = 0x8001;
     /** Filename of the DLL. */
-    private static final String LIBFILENAME = "JNIConnector.dll";
+    private static final String LIBFILENAME = "skype.dll";
     
     /** Singleton instance. */
     private static Win32Connector instance = null;
@@ -89,7 +89,7 @@ public final class Win32Connector extends Connector {
     protected void initializeImpl() {
         // Loading DLL
     	try {
-    		System.loadLibrary("JNIConnector");
+    		System.loadLibrary("skype");
     	} catch (Throwable e) {
     		if (!ConnectorUtils.checkLibraryInPath(LIBFILENAME)) {
 	    		ConnectorUtils.extractFromJarToTemp(LIBFILENAME);
