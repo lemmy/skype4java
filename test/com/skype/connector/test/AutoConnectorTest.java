@@ -24,28 +24,28 @@ package com.skype.connector.test;
 import com.skype.Call;
 import com.skype.Skype;
 
-public final class SampleTest extends TestCaseByCSVFile {
+public final class AutoConnectorTest extends TestCaseByCSVFile {
     @Override
     protected void setUp() throws Exception {
         setRecordingMode(false);
     }
-    
+
     public void testGetVersion() throws Exception {
         String result = Skype.getVersion();
-        if (isRecordingMode()) {
+        if(isRecordingMode()) {
             System.out.println(result);
         } else {
             assertEquals("2.5.0.130", result);
         }
     }
-    
+
     public void testCall() throws Exception {
         Call call = Skype.getContactList().getFriend("echo123").call();
         Thread.sleep(5000);
         call.finish();
 
         String result = call.getDuration() + "," + call.getId() + "," + call.getPartnerId() + "," + call.getType();
-        if (isRecordingMode()) {
+        if(isRecordingMode()) {
             System.out.println(result);
         } else {
             assertEquals("2,8345,echo123,OUTGOING_P2P", result);
