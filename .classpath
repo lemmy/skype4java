@@ -6,6 +6,7 @@
 	<classpathentry kind="src" path="res"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="var" path="JUNIT_HOME/junit.jar" sourcepath="/JUNIT_SRC_HOME/junitsrc.zip"/>
-	<classpathentry kind="var" path="SWT_LIB"/>
+	<classpathentry kind="var" path="SWT_LIB" sourcepath="/SWT_LIB_SRC"/>
+	<classpathentry kind="lib" path="lib/windows/winp.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
