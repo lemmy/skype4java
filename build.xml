@@ -1,42 +1,43 @@
 <?xml version="1.0"?>
 <project name="skype" default="jar" basedir=".">
-    <taskdef name="fmpp" classname="fmpp.tools.AntTask" classpath="lib/tools/fmpp.jar"/>
-	
-    <target name="prepare">
-        <copy todir="res/win32" file="src_win32/JNIConnector.dll"/>
-    	
-        <mkdir dir="build"/>
-    </target>
+	<taskdef name="fmpp" classname="fmpp.tools.AntTask" classpath="lib/tools/fmpp.jar" />
 
-    <target name="compile" depends="prepare">
-        <javac srcdir="src" destdir="build" classpath="lib/windows/swt.jar;lib/windows/winp.jar" encoding="UTF-8"/>
-    	
-    	<copy todir="build">
-    		<fileset dir="res"/>
-    	</copy>
-    </target>
+	<target name="prepare">
+		<mkdir dir="build" />
+	</target>
 
-    <target name="jar" depends="compile">
-        <jar basedir="build" includes="**/**" destfile="release/skype.jar"/>
-    </target>
-	
+	<target name="compile" depends="prepare">
+		<javac srcdir="src" destdir="build" encoding="UTF-8" source="1.5" target="1.5">
+			<classpath path="lib/windows/swt.jar" />
+			<classpath path="lib/windows/winp.jar" />
+		</javac>
+
+		<copy todir="build">
+			<fileset dir="res" />
+		</copy>
+	</target>
+
+	<target name="jar" depends="compile">
+		<jar basedir="build" includes="**/**" destfile="release/skype.jar" />
+	</target>
+
 	<target name="javadoc">
 		<macrodef name="javadoc-i18n">
-			<attribute name="locale"/>
+			<attribute name="locale" />
 			<sequential>
-				<mkdir dir="tmp/src-@{locale}"/>
-				<fmpp sourceroot="src" outputroot="tmp/src-@{locale}" data="locale:@{locale}"/>
+				<mkdir dir="tmp/src-@{locale}" />
+				<fmpp sourceroot="src" outputroot="tmp/src-@{locale}" data="locale:@{locale}" />
 				<javadoc sourcepath="tmp/src-@{locale}" destdir="javadoc/@{locale}" windowtitle="Skype4Java" Locale="@{locale}" Encoding="UTF-8" packagenames="com.skype.*" charset="UTF-8">
-					<link href="https://developer.skype.com/wiki/Java_API"/>
+					<link href="https://developer.skype.com/wiki/Java_API" />
 				</javadoc>
 			</sequential>
 		</macrodef>
 
-		<javadoc-i18n locale="ja"/>
-		<javadoc-i18n locale="en"/>
+		<javadoc-i18n locale="ja" />
+		<javadoc-i18n locale="en" />
 	</target>
-	
-    <target name="clean">
-        <delete dir="build"/>
-    </target>
+
+	<target name="clean">
+		<delete dir="build" />
+	</target>
 </project>
