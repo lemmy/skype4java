@@ -3,6 +3,7 @@
 	<taskdef name="fmpp" classname="fmpp.tools.AntTask" classpath="lib/tools/fmpp.jar" />
 
 	<target name="prepare">
+		<delete dir="build" />
 		<mkdir dir="build" />
 	</target>
 
