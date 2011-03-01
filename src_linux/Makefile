@@ -1,7 +1,7 @@
 JDK_DIR = /usr/lib/jvm/java-6-sun
 
 CC = gcc
-CFLAGS = -pipe -Wall -W -g
+CFLAGS = -Wall -W -g -fPIC
 INCPATH = -I. -I$(JDK_DIR)/include -I$(JDK_DIR)/include/linux
 
 LINK = g++
