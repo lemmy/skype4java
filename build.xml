@@ -11,6 +11,7 @@
 		<javac srcdir="src" destdir="build" encoding="UTF-8" source="1.5" target="1.5">
 			<classpath path="lib/windows/swt.jar" />
 			<classpath path="lib/windows/winp.jar" />
+			<classpath path="lib/linux/libdbus-java-2.8.jar" />
 		</javac>
 
 		<copy todir="build">
