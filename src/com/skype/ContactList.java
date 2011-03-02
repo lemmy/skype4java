@@ -1,6 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2006-2007 Koji Hisano <hisano@gmail.com> - UBION Inc. Developer
  * Copyright (c) 2006-2007 UBION Inc. <http://www.ubion.co.jp/>
+ * Copyright (c) 2011 Markus Alexander Kuppe.
  * 
  * Copyright (c) 2006-2007 Skype Technologies S.A. <http://www.skype.com/>
  * 
@@ -22,15 +23,27 @@
  ******************************************************************************/
 package com.skype;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+
+import com.skype.User.Status;
+import com.skype.connector.AbstractConnectorListener;
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
+import com.skype.connector.ConnectorListener;
+import com.skype.connector.ConnectorMessageEvent;
 
 /**
  * This object can be used for all actions normal to a contactlist, like searching users and friends.
  * @author Koji Hisano.
  */
 public final class ContactList {
-	/**
+    public static final String STATUS_PROPERTY = "com.skype.ContactList.status";
+    private static Object propertyChangeListenerMutex = new Object();
+    private static ConnectorListener propertyChangeListener;
+    private PropertyChangeSupport listeners = new PropertyChangeSupport(this);
+
+    /**
 	 * Constructor.
 	 */
     ContactList() {
@@ -232,5 +245,58 @@ public final class ContactList {
      */
     public void removeGroup(Group group) throws SkypeException {
         group.dispose();
+    }
+    
+    /**
+     * Adds a PropertyChangeListener to this user.
+     * <p>
+     * The listener is registered for all bound properties of this contact list, including the following:
+     * <ul>
+     *    <li>All changes to the contact list</li>
+     * </ul>
+     * </p><p>
+     * If listener is null, no exception is thrown and no action is performed.
+     * </p>
+     * @param listener the PropertyChangeListener to be added
+     * @see #removePropertyChangeListener(PropertyChangeListener)
+     */
+    public final void addPropertyChangeListener(PropertyChangeListener listener) throws SkypeException {
+        synchronized (propertyChangeListenerMutex) {
+            if (propertyChangeListener == null) {
+                ConnectorListener connectorListener = new AbstractConnectorListener() {
+                    @Override
+                    public void messageReceived(ConnectorMessageEvent event) {
+                        String message = event.getMessage();
+                        if (message.startsWith("GROUP ")) {
+                            String data = message.substring("GROUP ".length());
+                            String groupId = data.substring(0, data.indexOf(' '));
+//                            data = data.substring(data.indexOf(' ') + 1);
+//                            String propertyName = data.substring(0, data.indexOf(' '));
+//                            String propertyValue = data.substring(data.indexOf(' ') + 1);
+                            listeners.firePropertyChange(STATUS_PROPERTY, null, groupId);
+                        }
+                    }
+                };
+                try {
+                    Connector.getInstance().addConnectorListener(connectorListener);
+                    propertyChangeListener = connectorListener;
+                } catch(ConnectorException e) {
+                    Utils.convertToSkypeException(e);
+                }
+            }
+        }
+        listeners.addPropertyChangeListener(listener);
+    }
+    
+    /**
+     * Removes the PropertyChangeListener from this user.
+     * <p>
+     * If listener is null, no exception is thrown and no action is performed.
+     * </p>
+     * @param listener the PropertyChangeListener to be removed
+     * @see #addPropertyChangeListener(PropertyChangeListener)
+     */
+    public final void removePropertyChangeListener(PropertyChangeListener listener) {
+        listeners.removePropertyChangeListener(listener);
     }
 }

@@ -1,6 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2006-2007 Koji Hisano <hisano@gmail.com> - UBION Inc. Developer
  * Copyright (c) 2006-2007 UBION Inc. <http://www.ubion.co.jp/>
+ * Copyright (c) 2011 Markus Alexander Kuppe.
  * 
  * Copyright (c) 2006-2007 Skype Technologies S.A. <http://www.skype.com/>
  * 
@@ -34,6 +35,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Koji Hisano <hisano@gmail.com>
  */
 public abstract class Connector {
+    private static final String useDBus = System.getProperty("com.skype.connector.Connector.useDBus");
+    
     /**
      * Enumeration of the connector status.
      */
@@ -85,7 +88,11 @@ public abstract class Connector {
                     connectorClassName = "com.skype.connector.windows.WindowsConnector";
                 }
             } else if (osName.startsWith("Linux") || osName.startsWith("LINUX")) {
-                connectorClassName = "com.skype.connector.linux.LinuxConnector";
+                if(useDBus != null && new Boolean(useDBus)) {
+                    connectorClassName = "com.skype.connector.linux.dbus.LinuxDBusConnector";
+                } else {
+                    connectorClassName = "com.skype.connector.linux.LinuxConnector";
+                }
             } else if (osName.startsWith("Mac OS X")) {
                 connectorClassName = "com.skype.connector.osx.OSXConnector";
             }
@@ -726,6 +733,7 @@ public abstract class Connector {
     private String execute(final String command, final String[] responseHeaders, final boolean checkAttached, boolean withoutTimeout) throws ConnectorException {
         final NotificationChecker checker = new NotificationChecker() {
             public boolean isTarget(String message) {
+//                System.out.println(message);
                 for (String responseHeader : responseHeaders) {
                     if (message.startsWith(responseHeader)) {
                         return true;
@@ -735,7 +743,7 @@ public abstract class Connector {
             }
         };
         try {
-            return execute(command, checker, checkAttached, withoutTimeout).get();
+            return execute(command, checker, checkAttached, true).get();
         } catch(InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new ConnectorException("The '" + command + "' command was interrupted.", e);
