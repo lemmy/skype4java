@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -103,6 +104,13 @@ public class User extends SkypeObject {
         }
     }
 
+    public static void removeAllListener() {
+        for(Iterator iterator = users.values().iterator(); iterator.hasNext();) {
+            User u = (User) iterator.next();
+            u.removeAllPropertyChangeListener();
+        }
+    }
+    
     /**
      * The <code>Status</code> enum contains the online status constants of the skype user.
      * @see User#getOnlineStatus()
@@ -801,5 +809,13 @@ public class User extends SkypeObject {
      */
     public final void removePropertyChangeListener(PropertyChangeListener listener) {
         listeners.removePropertyChangeListener(listener);
+    }
+    
+    public final void removeAllPropertyChangeListener() {
+        PropertyChangeListener[] propertyChangeListeners = listeners.getPropertyChangeListeners();
+        for(int i = 0; i < propertyChangeListeners.length; i++) {
+            PropertyChangeListener propertyChangeListener = propertyChangeListeners[i];
+            removePropertyChangeListener(propertyChangeListener);
+        }
     }
 }

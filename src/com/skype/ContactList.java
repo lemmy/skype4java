@@ -299,4 +299,13 @@ public final class ContactList {
     public final void removePropertyChangeListener(PropertyChangeListener listener) {
         listeners.removePropertyChangeListener(listener);
     }
+
+
+    public void removeAllListener() {
+        PropertyChangeListener[] propertyChangeListeners = listeners.getPropertyChangeListeners();
+        for(int i = 0; i < propertyChangeListeners.length; i++) {
+            PropertyChangeListener propertyChangeListener = propertyChangeListeners[i];
+            removePropertyChangeListener(propertyChangeListener);
+        }
+    }
 }

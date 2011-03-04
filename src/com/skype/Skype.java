@@ -1010,4 +1010,17 @@ public final class Skype {
      */
     private Skype() {
     }
+
+
+    public static void removeAllListeners() {
+        synchronized(callListenerMutex) {
+            callListeners.clear();
+        }
+        synchronized(chatMessageListenerMutex) {
+            chatMessageListeners.clear();
+        }
+        synchronized(voiceMailListenerMutex) {
+            voiceMailListeners.clear();
+        }
+    }
 }
