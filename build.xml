@@ -16,6 +16,7 @@
 
 		<copy todir="build">
 			<fileset dir="res" />
+			<fileset dir="src" includes="dummy.jpg" />
 		</copy>
 	</target>
 

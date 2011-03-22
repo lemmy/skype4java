@@ -21,10 +21,18 @@
  ******************************************************************************/
 package com.skype.connector.linux.dbus;
 
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import com.skype.Skype;
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
 
@@ -33,9 +41,10 @@ import com.skype.connector.ConnectorException;
  */
 public final class LinuxDBusConnector extends Connector {
     private static LinuxDBusConnector _instance = null;
-    
+
     /**
      * Get singleton instance.
+     * 
      * @return instance.
      */
     public static synchronized Connector getInstance() {
@@ -44,34 +53,47 @@ public final class LinuxDBusConnector extends Connector {
         }
         return _instance;
     }
-    
+
     private SkypeFrameworkListener listener = new SkypeFrameworkListener() {
         public void notificationReceived(String notificationString) {
             fireMessageReceived(notificationString);
         }
     };
 
+    private String profilePath;
+
     /**
      * Constructor.
      */
     private LinuxDBusConnector() {
     }
-    
+
     public boolean isRunning() throws ConnectorException {
         return SkypeFramework.isRunning();
     }
 
     /**
      * Gets the absolute path of Skype.
+     * 
      * @return the absolute path of Skype.
      */
     public String getInstalledPath() {
         File application = new File("/usr/bin/skype");
-        if (application.exists()) {
+        if(application.exists()) {
             return application.getAbsolutePath();
         } else {
             return null;
         }
+    }
+    
+    private String getProfilePath() {
+        // profile path does not change at runtime
+        if (profilePath == null) {
+            final String userHome = System.getProperty("user.home");
+            final String account = SkypeFramework.sendCommndWithResponse("GET CURRENTUSERHANDLE");
+            profilePath = userHome + File.separator + ".Skype" + File.separator + account.split(" ")[1];
+        }
+        return profilePath;
     }
 
     /**
@@ -84,12 +106,13 @@ public final class LinuxDBusConnector extends Connector {
 
     /**
      * Connects to Skype client.
+     * 
      * @param timeout the maximum time in milliseconds to connect.
      * @return Status the status after connecting.
      * @throws ConnectorException when connection can not be established.
      */
     protected Status connect(int timeout) throws ConnectorException {
-        if (!SkypeFramework.isRunning()) {
+        if(!SkypeFramework.isRunning()) {
             setStatus(Status.NOT_RUNNING);
             return getStatus();
         }
@@ -97,7 +120,7 @@ public final class LinuxDBusConnector extends Connector {
             final BlockingQueue<String> queue = new LinkedBlockingQueue<String>();
             SkypeFrameworkListener initListener = new SkypeFrameworkListener() {
                 public void notificationReceived(String notification) {
-                    if ("OK".equals(notification) || "CONNSTATUS OFFLINE".equals(notification) || "ERROR 68".equals(notification)) {
+                    if("OK".equals(notification) || "CONNSTATUS OFFLINE".equals(notification) || "ERROR 68".equals(notification)) {
                         try {
                             queue.put(notification);
                         } catch(InterruptedException e) {
@@ -111,11 +134,11 @@ public final class LinuxDBusConnector extends Connector {
             SkypeFramework.sendCommand("NAME " + getApplicationName());
             String result = queue.take();
             SkypeFramework.removeSkypeFrameworkListener(initListener);
-            if ("OK".equals(result)) {
+            if("OK".equals(result)) {
                 setStatus(Status.ATTACHED);
-            } else if ("CONNSTATUS OFFLINE".equals(result)) {
+            } else if("CONNSTATUS OFFLINE".equals(result)) {
                 setStatus(Status.NOT_AVAILABLE);
-            } else if ("ERROR 68".equals(result)) {
+            } else if("ERROR 68".equals(result)) {
                 setStatus(Status.REFUSED);
             }
             return getStatus();
@@ -126,10 +149,20 @@ public final class LinuxDBusConnector extends Connector {
 
     /**
      * Sends a command to the Skype client.
+     * 
      * @param command The command to send.
      */
     protected void sendCommand(final String command) {
-        SkypeFramework.sendCommand(command);
+        // using dbus to receive a user avatar fails with a general syntax error, thus
+        // read the avatar from the skype .dbb files directly
+        if(command.toLowerCase().contains("avatar")) {
+            final String[] split = command.split(" ");
+            final String userId = split[2];
+            readAvatarToFile(getProfilePath(), userId, split[5]);
+            SkypeFramework.fireNotificationReceived("USER " + userId + " AVATAR 1 ");
+        } else {
+            SkypeFramework.sendCommand(command);
+        }
     }
 
     /**
@@ -138,5 +171,122 @@ public final class LinuxDBusConnector extends Connector {
     protected void disposeImpl() {
         SkypeFramework.removeSkypeFrameworkListener(listener);
         SkypeFramework.dispose();
+    }
+
+    /**
+     * The Skype files that make up the user database
+     */
+    private static final String[] DBBs = new String[]{/*"user256.dbb",*/ "user1024.dbb", "user4096.dbb", "user16384.dbb", "user32768.dbb", "user65536.dbb"};
+
+    /**
+     * JPG Magic markers
+     */
+    private static final byte[] JPG_START_MARKER = new byte[]{(byte) 0xFF, (byte) 0xD8};
+    private static final byte[] JPG_END_MARKER = new byte[]{(byte) 0xFF, (byte) 0xD9};
+    
+    /**
+     * Marker which (appears to) separate user entries in .dbb files
+     */
+    private static final byte[] L33L_MARKER = "l33l".getBytes();
+
+    private void readAvatarToFile(final String installPath, final String userId, final String path) {
+        try {
+            for(int i = 0; i < DBBs.length; i++) {
+                File file = new File(installPath + File.separator + DBBs[i]);
+                if(file != null && file.exists()) {
+                    // read dbb file into a byte[]
+                    final DataInputStream stream = new DataInputStream(new FileInputStream(file));
+                    final byte[] bytes = new byte[stream.available()];
+                    stream.read(bytes);
+
+                    int pos = 0;
+                    while(pos != bytes.length - 1) {
+                        int l33l1 = indexOf(bytes, L33L_MARKER, pos);
+                        if(l33l1 == -1) {
+                            break;
+                        }
+                        
+                        int l33l2 = indexOf(bytes, L33L_MARKER, l33l1 + 1);
+                        if(l33l2 == -1) { // end of file
+                            l33l2 = bytes.length - 1;
+                        }
+                        
+                        // is userid owner of current l33l block?
+                        int user = indexOf(bytes, userId.getBytes(), l33l1, l33l2);
+                        if(user != -1) { // current l33l block is user we are looking for
+                            
+                            int jpgStart = indexOf(bytes, JPG_START_MARKER, l33l1, l33l2);
+                            if(jpgStart != -1) { // l33l block contains jpg image
+
+                                int jpgEnd = indexOf(bytes, JPG_END_MARKER, jpgStart, l33l2);
+                                if(jpgEnd != -1) { // might happen as well
+                                    
+                                    // slice off jpg from dbb
+                                    byte[] bs = Arrays.copyOfRange(bytes, jpgStart, jpgEnd + 2);
+                                    
+                                    // write to temp file
+                                    FileOutputStream fos = new FileOutputStream(path);
+                                    fos.write(bs);
+                                    fos.close();
+                                    
+                                    return;
+                                }
+                            } else {
+                                break;
+                            }
+                        }
+                        
+                        // advance to the next l33l marker
+                        pos = l33l2;
+                    }
+                }    
+            }
+
+            // write dummy file
+            InputStream in = getClass().getResourceAsStream("/dummy.jpg");
+            FileOutputStream out = new FileOutputStream(path);
+            // Transfer bytes from in to out
+            byte[] buf = new byte[1024];
+            int len;
+            while((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
+            }
+            in.close();
+            out.close();
+
+        } catch(FileNotFoundException e) {
+            e.printStackTrace();
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * @param bytes Where to search in
+     * @param key The key to search for
+     * @param from Must be < bytes.length
+     * @return The first occurrence of the given key in bytes
+     */
+    private int indexOf(byte[] bytes, byte[] key, int from, int to) {
+        OUTER: for(int i = from; i < to; i++) {
+            // try to match first byte
+            if(bytes[i] == key[0]) {
+                for(int j = 0; j < key.length; j++) {
+                    if(key[j] != bytes[i + j]) {
+                        continue OUTER;
+                    }
+                }
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private int indexOf(byte[] bytes, byte[] key, int from) {
+        return indexOf(bytes, key, from, bytes.length);
+    }
+    
+    private int indexOf(byte[] bytes, byte[] key) {
+        return indexOf(bytes, key, 0);
     }
 }

@@ -81,6 +81,10 @@ public class SkypeFramework {
 	    final String response = skypeDBus.Invoke(command);
 		fireNotificationReceived(response);
 	}
+	
+	static String sendCommndWithResponse(String command) {
+	    return skypeDBus.Invoke(command);
+	}
 
 	static void fireNotificationReceived(String notificationString) {
 		System.out
