@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="src" path="test"/>
-	<classpathentry kind="src" path="sample"/>
-	<classpathentry kind="src" path="res"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="var" path="JUNIT_HOME/junit.jar" sourcepath="/JUNIT_SRC_HOME/junitsrc.zip"/>
-	<classpathentry kind="lib" path="lib/windows/winp.jar"/>
-	<classpathentry kind="lib" path="lib/linux/libdbus-java-2.8.jar"/>
-	<classpathentry kind="lib" path="lib/windows/swt.jar"/>
-	<classpathentry kind="var" path="ECLIPSE_HOME/plugins/org.eclipse.swt.gtk.linux.x86_64_3.6.2.v3659b.jar"/>
+	<classpathentry kind="var" path="ECLIPSE_HOME/plugins/org.eclipse.swt.gtk.linux.x86_64_3.7.0.v3724c.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/dbus-java"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
