@@ -72,30 +72,16 @@ public class SkypeFramework {
 		this.pass = aPassword;
 	}
 
-	@SuppressWarnings("unused")
     void init() throws ConnectorException {
 	    
         Process process = null;
         try {
-//            SkypeDBusDaemon dBusDaemon = new SkypeDBusDaemon();
-//        
-//            String string = dBusDaemon.getBusAddress().toString();
-//            System.out.println("export DBUS_SESSION_BUS_ADDRESS=\"" + string + "\" && qdbusviewer");
             String string = null;
             process = spawnSkypeProcess(string, user, pass);
             addShutdownHook(process);
 	        int pid = getPID(process);
 	        
-//            File f = new File("/tmp/addressfile");
-//            BufferedReader fr = new BufferedReader(new FileReader(f));
-//            String string = fr.readLine();
-//            String string = "tcp:host=localhost,port=43916,guid=6bbd386de469eb9811ab039ed7826c65";
-
-	        if(string != null) {
-	            conn = DBusConnection.getConnection(string);
-	        } else {
-                conn = DBusConnection.getConnection(DBusConnection.SESSION);
-	        }
+            conn = DBusConnection.getConnection(DBusConnection.SESSION);
             final DBus dbus = conn.getRemoteObject("org.freedesktop.DBus", "/org/freedesktop/DBus", DBus.class);
 
             
@@ -123,7 +109,6 @@ public class SkypeFramework {
             skypeDBus = conn.getRemoteObject("com.Skype.API", SERVER_PATH, API.class);
 
             // add generic client listener for the given skype name
-            // replaces: conn.exportObject(CLIENT_PATH, new SkypeDBusNotify());
             conn.exportObject(CLIENT_PATH, source, new SkypeDBusNotify(this));
 	    } catch(Exception e) {
 	        if(process != null) {
@@ -164,9 +149,6 @@ public class SkypeFramework {
 
     private Process spawnSkypeProcess(final String dbusAddress, final String user, final String pass) throws IOException {
         List<String> cmds = new ArrayList<String>();
-//        cmds.add("/bin/bash");
-//        cmds.add("-c");
-//        cmds.add("/bin/echo " + user +  " " + pass + " | /usr/bin/skype --pipelogin");
         cmds.add("/usr/bin/skype");
         cmds.add("--pipelogin");
         
@@ -190,35 +172,8 @@ public class SkypeFramework {
         outputStream.close();
         
         return process;
-        
-//        ProcessBuilder builder = new ProcessBuilder(cmds);
-//        builder.redirectErrorStream(true);
-//        return builder.start();
-
-//        DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
-//        Executor executor = new DefaultExecutor();
-//        
-//        // kill run away process
-//        ExecuteWatchdog watchdog = new ExecuteWatchdog(60*1000);
-//        executor.setWatchdog(watchdog);
-//
-//        // build command line
-//        CommandLine cl = new CommandLine("/usr/bin/skype");
-//                cl.addArgument("--pipelogin");
-//
-//        // pipe user/pass to skype process
-//        String text = user + " " + pass;
-//        ByteArrayInputStream input =
-//            new ByteArrayInputStream(text.getBytes("ISO-8859-1"));
-//        ByteArrayOutputStream output = new ByteArrayOutputStream();
-//        executor.setStreamHandler(new PumpStreamHandler(output, null, input));
-//
-//        // get going
-//        executor.execute(cl, resultHandler);
-//        return null;
     }
     
-
     void addSkypeFrameworkListener(SkypeFrameworkListener listener) {
 		listeners.add(listener);
 	}
