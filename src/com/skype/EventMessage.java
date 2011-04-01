@@ -45,8 +45,8 @@ public final class EventMessage extends SkypeObject {
         return eventMessages.get(id);
     }
 
-    static EventMessage addEventMessage(String caption, String hint) {
-        EventMessage eventMessage = new EventMessage(caption, hint);
+    static EventMessage addEventMessage(Connector connector, String caption, String hint) {
+        EventMessage eventMessage = new EventMessage(connector, caption, hint);
         eventMessages.put(eventMessage.getId(), eventMessage);
         return eventMessage;
     }
@@ -57,7 +57,8 @@ public final class EventMessage extends SkypeObject {
 
     private final List<EventMessageListener> eventMessageListeners = Collections.synchronizedList(new ArrayList<EventMessageListener>());
 
-    EventMessage(final String caption, final String hint) {
+    EventMessage(Connector connector, final String caption, final String hint) {
+        super(connector);
         this.caption = caption;
         this.hint = hint;
     }
@@ -99,18 +100,14 @@ public final class EventMessage extends SkypeObject {
                             if (eventMessage != null) {
                                 EventMessageListener[] listeners = eventMessage.eventMessageListeners.toArray(new EventMessageListener[0]);
                                 for (EventMessageListener listener : listeners) {
-                                    try {
                                         listener.eventMessageClicked();
-                                    } catch (Throwable e) {
-                                        Skype.handleUncaughtException(e);
-                                    }
                                 }
                             }
                         }
                     }
                 };
                 try {
-                    Connector.getInstance().addConnectorListener(eventMessageListener);
+                    connector.addConnectorListener(eventMessageListener);
                 } catch (ConnectorException e) {
                     Utils.convertToSkypeException(e);
                 }
@@ -127,7 +124,7 @@ public final class EventMessage extends SkypeObject {
                 isEmpty &= eventMessage.eventMessageListeners.isEmpty();
             }
             if (isEmpty) {
-                Connector.getInstance().removeConnectorListener(eventMessageListener);
+                connector.removeConnectorListener(eventMessageListener);
                 eventMessageListener = null;
             }
         }
@@ -136,7 +133,7 @@ public final class EventMessage extends SkypeObject {
     public void dispose() throws SkypeException {
         try {
             String command = "DELETE EVENT " + getId();
-            String response = Connector.getInstance().execute(command);
+            String response = connector.execute(command);
             Utils.checkError(response);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);

@@ -27,10 +27,8 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import com.skype.connector.AbstractConnectorListener;
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
-import com.skype.connector.ConnectorMessageEvent;
 import com.skype.connector.NotificationChecker;
 
 /**
@@ -45,15 +43,14 @@ public final class Stream extends SkypeObject {
 
     /** Listeners to this stream. */
     private List<StreamListener> listeners = new ArrayList<StreamListener>();
-    /** Exceptionhandler for this Stream. */
-    private SkypeExceptionHandler exceptionHandler;
     
     /**
      * Constructor.
      * @param newApplication AP2AP application to which this stream belongs.
      * @param newId ID of this stream.
      */
-    Stream(Application newApplication, String newId) {
+    Stream(final Connector aConnector, Application newApplication, String newId) {
+    	super(aConnector);
         assert newApplication != null;
         assert newId != null;
         this.application = newApplication;
@@ -110,7 +107,7 @@ public final class Stream extends SkypeObject {
      * @return User.
      */
     public Friend getFriend() {
-        return User.getFriendInstance(getId().substring(0, getId().indexOf(':')));
+        return User.getFriendInstance(connector, getId().substring(0, getId().indexOf(':')));
     }
 
     /**
@@ -143,7 +140,7 @@ public final class Stream extends SkypeObject {
             String header = "ALTER APPLICATION " + getApplication().getName() + " WRITE " + getId();
             ApplicationListener applicationListener = null;
             try {
-                final Future<String> future = Connector.getInstance().waitForEndWithId(header + " " + text, header, checker);
+                final Future<String> future = connector.waitForEndWithId(header + " " + text, header, checker);
                 applicationListener = new ApplicationAdapter() {
                     @Override
                     public void disconnected(Stream stream) throws SkypeException {
@@ -177,15 +174,6 @@ public final class Stream extends SkypeObject {
         }
     }
 
-    private boolean isClosed() throws SkypeException {
-        for (Stream stream: application.getAllStreams()) {
-            if (stream == this) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     /**
      * Send a datagram message through this stream.
      * @param datagram the data message to send.
@@ -196,7 +184,7 @@ public final class Stream extends SkypeObject {
         try {
             String resposeHeader = "ALTER APPLICATION " + getApplication().getName() + " DATAGRAM " + getId();
             String command = resposeHeader + " " + datagram;
-            String result = Connector.getInstance().execute(command, resposeHeader);
+            String result = connector.execute(command, resposeHeader);
             Utils.checkError(result);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
@@ -229,11 +217,7 @@ public final class Stream extends SkypeObject {
         assert text != null;
         StreamListener[] tmpListeners = this.listeners.toArray(new StreamListener[0]);
         for (StreamListener listener : tmpListeners) {
-            try {
                 listener.textReceived(text);
-            } catch (Throwable e) {
-                Utils.handleUncaughtException(e, exceptionHandler);
-            }
         }
     }
 
@@ -245,11 +229,7 @@ public final class Stream extends SkypeObject {
         assert datagram != null;
         StreamListener[] tmpListeners = this.listeners.toArray(new StreamListener[0]);
         for (StreamListener listener : tmpListeners) {
-            try {
                 listener.datagramReceived(datagram);
-            } catch (Throwable e) {
-                Utils.handleUncaughtException(e, exceptionHandler);
-            }
         }
     }
 
@@ -259,7 +239,7 @@ public final class Stream extends SkypeObject {
      */
     public void disconnect() throws SkypeException {
         try {
-            String response = Connector.getInstance().execute("ALTER APPLICATION " + application.getName() + " DISCONNECT " + getId());
+            String response = connector.execute("ALTER APPLICATION " + application.getName() + " DISCONNECT " + getId());
             Utils.checkError(response);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);

@@ -46,19 +46,34 @@ public class SkypeFramework {
 
 	private static final List<SkypeFrameworkListener> listeners = new CopyOnWriteArrayList<SkypeFrameworkListener>();
 	
-	private static class SkypeDBusNotify implements Client  {
+	private class SkypeDBusNotify implements Client  {
+		
+		private SkypeFramework fw;
+
+		public SkypeDBusNotify(SkypeFramework fw) {
+			this.fw = fw;
+		}
+		
 		public boolean isRemote() {
 			return false;
 		}
 
 		public void Notify(String message) {
 		    System.out.println("<= fireListenerNotify: " + message);
-			fireNotificationReceived(message);
+		    fw.fireNotificationReceived(message);
 		}
 	}
 
+	private String pass;
+	private String user;
+
+	public SkypeFramework(String aUsername, String aPassword) {
+		this.user = aUsername;
+		this.pass = aPassword;
+	}
+
 	@SuppressWarnings("unused")
-    static void init() throws ConnectorException {
+    void init() throws ConnectorException {
 	    
         Process process = null;
         try {
@@ -67,7 +82,7 @@ public class SkypeFramework {
 //            String string = dBusDaemon.getBusAddress().toString();
 //            System.out.println("export DBUS_SESSION_BUS_ADDRESS=\"" + string + "\" && qdbusviewer");
             String string = null;
-            process = spawnSkypeProcess(string, "markus_kuppe", "7Ml7eaqX");
+            process = spawnSkypeProcess(string, user, pass);
             addShutdownHook(process);
 	        int pid = getPID(process);
 	        
@@ -96,7 +111,6 @@ public class SkypeFramework {
             		final String name = names[i];
             		if(name.startsWith(":")) {
             			UInt32 getConnectionUnixProcessID = dbus.GetConnectionUnixProcessID(name);
-            			System.out.println(getConnectionUnixProcessID.intValue());
             			if(pid == getConnectionUnixProcessID.intValue()) {
             			    source  = name;
             				break;
@@ -110,7 +124,7 @@ public class SkypeFramework {
 
             // add generic client listener for the given skype name
             // replaces: conn.exportObject(CLIENT_PATH, new SkypeDBusNotify());
-            conn.exportObject(CLIENT_PATH, source, new SkypeDBusNotify());
+            conn.exportObject(CLIENT_PATH, source, new SkypeDBusNotify(this));
 	    } catch(Exception e) {
 	        if(process != null) {
 	            process.destroy();
@@ -119,7 +133,7 @@ public class SkypeFramework {
 	    }
 	}
 
-	private static void addShutdownHook(final Process process) {
+	private void addShutdownHook(final Process process) {
 	    Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             public void run() {
                 if(process != null) {
@@ -129,7 +143,7 @@ public class SkypeFramework {
 	    }));
     }
 
-    private static int getPID(Process process) {
+    private int getPID(Process process) {
 	    if(process.getClass().getName().equals("java.lang.UNIXProcess")) {
 	        try {
 	            Field f = process.getClass().getDeclaredField("pid");
@@ -148,8 +162,8 @@ public class SkypeFramework {
 	    return -1;
     }
 
-    private static Process spawnSkypeProcess(final String dbusAddress, final String user, final String pass) throws IOException {
-        List cmds = new ArrayList();
+    private Process spawnSkypeProcess(final String dbusAddress, final String user, final String pass) throws IOException {
+        List<String> cmds = new ArrayList<String>();
 //        cmds.add("/bin/bash");
 //        cmds.add("-c");
 //        cmds.add("/bin/echo " + user +  " " + pass + " | /usr/bin/skype --pipelogin");
@@ -160,14 +174,14 @@ public class SkypeFramework {
 
         Process process;
         if(dbusAddress != null) {
-            List envs = new ArrayList();
+            List<String> envs = new ArrayList<String>();
             envs.add("DBUS_SESSION_BUS_ADDRESS=" + dbusAddress);
             envs.add("USER=" + System.getProperty("user.name"));
             envs.add("HOME=" + System.getProperty("user.home"));
             envs.add("DISPLAY=" + System.getenv("DISPLAY"));
-            process = runtime.exec((String[]) cmds.toArray(new String[cmds.size()]), (String[]) envs.toArray(new String[envs.size()]));
+            process = runtime.exec(cmds.toArray(new String[cmds.size()]), envs.toArray(new String[envs.size()]));
         } else {
-            process = runtime.exec((String[]) cmds.toArray(new String[cmds.size()]));
+            process = runtime.exec(cmds.toArray(new String[cmds.size()]));
         }
         
 
@@ -205,29 +219,29 @@ public class SkypeFramework {
     }
     
 
-    static void addSkypeFrameworkListener(SkypeFrameworkListener listener) {
+    void addSkypeFrameworkListener(SkypeFrameworkListener listener) {
 		listeners.add(listener);
 	}
 
-	static void removeSkypeFrameworkListener(SkypeFrameworkListener listener) {
+	void removeSkypeFrameworkListener(SkypeFrameworkListener listener) {
 		listeners.remove(listener);
 	}
 
-	static boolean isRunning() {
+	boolean isRunning() {
 		return true;
 	}
 
-	static void sendCommand(String command) {
+	void sendCommand(String command) {
 	    System.err.println("=> sendcommand: " + command);
 	    final String response = skypeDBus.Invoke(command);
 		fireNotificationReceived(response);
 	}
 	
-	static String sendCommndWithResponse(String command) {
+	String sendCommndWithResponse(String command) {
 	    return skypeDBus.Invoke(command);
 	}
 
-	static void fireNotificationReceived(String notificationString) {
+	void fireNotificationReceived(String notificationString) {
 		System.out
 				.println("<= fireNotificationReceived: " + notificationString);
 		for (SkypeFrameworkListener listener : listeners) {
@@ -235,9 +249,8 @@ public class SkypeFramework {
 		}
 	}
 
-	static void dispose() {
+	void dispose() {
 		conn.unExportObject(CLIENT_PATH);
 		conn.disconnect();
 	}
-
 }

@@ -45,10 +45,10 @@ public final class Group extends SkypeObject {
      * @param id whose associated Group object is to be returned.
      * @return Group object with ID == id.
      */
-    static Group getInstance(final String id) {
+    static Group getInstance(final Connector aConnector, final String id) {
         synchronized(groups) {
             if (!groups.containsKey(id)) {
-                groups.put(id, new Group(id));
+                groups.put(id, new Group(aConnector, id));
             }
             return groups.get(id);
         }
@@ -86,7 +86,8 @@ public final class Group extends SkypeObject {
      * Constructor.
      * @param newId ID of this GROUP.
      */
-    private Group(String newId) {
+    private Group(final Connector aConnector, String newId) {
+    	super(aConnector);
         this.id = newId;
     }
 
@@ -135,7 +136,7 @@ public final class Group extends SkypeObject {
      * @throws SkypeException when the connection has gone bad.
      */
     public void addFriend(Friend friend) throws SkypeException {
-        Utils.executeWithErrorCheck("ALTER GROUP " + getId() + " ADDUSER " + friend.getId());
+        Utils.executeWithErrorCheck(connector, "ALTER GROUP " + getId() + " ADDUSER " + friend.getId());
     }
 
     /**
@@ -144,7 +145,7 @@ public final class Group extends SkypeObject {
      * @throws SkypeException when connection has gone bad.
      */
     public void addPSTN(String pstn) throws SkypeException {
-        Utils.executeWithErrorCheck("ALTER GROUP " + getId() + " ADDUSER " + pstn);
+        Utils.executeWithErrorCheck(connector, "ALTER GROUP " + getId() + " ADDUSER " + pstn);
     }
 
     /**
@@ -153,7 +154,7 @@ public final class Group extends SkypeObject {
      * @throws SkypeException when connection has gone bad.
      */
     public void removeFriend(Friend friend) throws SkypeException {
-        Utils.executeWithErrorCheck("ALTER GROUP " + getId() + " REMOVEUSER " + friend.getId());
+        Utils.executeWithErrorCheck(connector, "ALTER GROUP " + getId() + " REMOVEUSER " + friend.getId());
     }
 
     /**
@@ -162,7 +163,7 @@ public final class Group extends SkypeObject {
      * @throws SkypeException when the connection has gone bad.
      */
     public void removePSTN(String pstn) throws SkypeException {
-        Utils.executeWithErrorCheck("ALTER GROUP " + getId() + " REMOVEUSER " + pstn);
+        Utils.executeWithErrorCheck(connector, "ALTER GROUP " + getId() + " REMOVEUSER " + pstn);
     }
 
     /**
@@ -184,7 +185,7 @@ public final class Group extends SkypeObject {
      * @throws SkypeException when connection has gone bad.
      */
     public void changePSTNDisplayName(String pstn, String displayName) throws SkypeException {
-        Utils.executeWithErrorCheck("SET USER " + pstn + " DISPLAYNAME " + displayName);
+        Utils.executeWithErrorCheck(connector, "SET USER " + pstn + " DISPLAYNAME " + displayName);
     }
 
     /**
@@ -196,7 +197,7 @@ public final class Group extends SkypeObject {
         String[] ids = Utils.convertToArray(getProperty("USERS"));
         Friend[] friends = new Friend[ids.length];
         for (int i = 0; i < ids.length; i++) {
-            friends[i] = Skype.getContactList().getFriend(ids[i]);
+            friends[i] = connector.getSkype().getContactList().getFriend(ids[i]);
         }
         return friends;
     }
@@ -268,7 +269,7 @@ public final class Group extends SkypeObject {
      * @throws SkypeException when the connection has gone bad.
      */
     private String getProperty(String name) throws SkypeException {
-        return Utils.getProperty("GROUP", getId(), name);
+        return Utils.getProperty(connector, "GROUP", getId(), name);
     }
 
     /** 
@@ -278,7 +279,7 @@ public final class Group extends SkypeObject {
      * @throws SkypeException when the connection has gone bad.
      */
     private void setProperty(String name, String newValue) throws SkypeException {
-        Utils.setProperty("GROUP", getId(), name, newValue);
+        Utils.setProperty(connector, "GROUP", getId(), name, newValue);
     }
 
     /**
@@ -287,7 +288,7 @@ public final class Group extends SkypeObject {
      */
     public void dispose() throws SkypeException {
         try {
-            String response = Connector.getInstance().execute("DELETE GROUP " + getId(), "DELETED GROUP ");
+            String response = connector.execute("DELETE GROUP " + getId(), "DELETED GROUP ");
             Utils.checkError(response);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);

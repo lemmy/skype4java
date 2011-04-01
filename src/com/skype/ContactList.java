@@ -26,7 +26,6 @@ package com.skype;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
-import com.skype.User.Status;
 import com.skype.connector.AbstractConnectorListener;
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
@@ -42,11 +41,14 @@ public final class ContactList {
     private static Object propertyChangeListenerMutex = new Object();
     private static ConnectorListener propertyChangeListener;
     private PropertyChangeSupport listeners = new PropertyChangeSupport(this);
+	private final Connector connector;
 
     /**
 	 * Constructor.
+     * @param connector 
 	 */
-    ContactList() {
+    ContactList(Connector connector) {
+    	this.connector = connector;
     }
 
     /**
@@ -57,13 +59,13 @@ public final class ContactList {
     public Friend[] getAllFriends() throws SkypeException {
         try {
             String responseHeader = "USERS ";
-            String response = Connector.getInstance().execute("SEARCH FRIENDS", responseHeader);
+            String response = connector.execute("SEARCH FRIENDS", responseHeader);
             Utils.checkError(response);
             String data = response.substring(responseHeader.length());
             String[] ids = Utils.convertToArray(data);
             Friend[] friends = new Friend[ids.length];
             for (int i = 0; i < ids.length; i++) {
-                friends[i] = User.getFriendInstance(ids[i]);
+                friends[i] = User.getFriendInstance(connector, ids[i]);
             }
             return friends;
         } catch (ConnectorException e) {
@@ -80,13 +82,13 @@ public final class ContactList {
     public Friend[] getAllUserWaitingForAuthorization() throws SkypeException {
         try {
             String responseHeader = "USERS ";
-            String response = Connector.getInstance().execute("SEARCH USERSWAITINGMYAUTHORIZATION", responseHeader);
+            String response = connector.execute("SEARCH USERSWAITINGMYAUTHORIZATION", responseHeader);
             Utils.checkError(response);
             String data = response.substring(responseHeader.length());
             String[] ids = Utils.convertToArray(data);
             Friend[] users = new Friend[ids.length];
             for (int i = 0; i < ids.length; i++) {
-                users[i] = User.getFriendInstance(ids[i]);
+                users[i] = User.getFriendInstance(connector, ids[i]);
             }
             return users;
         } catch (ConnectorException e) {
@@ -157,13 +159,13 @@ public final class ContactList {
     private Group[] getAllGroups(String type) throws SkypeException {
         try {
             String responseHeader = "GROUPS ";
-            String response = Connector.getInstance().execute("SEARCH GROUPS " + type, responseHeader);
+            String response = connector.execute("SEARCH GROUPS " + type, responseHeader);
             Utils.checkError(response);
             String data = response.substring(responseHeader.length());
             String[] ids = Utils.convertToArray(data);
             Group[] groups = new Group[ids.length];
             for (int i = 0; i < ids.length; i++) {
-                groups[i] = Group.getInstance(ids[i]);
+                groups[i] = Group.getInstance(connector, ids[i]);
             }
             return groups;
         } catch (ConnectorException e) {
@@ -197,10 +199,10 @@ public final class ContactList {
     public Group addGroup(String name) throws SkypeException {
         try {
             String responseHeader = "GROUP ";
-            String response = Connector.getInstance().execute("CREATE GROUP " + name, responseHeader).substring(responseHeader.length());
+            String response = connector.execute("CREATE GROUP " + name, responseHeader).substring(responseHeader.length());
             Utils.checkError(response);
             String id = response.substring(0, response.indexOf(' '));
-            return Group.getInstance(id);
+            return Group.getInstance(connector, id);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return null;
@@ -224,7 +226,7 @@ public final class ContactList {
      * @throws SkypeException when connection has gone bad.
      */
     public Friend addFriend(String skypeId, String messageForAuthorization) throws SkypeException {
-        Friend friend = Friend.getFriendInstance(skypeId);
+        Friend friend = Friend.getFriendInstance(connector, skypeId);
         friend.askForAuthorization(messageForAuthorization);
         return friend;
     }
@@ -278,7 +280,7 @@ public final class ContactList {
                     }
                 };
                 try {
-                    Connector.getInstance().addConnectorListener(connectorListener);
+                    connector.addConnectorListener(connectorListener);
                     propertyChangeListener = connectorListener;
                 } catch(ConnectorException e) {
                     Utils.convertToSkypeException(e);

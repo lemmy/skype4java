@@ -25,6 +25,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.skype.connector.Connector;
+
 /**
  * Basis of all Skype objects.
  * @see Call
@@ -42,6 +44,12 @@ class SkypeObject {
      * Map of user data added to this object.
      */
     private Map<String, Object> userDataMap = Collections.synchronizedMap(new HashMap<String, Object>());
+
+    protected final Connector connector;
+    
+    public SkypeObject(final Connector aConnector) {
+    	this.connector = aConnector;
+    }
     
     /**
      * Returns the user data to which this object maps to the specified by the name.

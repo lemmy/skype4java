@@ -201,12 +201,14 @@ public final class Profile {
     private PropertyChangeSupport listeners = new PropertyChangeSupport(this);
     private Object propertyChangeListenerMutex = new Object();
     private ConnectorListener propertyChangeListener;
+	private Connector connector;
 
     /**
      * Constructor.
      *
      */
-    Profile() {
+    Profile(final Connector aConnector) {
+    	this.connector = aConnector;
     }
 
     /**
@@ -216,7 +218,7 @@ public final class Profile {
      * @see #setStatus(Status)
      */
     public Status getStatus() throws SkypeException {
-        return Status.valueOf(Utils.getProperty("USERSTATUS"));
+        return Status.valueOf(Utils.getProperty(connector, "USERSTATUS"));
     }
 
     /**
@@ -227,7 +229,7 @@ public final class Profile {
      */
     public void setStatus(final Status newValue) throws SkypeException {
         Utils.checkNotNull("newValue", newValue);
-        Utils.setProperty("USERSTATUS", newValue.toString());
+        Utils.setProperty(connector, "USERSTATUS", newValue.toString());
     }
 
     /**
@@ -236,7 +238,7 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      */
     public String getId() throws SkypeException {
-        return Utils.getProperty("CURRENTUSERHANDLE");
+        return Utils.getProperty(connector, "CURRENTUSERHANDLE");
     }
 
     /**
@@ -273,7 +275,7 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      */
     private boolean canDo(final String name) throws SkypeException {
-        return Boolean.parseBoolean(Utils.getProperty("PRIVILEGE", name));
+        return Boolean.parseBoolean(Utils.getProperty(connector, "PRIVILEGE", name));
     }
 
     /**
@@ -747,7 +749,7 @@ public final class Profile {
         } else {
             newValueString = newValue.getAbsolutePath();
         }
-        Utils.setProperty("AVATAR", "1", newValueString);
+        Utils.setProperty(connector, "AVATAR", "1", newValueString);
     }
     
     /**
@@ -763,7 +765,7 @@ public final class Profile {
             final File file = Utils.createTempraryFile("get_avator_", "jpg");
             final String command = "GET AVATAR 1 " + file.getAbsolutePath();
             final String responseHeader = "AVATAR 1 ";
-            final String response = Connector.getInstance().execute(command, responseHeader);
+            final String response = connector.execute(command, responseHeader);
             Utils.checkError(response);
             final BufferedImage image = ImageIO.read(file);
             file.delete();
@@ -893,7 +895,7 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      */
     private String getProperty(final String name) throws SkypeException {
-        return Utils.getProperty("PROFILE", name);
+        return Utils.getProperty(connector, "PROFILE", name);
     }
 
     /**
@@ -903,7 +905,7 @@ public final class Profile {
      * @throws SkypeException when the connection has gone bad or an ERROR message is received.
      */
     private void setProperty(final String name, final String value) throws SkypeException {
-        Utils.setProperty("PROFILE", name, Utils.convertNullToEmptyString(value));
+        Utils.setProperty(connector, "PROFILE", name, Utils.convertNullToEmptyString(value));
     }
     
     /**
@@ -941,7 +943,7 @@ public final class Profile {
                     }
                 };
                 try {
-                    Connector.getInstance().addConnectorListener(connectorListener);
+                	connector.addConnectorListener(connectorListener);
                     propertyChangeListener = connectorListener;
                 } catch(ConnectorException e) {
                     Utils.convertToSkypeException(e);

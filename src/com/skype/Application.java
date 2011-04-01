@@ -47,8 +47,8 @@ public final class Application extends SkypeObject {
      * @return Application object with ID == id.
      * @throws SkypeException when connection has gone bad.
      */
-    static Application getInstance(final String id) throws SkypeException {
-        Application newApplication = new Application(id);
+    static Application getInstance(final Connector aConnector, final String id) throws SkypeException {
+        Application newApplication = new Application(aConnector, id);
         Application application = applications.putIfAbsent(id, newApplication);
         if (application == null) {
             application = newApplication;
@@ -98,17 +98,14 @@ public final class Application extends SkypeObject {
     private final Map<String, Stream> streams = new HashMap<String, Stream>();
 
     /**
-     * Application exception handler.
-     */
-    private SkypeExceptionHandler exceptionHandler;
-
-    /**
      * Constructor.
+     * @param aConnector 
      * 
      * @param newName An arbitrary name to identify the application that will be exchanging data.
      * @throws SkypeException when connection to Skype client has gone bad.
      */
-    private Application(final String newName) throws SkypeException {
+    private Application(Connector aConnector, final String newName) throws SkypeException {
+    	super(aConnector);
         assert newName != null;
         this.name = newName;
     }
@@ -139,7 +136,7 @@ public final class Application extends SkypeObject {
     void initialize() throws SkypeException {
         try {
             synchronized(isInitializedFieldMutex) {
-                String response = Connector.getInstance().execute("CREATE APPLICATION " + name);
+                String response = connector.execute("CREATE APPLICATION " + name);
                 // to support recreation
                 // TODO add a mechanism to handle status changes
                 getAllStreams(); // to fire events
@@ -147,7 +144,7 @@ public final class Application extends SkypeObject {
                     Utils.checkError(response);
                 }
                 if (!isInitialized) {
-                    Connector.getInstance().addConnectorListener(dataListener, false, true);
+                    connector.addConnectorListener(dataListener, false, true);
                     Runtime.getRuntime().addShutdownHook(shutdownHookForFinish);
                     isInitialized = true;
                 }
@@ -166,9 +163,9 @@ public final class Application extends SkypeObject {
         try {
             synchronized(isInitializedFieldMutex) {
                 if(isInitialized) {
-                    Connector.getInstance().removeConnectorListener(dataListener);
+                    connector.removeConnectorListener(dataListener);
                     Runtime.getRuntime().removeShutdownHook(shutdownHookForFinish);
-                    String response = Connector.getInstance().execute("DELETE APPLICATION " + getName());
+                    String response = connector.execute("DELETE APPLICATION " + getName());
                     Utils.checkError(response);
                     isInitialized = false;
                 }
@@ -238,12 +235,12 @@ public final class Application extends SkypeObject {
                     }
                 };
                 try {
-                    Connector.getInstance().addConnectorListener(connectorListener);
+                    connector.addConnectorListener(connectorListener);
                     synchronized(wait) {
                         for(String skypeId: ids) {
                             if(skypeId != null) {
                                 String command = "ALTER APPLICATION " + getName() + " CONNECT " + skypeId;
-                                String result = Connector.getInstance().execute(command, new String[] {command, "APPLICATION " + getName() + " CONNECTING ", "ERROR "});
+                                String result = connector.execute(command, new String[] {command, "APPLICATION " + getName() + " CONNECTING ", "ERROR "});
                                 Utils.checkError(result);
                             }
                         }
@@ -259,7 +256,7 @@ public final class Application extends SkypeObject {
                     Utils.convertToSkypeException(e);
                     return null;
                 } finally {
-                    Connector.getInstance().removeConnectorListener(connectorListener);
+                    connector.removeConnectorListener(connectorListener);
                 }
             } catch(SkypeException e) {
                 for(Stream stream: getAllStreams(ids)) {
@@ -321,7 +318,7 @@ public final class Application extends SkypeObject {
      * @throws SkypeException when connection is gone bad.
      */
     public Stream[] getAllStreams() throws SkypeException {
-        String streamIds = Utils.getPropertyWithCommandId("APPLICATION", getName(), "STREAMS");
+        String streamIds = Utils.getPropertyWithCommandId(connector, "APPLICATION", getName(), "STREAMS");
         synchronized(streams) {
             fireStreamEvents(streamIds);
             if("".equals(streamIds)) {
@@ -341,7 +338,7 @@ public final class Application extends SkypeObject {
             String[] newStreamIds = "".equals(newStreamIdList)? new String[0]: newStreamIdList.split(" ");
             for(String streamId: newStreamIds) {
                 if(!streams.containsKey(streamId)) {
-                    Stream stream = new Stream(this, streamId);
+                    Stream stream = new Stream(connector, this, streamId);
                     streams.put(streamId, stream);
                     fireConnected(stream);
                 }
@@ -369,11 +366,7 @@ public final class Application extends SkypeObject {
         // to prevent ConcurrentModificationException
         ApplicationListener[] myListeners = this.listeners.toArray(new ApplicationListener[0]);
         for(ApplicationListener listener: myListeners) {
-            try {
                 listener.connected(stream);
-            } catch(Throwable e) {
-                Utils.handleUncaughtException(e, exceptionHandler);
-            }
         }
     }
 
@@ -387,11 +380,7 @@ public final class Application extends SkypeObject {
         // to prevent ConcurrentModificationException
         ApplicationListener[] myListeners = this.listeners.toArray(new ApplicationListener[0]);
         for(ApplicationListener listener: myListeners) {
-            try {
                 listener.disconnected(stream);
-            } catch(Throwable e) {
-                Utils.handleUncaughtException(e, exceptionHandler);
-            }
         }
     }
 
@@ -476,7 +465,7 @@ public final class Application extends SkypeObject {
         try {
             String command = "GET APPLICATION " + getName() + " " + type;
             String responseHeader = "APPLICATION " + getName() + " " + type + " ";
-            String response = Connector.getInstance().executeWithId(command, responseHeader);
+            String response = connector.executeWithId(command, responseHeader);
             Utils.checkError(response);
             return extractFriends(response.substring(responseHeader.length()));
         } catch(ConnectorException e) {
@@ -504,7 +493,7 @@ public final class Application extends SkypeObject {
                 ids[i] = id.substring(0, id.indexOf(':'));
             }
         }
-        Friend[] allFriends = Skype.getContactList().getAllFriends();
+        Friend[] allFriends = connector.getSkype().getContactList().getAllFriends();
         List<Friend> friends = new ArrayList<Friend>();
         for(String id: ids) {
             for(Friend friend: allFriends) {
@@ -544,12 +533,11 @@ public final class Application extends SkypeObject {
          * @param dataResponse the received data.
          */
         private void handleData(final String dataResponse) {
-            try {
                 if(isReceivedText(dataResponse)) {
                     String data = dataResponse.substring("RECEIVED ".length());
                     String streamId = data.substring(0, data.indexOf('='));
                     String dataHeader = "ALTER APPLICATION " + getName() + " READ " + streamId;
-                    String response = Connector.getInstance().executeWithId(dataHeader, dataHeader);
+                    String response = connector.executeWithId(dataHeader, dataHeader);
                     Utils.checkError(response);
                     String text = response.substring(dataHeader.length() + 1);
                     synchronized(streams) {
@@ -567,9 +555,6 @@ public final class Application extends SkypeObject {
                         }
                     }
                 }
-            } catch(Exception e) {
-                Utils.handleUncaughtException(e, exceptionHandler);
-            }
         }
 
         /**
@@ -597,7 +582,7 @@ public final class Application extends SkypeObject {
         @Override
         public void run() {
             try {
-                Connector.getInstance().execute("DELETE APPLICATION " + Application.this.getName());
+                connector.execute("DELETE APPLICATION " + Application.this.getName());
             } catch(ConnectorException e) {
                 // ignore errors because the program was stopped.
             }

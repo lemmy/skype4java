@@ -52,10 +52,10 @@ public final class Call extends SkypeObject {
      * @param id whose associated Call object is to be returned.
      * @return Call object with ID == id.
      */
-    static Call getInstance(final String id) {
+    static Call getInstance(final Connector aConnector, final String id) {
         synchronized(calls) {
             if (!calls.containsKey(id)) {
-                calls.put(id, new Call(id));
+                calls.put(id, new Call(aConnector, id));
             }
             return calls.get(id);
         }
@@ -172,11 +172,6 @@ public final class Call extends SkypeObject {
     private Status oldStatus;
     
     /**
-     * Exception handler to CALL object.
-     */
-    private SkypeExceptionHandler exceptionHandler;
-    
-    /**
      * Flag for fired events.
      */
     private boolean isCallListenerEventFired;
@@ -186,7 +181,8 @@ public final class Call extends SkypeObject {
      * Use getInstance instead of constructor.
      * @param newId the ID of this CALL object.
      */
-    private Call(final String newId) {
+    private Call(final Connector aConnector, final String newId) {
+    	super(aConnector);
         this.id = newId;
     }
 
@@ -250,11 +246,7 @@ public final class Call extends SkypeObject {
         }
         oldStatus = status;
         for (CallStatusChangedListener listener : listeners) {
-            try {
                 listener.statusChanged(status);
-            } catch (Throwable e) {
-                Utils.handleUncaughtException(e, exceptionHandler);
-            }
         }
     }
 
@@ -305,7 +297,7 @@ public final class Call extends SkypeObject {
      */
     private void setStatus(final String status) throws SkypeException {
         try {
-            String response = Connector.getInstance().executeWithId("SET CALL " + getId() + " STATUS " + status, "CALL " + getId() + " STATUS ");
+            String response = connector.executeWithId("SET CALL " + getId() + " STATUS " + status, "CALL " + getId() + " STATUS ");
             Utils.checkError(response);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
@@ -317,7 +309,7 @@ public final class Call extends SkypeObject {
      * @throws SkypeException when connection is bad.
      */
     public void forward() throws SkypeException {
-        Utils.executeWithErrorCheck("ALTER CALL " + getId() + " END FORWARD_CALL");
+        Utils.executeWithErrorCheck(connector, "ALTER CALL " + getId() + " END FORWARD_CALL");
     }
     
     /**
@@ -325,7 +317,7 @@ public final class Call extends SkypeObject {
      * @throws SkypeException when connection is bad.
      */
     public void redirectToVoiceMail() throws SkypeException {
-        Utils.executeWithErrorCheck("ALTER CALL " + getId() + " END FORWARD_CALL");
+        Utils.executeWithErrorCheck(connector, "ALTER CALL " + getId() + " END FORWARD_CALL");
     }
     
     /**
@@ -333,7 +325,7 @@ public final class Call extends SkypeObject {
      * @throws SkypeException when connection is bad.
      */
     public void send(DTMF command) throws SkypeException {
-        Utils.executeWithErrorCheck("SET CALL " + getId() + " DTMF " + command.getType());
+        Utils.executeWithErrorCheck(connector, "SET CALL " + getId() + " DTMF " + command.getType());
     }
 
     /**
@@ -351,7 +343,7 @@ public final class Call extends SkypeObject {
      * @throws SkypeException when connection is bad.
      */
     public User getPartner() throws SkypeException {
-        return User.getInstance(getPartnerId());
+        return User.getInstance(connector, getPartnerId());
     }
 
     /**
@@ -388,7 +380,7 @@ public final class Call extends SkypeObject {
      */
     public Status getStatus() throws SkypeException {
         // call Utils#getPropertyWithCommandId(String, String, String) to prevent new event notification
-        return Status.valueOf(Utils.getPropertyWithCommandId("CALL", getId(), "STATUS"));
+        return Status.valueOf(Utils.getPropertyWithCommandId(connector, "CALL", getId(), "STATUS"));
     }
 
     /**
@@ -417,7 +409,7 @@ public final class Call extends SkypeObject {
     public void setReceiveVideoEnabled(final boolean videoStatus) throws SkypeException {
         String value = videoStatus ? "START_VIDEO_SEND" : "STOP_VIDEO_SEND";
         try {
-            String response = Connector.getInstance().execute("ALTER CALL " + getId() + " " + value);
+            String response = connector.execute("ALTER CALL " + getId() + " " + value);
             Utils.checkError(response);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
@@ -451,7 +443,7 @@ public final class Call extends SkypeObject {
     public void setSendVideoEnabled(final boolean videoStatus) throws SkypeException {
         String value = videoStatus ? "START_VIDEO_RECEIVE" : "STOP_VIDEO_RECEIVE";
         try {
-            String response = Connector.getInstance().execute("ALTER CALL " + getId() + " " + value);
+            String response = connector.execute("ALTER CALL " + getId() + " " + value);
             Utils.checkError(response);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
@@ -515,7 +507,7 @@ public final class Call extends SkypeObject {
      * @throws SkypeException when connection is bad.
      */
     private String getProperty(final String name) throws SkypeException {
-        return Utils.getProperty("CALL", getId(), name);
+        return Utils.getProperty(connector, "CALL", getId(), name);
     }
     
     /**
@@ -643,7 +635,7 @@ public final class Call extends SkypeObject {
     }
 
     private Map<String, String> getStreams(String type) throws SkypeException {
-        String response = Utils.getProperty("CALL", getId(), type);
+        String response = Utils.getProperty(connector, "CALL", getId(), type);
         Utils.checkError(response);
         if("".equals(response)) {
             return new HashMap<String, String>();
@@ -680,7 +672,7 @@ public final class Call extends SkypeObject {
                 parameters.append(streams.get(key));
                 parameters.append("\"");
             }
-            String response = Connector.getInstance().execute("ALTER CALL " + getId() + " SET_" + type + parameters);
+            String response = connector.execute("ALTER CALL " + getId() + " SET_" + type + parameters);
             Utils.checkError(response);
         } catch(ConnectorException e) {
             Utils.convertToSkypeException(e);
@@ -691,7 +683,7 @@ public final class Call extends SkypeObject {
         try {
             String command = "GET CALL " + getId() + " CAN_TRANSFER " + skypeId;
             String responseHeader = "CALL " + getId() + " CAN_TRANSFER " + skypeId + " ";
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             Utils.checkError(response);
             return Boolean.parseBoolean(response.substring((responseHeader).length()));
         } catch (ConnectorException e) {
@@ -703,7 +695,7 @@ public final class Call extends SkypeObject {
     public void transferTo(String... skypeIds) throws SkypeException {
         Utils.checkNotNull("skypeIds", skypeIds);
         try {
-            String response = Connector.getInstance().execute("ALTER CALL " + getId() + " TRANSFER \"" + Utils.convertToCommaSeparatedString(skypeIds) + "\"");
+            String response = connector.execute("ALTER CALL " + getId() + " TRANSFER \"" + Utils.convertToCommaSeparatedString(skypeIds) + "\"");
             Utils.checkError(response);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);

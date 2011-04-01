@@ -26,7 +26,11 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import com.skype.connector.*;
+import com.skype.connector.AbstractConnectorListener;
+import com.skype.connector.Connector;
+import com.skype.connector.ConnectorException;
+import com.skype.connector.ConnectorListener;
+import com.skype.connector.ConnectorMessageEvent;
 
 /**
  * Skype information model (not view) class of Skype4Java.
@@ -34,60 +38,68 @@ import com.skype.connector.*;
  * @see SkypeClient
  * @author Koji Hisano
  */
-public final class Skype {
+public class Skype {
     /**
      * The library version.
      */
     public static final String LIBRARY_VERSION = "1.0.0.0";
 
     /** contactList instance. */
-    private static ContactList contactList;
+    private ContactList contactList;
     
     /** Profile instance for this Skype session. */
-    private static Profile profile;
+    private Profile profile;
 
     /** chatMessageListener lock. */
-    private static Object chatMessageListenerMutex = new Object();
+    private Object chatMessageListenerMutex = new Object();
     /** CHATMESSAGE listener. */
-    private static ConnectorListener chatMessageListener;
+    private ConnectorListener chatMessageListener;
     /** Collection of listeners. */
-    private static List<ChatMessageListener> chatMessageListeners = new CopyOnWriteArrayList<ChatMessageListener>();
+    private List<ChatMessageListener> chatMessageListeners = new CopyOnWriteArrayList<ChatMessageListener>();
 
     /** callListener lock object. */
-    private static Object callListenerMutex = new Object();
+    private Object callListenerMutex = new Object();
     /** CALL listener. */
-    private static ConnectorListener callListener;
+    private ConnectorListener callListener;
     /** Collection of all CALL listeners. */
-    private static List<CallListener> callListeners = new CopyOnWriteArrayList<CallListener>();
+    private List<CallListener> callListeners = new CopyOnWriteArrayList<CallListener>();
 
     /** voiceMailListener lock object. */
-    private static Object voiceMailListenerMutex = new Object();
+    private Object voiceMailListenerMutex = new Object();
     /** VOICEMAIL listener. */
-    private static ConnectorListener voiceMailListener;
+    private ConnectorListener voiceMailListener;
     /** Collection of all VOICEMAIL listeners. */
-    private static List<VoiceMailListener> voiceMailListeners = new CopyOnWriteArrayList<VoiceMailListener>();
+    private List<VoiceMailListener> voiceMailListeners = new CopyOnWriteArrayList<VoiceMailListener>();
 
     /** User threading lock object. */
-    private static Object userThreadFieldMutex = new Object();
+    private Object userThreadFieldMutex = new Object();
     /** User thread. */
-    private static Thread userThread;
+    private Thread userThread;
 
     /** General exception handler. */
-    private static SkypeExceptionHandler defaultExceptionHandler = new SkypeExceptionHandler() {
+    private SkypeExceptionHandler defaultExceptionHandler = new SkypeExceptionHandler() {
         /** Print the non caught exceptions. */
     	public void uncaughtExceptionHappened(Throwable e) {
             e.printStackTrace();
         }
     };
     /** refrence to the default exception handler. */
-    private static SkypeExceptionHandler exceptionHandler = defaultExceptionHandler;
+    private SkypeExceptionHandler exceptionHandler = defaultExceptionHandler;
 
-    /**
+	private final Connector connector;
+
+
+    public Skype(String user, String pass) {
+    	connector = Connector.getInstance(this, user, pass);
+    	connector.connect();
+	}
+
+	/**
      * Sets the thread of Skype4Java to "daemon mode" or not.
      * @param on true to set the thread to "daemon mode"
      */
     @Deprecated
-    public static void setDeamon(boolean on) {
+    public void setDeamon(boolean on) {
         setDaemon(on);
     }
 
@@ -95,7 +107,7 @@ public final class Skype {
      * Sets the thread of Skype4Java to "daemon mode" or not.
      * @param on true to set the thread to "daemon mode"
      */
-    public static void setDaemon(boolean on) {
+    public void setDaemon(boolean on) {
         synchronized (userThreadFieldMutex) {
             if (!on && userThread == null) {
                 userThread = new Thread("SkypeUserThread") {
@@ -122,9 +134,9 @@ public final class Skype {
      * @param on if true debug logging will be sent to the console.
      * @throws SkypeException when the connection has gone bad.
      */
-    public static void setDebug(boolean on) throws SkypeException {
+    public void setDebug(boolean on) throws SkypeException {
         try {
-            Connector.getInstance().setDebug(on);
+            connector.setDebug(on);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
         }
@@ -135,8 +147,8 @@ public final class Skype {
      * @return String with version.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static String getVersion() throws SkypeException {
-        return Utils.getProperty("SKYPEVERSION");
+    public String getVersion() throws SkypeException {
+        return Utils.getProperty(getConnector(),"SKYPEVERSION");
     }
 
     /**
@@ -144,7 +156,7 @@ public final class Skype {
      * WARNING, does not work for all platforms yet.
      * @return true if Skype client is installed.
      */
-    public static boolean isInstalled() {
+    public boolean isInstalled() {
         String path = getInstalledPath();
         if(path == null) {
             return false;
@@ -157,8 +169,8 @@ public final class Skype {
      * WARNING, does not work for all platforms yet.
      * @return String with the full path to Skype client.
      */
-    public static String getInstalledPath() {
-        return Connector.getInstance().getInstalledPath();
+    public String getInstalledPath() {
+        return connector.getInstalledPath();
     }
 
     /**
@@ -167,9 +179,9 @@ public final class Skype {
      * @return true if Skype client is running.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static boolean isRunning() throws SkypeException {
+    public boolean isRunning() throws SkypeException {
         try {
-            return Connector.getInstance().isRunning();
+            return connector.isRunning();
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return false;
@@ -182,12 +194,12 @@ public final class Skype {
      * @return users
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static User[] searchUsers(String keyword) throws SkypeException {
+    public User[] searchUsers(String keyword) throws SkypeException {
         String command = "SEARCH USERS " + keyword;
         String responseHeader = "USERS ";
         String response;
         try {
-            response = Connector.getInstance().executeWithId(command, responseHeader);
+            response = connector.executeWithId(command, responseHeader);
         } catch(ConnectorException ex) {
             Utils.convertToSkypeException(ex);
             return null;
@@ -197,7 +209,7 @@ public final class Skype {
         String[] ids = Utils.convertToArray(data);
         User[] users = new User[ids.length];
         for(int i = 0; i < ids.length; ++i) {
-            users[i] = User.getInstance(ids[i]);
+            users[i] = User.getInstance(connector, ids[i]);
         }
         return users;
     }
@@ -207,9 +219,9 @@ public final class Skype {
      * @return contactlist singleton.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static ContactList getContactList() throws SkypeException {
+    public ContactList getContactList() throws SkypeException {
         if (contactList == null) {
-            contactList = new ContactList();
+            contactList = new ContactList(connector);
         }
         return contactList;
     }
@@ -221,7 +233,7 @@ public final class Skype {
      * @return The started Call.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static Call call(String... skypeIds) throws SkypeException {
+    public Call call(String... skypeIds) throws SkypeException {
         Utils.checkNotNull("skypeIds", skypeIds);
         return call(Utils.convertToCommaSeparatedString(skypeIds));
     }
@@ -233,14 +245,14 @@ public final class Skype {
      * @return The new call object.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static Call call(String skypeId) throws SkypeException {
+    public Call call(String skypeId) throws SkypeException {
         Utils.checkNotNull("skypeIds", skypeId);
         try {
             String responseHeader = "CALL ";
-            String response = Connector.getInstance().executeWithId("CALL " + skypeId, responseHeader);
+            String response = connector.executeWithId("CALL " + skypeId, responseHeader);
             Utils.checkError(response);
             String id = response.substring(responseHeader.length(), response.indexOf(" STATUS "));
-            return Call.getInstance(id);
+            return Call.getInstance(connector, id);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return null;
@@ -254,7 +266,7 @@ public final class Skype {
      * @return The new chat object.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static Chat chat(String[] skypeIds) throws SkypeException {
+    public Chat chat(String[] skypeIds) throws SkypeException {
         Utils.checkNotNull("skypeIds", skypeIds);
         return chat(Utils.convertToCommaSeparatedString(skypeIds));
     }
@@ -266,13 +278,13 @@ public final class Skype {
      * @return The new chat.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static Chat chat(String skypeId) throws SkypeException {
+    public Chat chat(String skypeId) throws SkypeException {
         try {
             String responseHeader = "CHAT ";
-            String response = Connector.getInstance().executeWithId("CHAT CREATE " + skypeId, responseHeader);
+            String response = connector.executeWithId("CHAT CREATE " + skypeId, responseHeader);
             Utils.checkError(response);
             String id = response.substring(responseHeader.length(), response.indexOf(" STATUS "));
-            return Chat.getInstance(id);
+            return Chat.getInstance(connector, id);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return null;
@@ -289,7 +301,7 @@ public final class Skype {
      * @return A new SMS object.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static SMS submitConfirmationCode(String[] numbers) throws SkypeException {
+    public SMS submitConfirmationCode(String[] numbers) throws SkypeException {
         Utils.checkNotNull("numbers", numbers);
         return submitConfirmationCode(Utils.convertToCommaSeparatedString(numbers));
     }
@@ -304,7 +316,7 @@ public final class Skype {
      * @return A new SMS object.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static SMS submitConfirmationCode(String number) throws SkypeException {
+    public SMS submitConfirmationCode(String number) throws SkypeException {
         SMS message = createSMS(number, SMS.Type.CONFIRMATION_CODE_REQUEST);
         message.send();
         return message;
@@ -321,7 +333,7 @@ public final class Skype {
      * @return A new SMS object.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static SMS submitConfirmationCode(String[] numbers, String code) throws SkypeException {
+    public SMS submitConfirmationCode(String[] numbers, String code) throws SkypeException {
         Utils.checkNotNull("numbers", numbers);
         Utils.checkNotNull("code", code);
         return submitConfirmationCode(Utils.convertToCommaSeparatedString(numbers), code);
@@ -338,7 +350,7 @@ public final class Skype {
      * @return A new SMS object.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static SMS submitConfirmationCode(String number, String code) throws SkypeException {
+    public SMS submitConfirmationCode(String number, String code) throws SkypeException {
         Utils.checkNotNull("number", number);
         Utils.checkNotNull("code", code);
         SMS message = createSMS(number, SMS.Type.CONFIRMATION_CODE_REQUEST);
@@ -354,7 +366,7 @@ public final class Skype {
      * @return The new SMS object.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static SMS sendSMS(String[] numbers, String content) throws SkypeException {
+    public SMS sendSMS(String[] numbers, String content) throws SkypeException {
         Utils.checkNotNull("numbers", numbers);
         return sendSMS(Utils.convertToCommaSeparatedString(numbers), content);
     }
@@ -366,7 +378,7 @@ public final class Skype {
      * @return The new SMS object.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */    
-    public static SMS sendSMS(String number, String content) throws SkypeException {
+    public SMS sendSMS(String number, String content) throws SkypeException {
         Utils.checkNotNull("number", number);
         Utils.checkNotNull("content", content);
         SMS message = createSMS(number, SMS.Type.OUTGOING);
@@ -382,13 +394,13 @@ public final class Skype {
      * @return The new SMS object.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    private static SMS createSMS(String number, SMS.Type type) throws SkypeException {
+    private SMS createSMS(String number, SMS.Type type) throws SkypeException {
         try {
             String responseHeader = "SMS ";
-            String response = Connector.getInstance().executeWithId("CREATE SMS " + type + " " + number, responseHeader);
+            String response = connector.executeWithId("CREATE SMS " + type + " " + number, responseHeader);
             Utils.checkError(response);
             String id = response.substring(responseHeader.length(), response.indexOf(" STATUS "));
-            return SMS.getInstance(id);
+            return SMS.getInstance(connector, id);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return null;
@@ -423,12 +435,12 @@ public final class Skype {
         try {
             String command = "SEARCH " + type;
             String responseHeader = "SMSS ";
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             String data = response.substring(responseHeader.length());
             String[] ids = Utils.convertToArray(data);
             SMS[] smss = new SMS[ids.length];
             for (int i = 0; i < ids.length; ++i) {
-                smss[i] = SMS.getInstance(ids[i]);
+                smss[i] = SMS.getInstance(connector, ids[i]);
             }
             return smss;
         } catch (ConnectorException e) {
@@ -443,13 +455,13 @@ public final class Skype {
      * @return The new Voicemail object.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static VoiceMail voiceMail(String skypeId) throws SkypeException {
+    public VoiceMail voiceMail(String skypeId) throws SkypeException {
         try {
             String responseHeader = "VOICEMAIL ";
-            String response = Connector.getInstance().executeWithId("VOICEMAIL " + skypeId, responseHeader);
+            String response = connector.executeWithId("VOICEMAIL " + skypeId, responseHeader);
             Utils.checkError(response);
             String id = response.substring(responseHeader.length(), response.indexOf(' ', responseHeader.length()));
-            return VoiceMail.getInstance(id);
+            return VoiceMail.getInstance(connector, id);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return null;
@@ -461,16 +473,16 @@ public final class Skype {
      * @return The all voice mails
      * @throws SkypeException If there is a problem with the connection or state at the Skype client.
      */
-    public static VoiceMail[] getAllVoiceMails() throws SkypeException {
+    public VoiceMail[] getAllVoiceMails() throws SkypeException {
         try {
             String command = "SEARCH VOICEMAILS";
             String responseHeader = "VOICEMAILS ";
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             String data = response.substring(responseHeader.length());
             String[] ids = Utils.convertToArray(data);
             VoiceMail[] voiceMails = new VoiceMail[ids.length];
             for (int i = 0; i < ids.length; ++i) {
-                voiceMails[i] = VoiceMail.getInstance(ids[i]);
+                voiceMails[i] = VoiceMail.getInstance(connector, ids[i]);
             }
             return voiceMails;
         } catch (ConnectorException ex) {
@@ -485,9 +497,9 @@ public final class Skype {
      * @return Application object reference.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static Application addApplication(String name) throws SkypeException {
+    public Application addApplication(String name) throws SkypeException {
         Utils.checkNotNull("name", name);
-        return Application.getInstance(name);
+        return Application.getInstance(connector, name);
     }
 
     /**
@@ -498,8 +510,8 @@ public final class Skype {
      * @throws SkypeException when connection has gone bad or ERROR reply.
      * @see #setAudioInputDevice(String)
      */
-    public static String getAudioInputDevice() throws SkypeException {
-        return convertDefaultDeviceToNull(Utils.getProperty("AUDIO_IN"));
+    public String getAudioInputDevice() throws SkypeException {
+        return convertDefaultDeviceToNull(Utils.getProperty(getConnector(),"AUDIO_IN"));
     }
 
     /**
@@ -510,8 +522,8 @@ public final class Skype {
      * @throws SkypeException when connection has gone bad or ERROR reply.
      * @see #setAudioOutputDevice(String)
      */
-    public static String getAudioOutputDevice() throws SkypeException {
-        return convertDefaultDeviceToNull(Utils.getProperty("AUDIO_OUT"));
+    public String getAudioOutputDevice() throws SkypeException {
+        return convertDefaultDeviceToNull(Utils.getProperty(getConnector(),"AUDIO_OUT"));
     }
 
     /**
@@ -519,8 +531,8 @@ public final class Skype {
      * @return String with the device name or null if there isn't one.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static String getVideoDevice() throws SkypeException {
-        return convertDefaultDeviceToNull(Utils.getProperty("VIDEO_IN"));
+    public String getVideoDevice() throws SkypeException {
+        return convertDefaultDeviceToNull(Utils.getProperty(getConnector(), "VIDEO_IN"));
     }
 
     /**
@@ -528,7 +540,7 @@ public final class Skype {
      * @param deviceName Name of the device to check.
      * @return <code>null</code> if device is default else devicename.
      */
-    private static String convertDefaultDeviceToNull(String deviceName) {
+    private String convertDefaultDeviceToNull(String deviceName) {
         if (isDefaultDevice(deviceName)) {
             return null;
         } else {
@@ -541,7 +553,7 @@ public final class Skype {
      * @param deviceName the string to compare.
      * @return true if devicename is equal to defaultname.
      */
-    private static boolean isDefaultDevice(String deviceName) {
+    private boolean isDefaultDevice(String deviceName) {
         return "".equals(deviceName);
     }
 
@@ -554,8 +566,8 @@ public final class Skype {
      * @throws SkypeException when connection has gone bad or ERROR reply.
      * @see #getAudioInputDevice()
      */
-    public static void setAudioInputDevice(String deviceName) throws SkypeException {
-        Utils.setProperty("AUDIO_IN", convertNullToDefaultDevice(deviceName));
+    public void setAudioInputDevice(String deviceName) throws SkypeException {
+        Utils.setProperty(getConnector(),"AUDIO_IN", convertNullToDefaultDevice(deviceName));
     }
 
     /**
@@ -567,8 +579,8 @@ public final class Skype {
      * @throws SkypeException when connection has gone bad or ERROR reply.
      * @see #getAudioOutputDevice()
      */
-    public static void setAudioOutputDevice(String deviceName) throws SkypeException {
-        Utils.setProperty("AUDIO_OUT", convertNullToDefaultDevice(deviceName));
+    public void setAudioOutputDevice(String deviceName) throws SkypeException {
+        Utils.setProperty(getConnector(),"AUDIO_OUT", convertNullToDefaultDevice(deviceName));
     }
 
     /**
@@ -576,8 +588,8 @@ public final class Skype {
      * @param deviceName name of the device to set.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void setVideoDevice(String deviceName) throws SkypeException {
-        Utils.setProperty("VIDEO_IN", convertNullToDefaultDevice(deviceName));
+    public void setVideoDevice(String deviceName) throws SkypeException {
+        Utils.setProperty(getConnector(),"VIDEO_IN", convertNullToDefaultDevice(deviceName));
     }
 
     /**
@@ -585,7 +597,7 @@ public final class Skype {
      * @param deviceName String to convert.
      * @return Default device string.
      */
-    private static String convertNullToDefaultDevice(String deviceName) {
+    private String convertNullToDefaultDevice(String deviceName) {
         if (deviceName == null) {
             return "";
         } else {
@@ -597,9 +609,9 @@ public final class Skype {
      * Get the singleton instance of the users profile.
      * @return Profile.
      */
-    public static synchronized Profile getProfile() {
+    public synchronized Profile getProfile() {
         if (profile == null) {
-            profile = new Profile();
+            profile = new Profile(connector);
         }
         return profile;
     }
@@ -610,16 +622,16 @@ public final class Skype {
      * @return all the active calls visible on calltabs
      * @throws SkypeException thrown when Skype API is unavailable or getting an Skype API error.
      */
-    public static Call[] getAllActiveCalls() throws SkypeException {
+    public Call[] getAllActiveCalls() throws SkypeException {
         try {
             String command = "SEARCH ACTIVECALLS";
             String responseHeader = "CALLS ";
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             String data = response.substring(responseHeader.length());
             String[] ids = Utils.convertToArray(data);
             Call[] calls = new Call[ids.length];
             for (int i = 0; i < ids.length; ++i) {
-                calls[i] = Call.getInstance(ids[i]);
+                calls[i] = Call.getInstance(connector, ids[i]);
             }
             return calls;
         } catch (ConnectorException ex) {
@@ -635,7 +647,7 @@ public final class Skype {
      *
      * @throws SkypeException If there is a problem with the connection or state at the Skype client.
      */
-    public static Chat[] getAllChats() throws SkypeException {
+    public Chat[] getAllChats() throws SkypeException {
         return getAllChats("CHATS");
     }
 
@@ -646,7 +658,7 @@ public final class Skype {
      *
      * @throws SkypeException If there is a problem with the connection or state at the Skype client.
      */
-    public static Chat[] getAllActiveChats() throws SkypeException {
+    public Chat[] getAllActiveChats() throws SkypeException {
         return getAllChats("ACTIVECHATS");
     }
 
@@ -657,7 +669,7 @@ public final class Skype {
      *
      * @throws SkypeException If there is a problem with the connection or state at the Skype client.
      */
-    public static Chat[] getAllMissedChats() throws SkypeException {
+    public Chat[] getAllMissedChats() throws SkypeException {
         return getAllChats("MISSEDCHATS");
     }
 
@@ -668,7 +680,7 @@ public final class Skype {
      *
      * @throws SkypeException If there is a problem with the connection or state at the Skype client.
      */
-    public static Chat[] getAllRecentChats() throws SkypeException {
+    public Chat[] getAllRecentChats() throws SkypeException {
         return getAllChats("RECENTCHATS");
     }
 
@@ -679,7 +691,7 @@ public final class Skype {
      *
      * @throws SkypeException If there is a problem with the connection or state at the Skype client.
      */
-    public static Chat[] getAllBookmarkedChats() throws SkypeException {
+    public Chat[] getAllBookmarkedChats() throws SkypeException {
         return getAllChats("BOOKMARKEDCHATS");
     }
 
@@ -690,16 +702,16 @@ public final class Skype {
      *
      * @throws SkypeException If there is a problem with the connection or state at the Skype client.
      */
-    private static Chat[] getAllChats(String type) throws SkypeException {
+    private Chat[] getAllChats(String type) throws SkypeException {
         try {
             String command = "SEARCH " + type;
             String responseHeader = "CHATS ";
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             String data = response.substring(responseHeader.length());
             String[] ids = Utils.convertToArray(data);
             Chat[] chats = new Chat[ids.length];
             for (int i = 0; i < ids.length; ++i) {
-                chats[i] = Chat.getInstance(ids[i]);
+                chats[i] = Chat.getInstance(connector, ids[i]);
             }
             return chats;
         } catch (ConnectorException ex) {
@@ -713,8 +725,8 @@ public final class Skype {
      *
      * @throws SkypeException If there is a problem with the connection or state at the Skype client.
      */
-    public static void clearCallHistory() throws SkypeException {
-        Utils.executeWithErrorCheck("CLEAR CALLHISTORY ALL"); // in doc, there is without "ALL", but only this works (protocol 5)
+    public void clearCallHistory() throws SkypeException {
+        Utils.executeWithErrorCheck(getConnector(),"CLEAR CALLHISTORY ALL"); // in doc, there is without "ALL", but only this works (protocol 5)
     }
 
     /**
@@ -722,8 +734,8 @@ public final class Skype {
      *
      * @throws SkypeException If there is a problem with the connection or state at the Skype client.
      */
-    public static void clearChatHistory() throws SkypeException {
-        Utils.executeWithErrorCheck("CLEAR CHATHISTORY");
+    public void clearChatHistory() throws SkypeException {
+        Utils.executeWithErrorCheck(getConnector(),"CLEAR CHATHISTORY");
     }    
 
     /**
@@ -731,8 +743,8 @@ public final class Skype {
      *
      * @throws SkypeException If there is a problem with the connection or state at the Skype client.
      */
-    public static void clearVoiceMailHistory() throws SkypeException {
-        Utils.executeWithErrorCheck("CLEAR VOICEMAILHISTORY");
+    public void clearVoiceMailHistory() throws SkypeException {
+        Utils.executeWithErrorCheck(getConnector(),"CLEAR VOICEMAILHISTORY");
     }    
 
     /**
@@ -740,8 +752,8 @@ public final class Skype {
      * @param id ID of the User.
      * @return The user found.
      */
-    public static User getUser(String id) {
-        return User.getInstance(id);
+    public User getUser(String id) {
+        return User.getInstance(connector, id);
     }
 
     /**
@@ -750,7 +762,7 @@ public final class Skype {
      * @throws SkypeException when connection has gone bad or ERROR reply.
      * @see #removeChatMessageListener(ChatMessageListener)
      */
-    public static void addChatMessageListener(ChatMessageListener listener) throws SkypeException {
+    public void addChatMessageListener(ChatMessageListener listener) throws SkypeException {
         Utils.checkNotNull("listener", listener);
         synchronized (chatMessageListenerMutex) {
             chatMessageListeners.add(listener);
@@ -766,7 +778,7 @@ public final class Skype {
                             if ("STATUS".equals(propertyName)) {
                                 String propertyValue = propertyNameAndValue.substring(propertyNameAndValue.indexOf(' ') + 1);
                                 ChatMessageListener[] listeners = chatMessageListeners.toArray(new ChatMessageListener[0]);
-                                ChatMessage chatMessage = ChatMessage.getInstance(id);
+                                ChatMessage chatMessage = ChatMessage.getInstance(connector, id);
                                 if ("SENT".equals(propertyValue)) {
                                     for (ChatMessageListener listener : listeners) {
                                         try {
@@ -789,7 +801,7 @@ public final class Skype {
                     }
                 };
                 try {
-                    Connector.getInstance().addConnectorListener(chatMessageListener);
+                    connector.addConnectorListener(chatMessageListener);
                 } catch (ConnectorException e) {
                     Utils.convertToSkypeException(e);
                 }
@@ -803,12 +815,12 @@ public final class Skype {
      * @param listener The listener to remove.
      * @see #addChatMessageListener(ChatMessageListener)
      */
-    public static void removeChatMessageListener(ChatMessageListener listener) {
+    public void removeChatMessageListener(ChatMessageListener listener) {
         Utils.checkNotNull("listener", listener);
         synchronized (chatMessageListenerMutex) {
             chatMessageListeners.remove(listener);
             if (chatMessageListeners.isEmpty()) {
-                Connector.getInstance().removeConnectorListener(chatMessageListener);
+                connector.removeConnectorListener(chatMessageListener);
                 chatMessageListener = null;
             }
         }
@@ -820,7 +832,7 @@ public final class Skype {
      * @param listener the listener to add.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void addCallListener(CallListener listener) throws SkypeException {
+    public void addCallListener(CallListener listener) throws SkypeException {
         Utils.checkNotNull("listener", listener);
         synchronized (callListenerMutex) {
             callListeners.add(listener);
@@ -836,7 +848,7 @@ public final class Skype {
                             if ("STATUS".equals(propertyName)) {
                                 String propertyValue = propertyNameAndValue.substring(propertyNameAndValue.indexOf(' ') + 1);
                                 Call.Status status = Call.Status.valueOf(propertyValue);
-                                Call call = Call.getInstance(id);
+                                Call call = Call.getInstance(connector, id);
                                 EXIT: if (status == Call.Status.ROUTING || status == Call.Status.RINGING) {
                                     synchronized(call) {
                                         if (call.isCallListenerEventFired()) {
@@ -881,7 +893,7 @@ public final class Skype {
                     }
                 };
                 try {
-                    Connector.getInstance().addConnectorListener(callListener);
+                    connector.addConnectorListener(callListener);
                 } catch (ConnectorException e) {
                     Utils.convertToSkypeException(e);
                 }
@@ -894,12 +906,12 @@ public final class Skype {
      * If listener is already removed nothing happens.
      * @param listener The listener to add.
      */
-    public static void removeCallListener(CallListener listener) {
+    public void removeCallListener(CallListener listener) {
         Utils.checkNotNull("listener", listener);
         synchronized (callListenerMutex) {
             callListeners.remove(listener);
             if (callListeners.isEmpty()) {
-                Connector.getInstance().removeConnectorListener(callListener);
+                connector.removeConnectorListener(callListener);
                 callListener = null;
             }
         }
@@ -911,7 +923,7 @@ public final class Skype {
      * @throws SkypeException if connection is bad or error is returned
      * @see VoicemaListener
      */
-    public static void addVoiceMailListener(VoiceMailListener listener) throws SkypeException {
+    public void addVoiceMailListener(VoiceMailListener listener) throws SkypeException {
         Utils.checkNotNull("listener", listener);
         synchronized (voiceMailListenerMutex) {
             voiceMailListeners.add(listener);
@@ -927,7 +939,7 @@ public final class Skype {
                             if ("TYPE".equals(propertyName)) {
                                 String propertyValue = propertyNameAndValue.substring(propertyNameAndValue.indexOf(' ') + 1);
                                 VoiceMail.Type type = VoiceMail.Type.valueOf(propertyValue);
-                                VoiceMail voiceMail = VoiceMail.getInstance(id);
+                                VoiceMail voiceMail = VoiceMail.getInstance(connector, id);
                                 VoiceMailListener[] listeners = voiceMailListeners.toArray(new VoiceMailListener[0]);
                                 switch (type) {
                                     case OUTGOING:
@@ -960,7 +972,7 @@ public final class Skype {
                     }
                 };
                 try {
-                    Connector.getInstance().addConnectorListener(voiceMailListener);
+                    connector.addConnectorListener(voiceMailListener);
                 } catch (ConnectorException e) {
                     Utils.convertToSkypeException(e);
                 }
@@ -973,12 +985,12 @@ public final class Skype {
      * If listener is already removed nothing happens.
      * @param listener The listener to add.
      */
-    public static void removeVoiceMailListener(VoiceMailListener listener) {
+    public void removeVoiceMailListener(VoiceMailListener listener) {
         Utils.checkNotNull("listener", listener);
         synchronized (voiceMailListenerMutex) {
             voiceMailListeners.remove(listener);
             if (voiceMailListeners.isEmpty()) {
-                Connector.getInstance().removeConnectorListener(voiceMailListener);
+                connector.removeConnectorListener(voiceMailListener);
                 voiceMailListener = null;
             }
         }
@@ -989,7 +1001,7 @@ public final class Skype {
      * @see SkypeExceptionHandler
      * @param handler the handler to use.
      */
-    public static void setSkypeExceptionHandler(SkypeExceptionHandler handler) {
+    public void setSkypeExceptionHandler(SkypeExceptionHandler handler) {
         if (handler == null) {
             handler = defaultExceptionHandler;
         }
@@ -1000,19 +1012,11 @@ public final class Skype {
      * Handle uncaught exceptions in a default way.
      * @param e the uncaught exception.
      */
-    static void handleUncaughtException(Throwable e) {
+    void handleUncaughtException(Throwable e) {
         exceptionHandler.uncaughtExceptionHappened(e);
     }
 
-    /** 
-     * Private constructor.
-     * Please use this object staticly.
-     */
-    private Skype() {
-    }
-
-
-    public static void removeAllListeners() {
+    public void removeAllListeners() {
         synchronized(callListenerMutex) {
             callListeners.clear();
         }
@@ -1023,4 +1027,12 @@ public final class Skype {
             voiceMailListeners.clear();
         }
     }
+
+	public void dispose() {
+		connector.dispose();
+	}
+
+	public Connector getConnector() {
+		return connector;
+	}
 }

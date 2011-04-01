@@ -24,7 +24,7 @@ package com.skype.connector;
 /**
  * Exception class which connectors can throw.
  */
-public class ConnectorException extends Exception {
+public class ConnectorException extends RuntimeException {
 	private static final long serialVersionUID = -764987191989792842L;
 
     /**

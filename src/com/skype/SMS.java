@@ -47,10 +47,10 @@ public final class SMS extends SkypeObject {
      * @param id whose associated SMS object is to be returned.
      * @return SMS object with ID == id.
      */
-    static SMS getInstance(final String id) {
+    static SMS getInstance(final Connector aConnector, final String id) {
         synchronized(smses) {
             if (!smses.containsKey(id)) {
-                smses.put(id, new SMS(id));
+                smses.put(id, new SMS(aConnector, id));
             }
             return smses.get(id);
         }
@@ -187,9 +187,11 @@ public final class SMS extends SkypeObject {
 
     /**
      * Constructor.
+     * @param aConnector 
      * @param newId unique identification number of this SMS.
      */
-    private SMS(String newId) {
+    private SMS(Connector aConnector, String newId) {
+    	super(aConnector);
         assert newId != null;
         this.id = newId;
     }
@@ -283,7 +285,7 @@ public final class SMS extends SkypeObject {
     public void toCheckedFailure() throws SkypeException {
         try {
             String command = "SET SMS " + getId() + " SEEN";
-            String response = Connector.getInstance().execute(command);
+            String response = connector.execute(command);
             Utils.checkError(response);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
@@ -388,7 +390,7 @@ public final class SMS extends SkypeObject {
      * @throws SkypeException when the connection to the Skype client has gone bad.
      */
     void send() throws SkypeException {
-        Utils.executeWithErrorCheck("ALTER SMS " + getId() + " SEND");
+        Utils.executeWithErrorCheck(connector, "ALTER SMS " + getId() + " SEND");
     }
 
     /**
@@ -396,7 +398,7 @@ public final class SMS extends SkypeObject {
      * @throws SkypeException when the connection to the Skype client has gone bad.
      */
     public void delete() throws SkypeException {
-        Utils.executeWithErrorCheck("DELETE SMS " + getId());
+        Utils.executeWithErrorCheck(connector, "DELETE SMS " + getId());
     }
 
     /**
@@ -406,7 +408,7 @@ public final class SMS extends SkypeObject {
      * @throws SkypeException when the connection to the Skype client has gone bad or if property does not exist.
      */
     private String getProperty(String name) throws SkypeException {
-        return Utils.getProperty("SMS", getId(), name);
+        return Utils.getProperty(connector, "SMS", getId(), name);
     }
 
     /**
@@ -416,6 +418,6 @@ public final class SMS extends SkypeObject {
      * @throws SkypeException when the connection to the Skype client has gone bad or if property does not exist or value is invalid.
      */
     private void setSMSProperty(String name, String value) throws SkypeException {
-        Utils.setProperty("SMS", getId(), name, value);
+        Utils.setProperty(connector, "SMS", getId(), name, value);
     }
 }

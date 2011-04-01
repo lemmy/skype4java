@@ -47,8 +47,8 @@ public final class MenuItem {
         return menuItems.get(id);
     }
 
-    static MenuItem addMenuItem(Context context, String caption, String hint, File iconFile, boolean enabled, String targetSkypeId, boolean multipleContactsEnabled) {
-        MenuItem menuItem = new MenuItem(context, caption, hint, iconFile, enabled, targetSkypeId, multipleContactsEnabled);
+    static MenuItem addMenuItem(Connector connector, Context context, String caption, String hint, File iconFile, boolean enabled, String targetSkypeId, boolean multipleContactsEnabled) {
+        MenuItem menuItem = new MenuItem(connector, context, caption, hint, iconFile, enabled, targetSkypeId, multipleContactsEnabled);
         menuItems.put(menuItem.getId(), menuItem);
         return menuItem;
     }
@@ -62,8 +62,10 @@ public final class MenuItem {
     private final String targetSkypeId;
     private final boolean multipleContactsEnabled;
     private final List<MenuItemListener> menuItemListeners = new CopyOnWriteArrayList<MenuItemListener>();
+    private final Connector connector;
 
-    MenuItem(final Context context, final String caption, final String hint, final File iconFile, final boolean enabled, final String targetSkypeId, final boolean multipleContactsEnabled) {
+    MenuItem(Connector connector, final Context context, final String caption, final String hint, final File iconFile, final boolean enabled, final String targetSkypeId, final boolean multipleContactsEnabled) {
+        this.connector = connector;
         this.context = context;
         this.caption = caption;
         this.hint = hint;
@@ -128,7 +130,7 @@ public final class MenuItem {
     }
 
     private void setProperty(String name, String value) throws SkypeException {
-        Utils.setProperty("MENU_ITEM", getId(), name, value);
+        Utils.setProperty(connector, "MENU_ITEM", getId(), name, value);
     }
 
     public File getIconFile() {
@@ -173,18 +175,14 @@ public final class MenuItem {
                             if (menuItem != null) {
                                 MenuItemListener[] listeners = menuItem.menuItemListeners.toArray(new MenuItemListener[0]);
                                 for (MenuItemListener listener : listeners) {
-                                    try {
                                         listener.menuItemClicked(new MenuItemClickEvent(MenuItem.this, skypeIds, context, contextIds));
-                                    } catch (Throwable e) {
-                                        Skype.handleUncaughtException(e);
-                                    }
                                 }
                             }
                         }
                     }
                 };
                 try {
-                    Connector.getInstance().addConnectorListener(menuItemListener);
+                    connector.addConnectorListener(menuItemListener);
                 } catch (ConnectorException e) {
                     Utils.convertToSkypeException(e);
                 }
@@ -201,7 +199,7 @@ public final class MenuItem {
                 isEmpty &= menuItem.menuItemListeners.isEmpty();
             }
             if (isEmpty) {
-                Connector.getInstance().removeConnectorListener(menuItemListener);
+                connector.removeConnectorListener(menuItemListener);
                 menuItemListener = null;
             }
         }
@@ -210,7 +208,7 @@ public final class MenuItem {
     public void dispose() throws SkypeException {
         try {
             String command = "DELETE MENU_ITEM " + getId();
-            String response = Connector.getInstance().execute(command);
+            String response = connector.execute(command);
             Utils.checkError(response);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);

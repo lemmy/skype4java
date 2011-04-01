@@ -26,6 +26,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.skype.connector.Connector;
+
 /**
  * This class implements Skype CHATMESSAGE object.
  * @see https://developer.skype.com/Docs/ApiDoc/CHATMESSAGE_object
@@ -43,10 +45,10 @@ public final class ChatMessage extends SkypeObject {
      * @param id whose associated ChatMessage object is to be returned.
      * @return ChatMessage object with ID == id.
      */
-    static ChatMessage getInstance(final String id) {
+    static ChatMessage getInstance(final Connector aConnector, final String id) {
         synchronized(chatMessages) {
             if (!chatMessages.containsKey(id)) {
-                chatMessages.put(id, new ChatMessage(id));
+                chatMessages.put(id, new ChatMessage(aConnector, id));
             }
             return chatMessages.get(id);
         }
@@ -99,12 +101,15 @@ public final class ChatMessage extends SkypeObject {
      * ID of this CHATMESSAGE.
      */
     private final String id;
+	private Connector connector;
 
     /**
      * Constructor.
+     * @param aConnector 
      * @param newId The ID of this CHATMESSAGE.
      */
-    private ChatMessage(String newId) {
+    private ChatMessage(Connector aConnector, String newId) {
+    	super(aConnector);
         this.id = newId;
     }
 
@@ -154,7 +159,7 @@ public final class ChatMessage extends SkypeObject {
      * @throws SkypeException when connection has gone bad.
      */
     public User getSender() throws SkypeException {
-        return User.getInstance(getSenderId());
+        return User.getInstance(connector, getSenderId());
     }
 
     /**
@@ -192,7 +197,7 @@ public final class ChatMessage extends SkypeObject {
      * @throws SkypeException when the connection has gone bad.
      */
     public Status getStatus() throws SkypeException {
-        return Status.valueOf(Utils.getPropertyWithCommandId("CHATMESSAGE", getId(), "STATUS"));
+        return Status.valueOf(Utils.getPropertyWithCommandId(connector, "CHATMESSAGE", getId(), "STATUS"));
     }
 
     /**
@@ -241,7 +246,7 @@ public final class ChatMessage extends SkypeObject {
      * @throws SkypeException when the connection has gone bad.
      */
     public Chat getChat() throws SkypeException {
-        return Chat.getInstance(getProperty("CHATNAME"));
+        return Chat.getInstance(connector, getProperty("CHATNAME"));
     }
 
     /**
@@ -257,7 +262,7 @@ public final class ChatMessage extends SkypeObject {
         String[] ids = value.split(" ");
         User[] users = new User[ids.length];
         for (int i = 0; i < ids.length; i++) {
-            users[i] = User.getInstance(ids[i]);
+            users[i] = User.getInstance(connector, ids[i]);
         }
         return users;
     }
@@ -269,11 +274,11 @@ public final class ChatMessage extends SkypeObject {
      * @throws SkypeException when connection has gone bad or property not found.
      */
     private String getProperty(String name) throws SkypeException {
-        return Utils.getProperty("CHATMESSAGE", getId(), name);
+        return Utils.getProperty(connector, "CHATMESSAGE", getId(), name);
     }
 
     private void setProperty(String name, String value) throws SkypeException {
-        Utils.setProperty("CHATMESSAGE", getId(), name, value);
+        Utils.setProperty(connector, "CHATMESSAGE", getId(), name, value);
     }
     // TODO void setSeen()
     // TODO boolean isSeen()

@@ -86,11 +86,11 @@ final class Utils {
      * @return the property value.
      * @throws SkypeException when connection to Skype client has gone bad or reply contains ERROR.
      */
-    static String getPropertyWithCommandId(String type, String id, String name) throws SkypeException {
+    static String getPropertyWithCommandId(Connector connector, String type, String id, String name) throws SkypeException {
         try {
             String command = "GET " + type + " " + id + " " + name;
             String responseHeader = type + " " + id + " " + name + " ";
-            String response = Connector.getInstance().executeWithId(command, responseHeader);
+            String response = connector.executeWithId(command, responseHeader);
             checkError(response);
             return response.substring((responseHeader).length());
         } catch (ConnectorException e) {
@@ -107,11 +107,11 @@ final class Utils {
      * @return the property value.
      * @throws SkypeException when connection to Skype client has gone bad or reply contains ERROR.
      */
-    static String getProperty(String type, String id, String name) throws SkypeException {
+    static String getProperty(Connector connector, String type, String id, String name) throws SkypeException {
         try {
             String command = "GET " + type + " " + id + " " + name;
             String responseHeader = type + " " + id + " " + name + " ";
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             checkError(response);
             return response.substring((responseHeader).length());
         } catch (ConnectorException e) {
@@ -127,11 +127,11 @@ final class Utils {
      * @return the property value.
      * @throws SkypeException when connection to Skype client has gone bad or reply contains ERROR.
      */
-    static String getProperty(String type, String name) throws SkypeException {
+    static String getProperty(Connector connector, String type, String name) throws SkypeException {
         try {
             String command = "GET " + type + " " + name;
             String responseHeader = type + " " + name + " ";
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             Utils.checkError(response);
             return response.substring((responseHeader).length());
         } catch (ConnectorException e) {
@@ -146,11 +146,11 @@ final class Utils {
      * @return the property value.
      * @throws SkypeException when connection to Skype client has gone bad or reply contains ERROR.
      */
-    static String getProperty(String name) throws SkypeException {
+    static String getProperty(Connector connector, String name) throws SkypeException {
         try {
             String command = "GET " + name + " ";
             String responseHeader = name + " ";
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             checkError(response);
             return response.substring(responseHeader.length());
         } catch (ConnectorException e) {
@@ -167,11 +167,11 @@ final class Utils {
      * @param value value to set to property to.
      * @throws SkypeException when connection to Skype client has gone bad or reply contains ERROR.
      */
-    static void setProperty(String type, String id, String name, String value) throws SkypeException {
+    static void setProperty(Connector connector, String type, String id, String name, String value) throws SkypeException {
         try {
             String command = "SET " + type + " " + id + " " + name + " " + value;
             String responseHeader = type + " " + id + " " + name + " " + value;
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             checkError(response);
         } catch (ConnectorException e) {
             convertToSkypeException(e);
@@ -185,11 +185,11 @@ final class Utils {
      * @param value value to set to property to.
      * @throws SkypeException when connection to Skype client has gone bad or reply contains ERROR.
      */
-    static void setProperty(String type, String name, String value) throws SkypeException {
+    static void setProperty(Connector connector, String type, String name, String value) throws SkypeException {
         try {
             String command = "SET " + type + " " + name + " " + value;
             String responseHeader = type + " " + name + " " + value;
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             checkError(response);
         } catch (ConnectorException e) {
             convertToSkypeException(e);
@@ -202,11 +202,11 @@ final class Utils {
      * @param value value to set to property to.
      * @throws SkypeException when connection to Skype client has gone bad or reply contains ERROR.
      */
-    static void setProperty(String name, String value) throws SkypeException {
+    static void setProperty(Connector connector, String name, String value) throws SkypeException {
         try {
             String command = "SET " + name + " " + value;
             String responseHeader = name + " " + value;
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             checkError(response);
         } catch (ConnectorException e) {
             convertToSkypeException(e);
@@ -218,9 +218,9 @@ final class Utils {
      * @param command the command to send to the Skype client.
      * @throws SkypeException  when connection to Skype client has gone bad or reply contains ERROR.
      */
-    static void executeWithErrorCheck(String command) throws SkypeException {
+    static void executeWithErrorCheck(Connector connector, String command) throws SkypeException {
         try {
-            String response = Connector.getInstance().execute(command);
+            String response = connector.execute(command);
             checkError(response);
         } catch (ConnectorException e) {
             convertToSkypeException(e);
@@ -276,19 +276,6 @@ final class Utils {
         calendar.setTimeInMillis(Long.parseLong(time) * 1000);
         calendar.setTimeZone(TimeZone.getDefault());
         return calendar.getTime();
-    }
-
-    /**
-     * Uncaught exception handler.
-     * @param e The uncaught exception.
-     * @param exceptionHandler the handler to set as uncaught exception handler.
-     */
-    static void handleUncaughtException(Throwable e, SkypeExceptionHandler exceptionHandler) {
-        if (exceptionHandler != null) {
-            exceptionHandler.uncaughtExceptionHappened(e);
-            return;
-        }
-        Skype.handleUncaughtException(e);
     }
 
     static File createTempraryFile(final String header, final String extension) {

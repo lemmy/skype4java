@@ -45,10 +45,10 @@ public final class Chat extends SkypeObject {
      * @param id whose associated Chat object is to be returned.
      * @return Chat object with ID == id.
      */
-    static Chat getInstance(final String id) {
+    static Chat getInstance(final Connector aConnector, final String id) {
         synchronized(chats) {
             if (!chats.containsKey(id)) {
-                chats.put(id, new Chat(id));
+                chats.put(id, new Chat(aConnector, id));
             }
             return chats.get(id);
         }
@@ -75,9 +75,11 @@ public final class Chat extends SkypeObject {
 
     /**
      * Constructor, please use getChat() instead.
+     * @param aConnector 
      * @param newId ID of this CHAT.
      */
-    private Chat(String newId) {
+    private Chat(Connector aConnector, String newId) {
+    	super(aConnector);
         assert newId != null;
         this.id = newId;
     }
@@ -120,7 +122,7 @@ public final class Chat extends SkypeObject {
         try {
             String command = "ALTER CHAT " + getId() + " SETTOPIC " + newValue;
             String responseHeader = "ALTER CHAT SETTOPIC";
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             Utils.checkError(response);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
@@ -147,7 +149,7 @@ public final class Chat extends SkypeObject {
         try {
             String command = "ALTER CHAT " + getId() + " ADDMEMBERS " + toCommaSeparatedString(addedUsers);
             String responseHeader = "ALTER CHAT ADDMEMBERS";
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             Utils.checkError(response);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
@@ -178,7 +180,7 @@ public final class Chat extends SkypeObject {
         try {
             String command = "ALTER CHAT " + getId() + " LEAVE";
             String responseHeader = "ALTER CHAT LEAVE";
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             Utils.checkError(response);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
@@ -194,12 +196,12 @@ public final class Chat extends SkypeObject {
         try {
             String command = "GET CHAT " + getId() + " CHATMESSAGES";
             String responseHeader = "CHAT " + getId() + " CHATMESSAGES ";
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             String data = response.substring(responseHeader.length());
             String[] ids = Utils.convertToArray(data);
             ChatMessage[] chatMessages = new ChatMessage[ids.length];
             for (int i = 0; i < ids.length; ++i) {
-                chatMessages[i] = ChatMessage.getInstance(ids[i]);
+                chatMessages[i] = ChatMessage.getInstance(connector, ids[i]);
             }
             return chatMessages;
         } catch (ConnectorException ex) {
@@ -217,12 +219,12 @@ public final class Chat extends SkypeObject {
         try {
             String command = "GET CHAT " + getId() + " RECENTCHATMESSAGES";
             String responseHeader = "CHAT " + getId() + " RECENTCHATMESSAGES ";
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             String data = response.substring(responseHeader.length());
             String[] ids = Utils.convertToArray(data);
             ChatMessage[] chatMessages = new ChatMessage[ids.length];
             for (int i = 0; i < ids.length; ++i) {
-                chatMessages[i] = ChatMessage.getInstance(ids[i]);
+                chatMessages[i] = ChatMessage.getInstance(connector, ids[i]);
             }
             return chatMessages;
         } catch (ConnectorException ex) {
@@ -240,10 +242,10 @@ public final class Chat extends SkypeObject {
     public ChatMessage send(String message) throws SkypeException {
         try {
             String responseHeader = "CHATMESSAGE ";
-            String response = Connector.getInstance().executeWithId("CHATMESSAGE " + getId() + " " + message, responseHeader);
+            String response = connector.executeWithId("CHATMESSAGE " + getId() + " " + message, responseHeader);
             Utils.checkError(response);
             String msgId = response.substring(responseHeader.length(), response.indexOf(" STATUS "));
-            return ChatMessage.getInstance(msgId);
+            return ChatMessage.getInstance(connector, msgId);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return null;
@@ -269,7 +271,7 @@ public final class Chat extends SkypeObject {
         if ("".equals(adder)) {
             return null;
         } else {
-            return User.getInstance(adder);
+            return User.getInstance(connector, adder);
         }
     }
 
@@ -279,7 +281,7 @@ public final class Chat extends SkypeObject {
      * @throws SkypeException when the connection has gone bad.
      */
     public Status getStatus() throws SkypeException {
-        return Status.valueOf(Utils.getPropertyWithCommandId("CHAT", getId(), "STATUS"));
+        return Status.valueOf(Utils.getPropertyWithCommandId(connector, "CHAT", getId(), "STATUS"));
     }
 
     /**
@@ -329,7 +331,7 @@ public final class Chat extends SkypeObject {
         try {
             String command = "GET CHAT " + getId() + " " + name;
             String responseHeader = "CHAT " + id + " " + name + " ";
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             String data = response.substring(responseHeader.length());
             if ("".equals(data)) {
                 return new User[0];
@@ -337,7 +339,7 @@ public final class Chat extends SkypeObject {
             String[] ids = data.split(" ");
             User[] users = new User[ids.length];
             for (int i = 0; i < ids.length; ++i) {
-                users[i] = User.getInstance(ids[i]);
+                users[i] = User.getInstance(connector, ids[i]);
             }
             return users;
         } catch (ConnectorException ex) {
@@ -362,6 +364,6 @@ public final class Chat extends SkypeObject {
      * @throws SkypeException when the connection has gone bad or property ain't found.
      */
     private String getProperty(String name) throws SkypeException {
-        return Utils.getProperty("CHAT", getId(), name);
+        return Utils.getProperty(connector, "CHAT", getId(), name);
     }
 }

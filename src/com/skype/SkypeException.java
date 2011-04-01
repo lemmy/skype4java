@@ -26,11 +26,8 @@ package com.skype;
  * Exception that will be thrown when the connection with Skype is not OK or unexpected events happen.
  * @author Koji Hisano
  */
-public class SkypeException extends Exception {
-    /**
-	 * SerialVersionUID needed for serialisation.
-	 */
-	private static final long serialVersionUID = -4277557764382543108L;
+@SuppressWarnings("serial") // serial is handled by runtime for now
+public class SkypeException extends RuntimeException {
 
 	/**
 	 * Constructor.

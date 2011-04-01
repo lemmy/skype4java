@@ -22,6 +22,8 @@
  ******************************************************************************/
 package com.skype;
 
+import com.skype.connector.Connector;
+
 /**
  * Implementation of a special USER, one that is authorized and on the contactlist.
  * @see User
@@ -32,7 +34,7 @@ public final class Friend extends User {
 	 * Constuctor.
 	 * @param id ID of this User.
 	 */
-	Friend(String id) {
-        super(id);
+	Friend(final Connector aConnector, String id) {
+        super(aConnector, id);
     }
 }

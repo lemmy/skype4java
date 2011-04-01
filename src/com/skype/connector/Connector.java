@@ -22,11 +22,26 @@
  ******************************************************************************/
 package com.skype.connector;
 
-import java.io.*;
-import java.lang.reflect.Method;
-import java.util.*;
-import java.util.concurrent.*;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.lang.reflect.Constructor;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.skype.Skype;
 
 /**
  * Base class for all platform specific connectors.
@@ -35,7 +50,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Koji Hisano <hisano@gmail.com>
  */
 public abstract class Connector {
-    private static final String useDBus = System.getProperty("com.skype.connector.Connector.useDBus", "true");
     
     /**
      * Enumeration of the connector status.
@@ -51,22 +65,6 @@ public abstract class Connector {
          */
         PENDING_AUTHORIZATION, ATTACHED, REFUSED, NOT_AVAILABLE, API_AVAILABLE, NOT_RUNNING;
     }
-
-    /** useJNIConnector if this is true on windows the connection will be made using a dll instead of using swt library. */
-    private static boolean _useJNIConnector;
-    /** Singleton instance of this class. */
-    private static Connector _instance;
-
-    /**
-     * To use the win32 dll instead of the SWT library please use this method.
-     * @param on If true the win32 connector will be used.
-     */
-    public static synchronized void useJNIConnector(final boolean on) {
-        if (_instance != null) {
-            throw new IllegalStateException("You should call Connector#useJNIConnector(boolean) before calling Connector#getInstance().");
-        }
-        _useJNIConnector = on;
-    }
     
     /**
      * Initializes a platform specific connection.
@@ -74,65 +72,14 @@ public abstract class Connector {
      * Windows has two versions see useJNIConnector.
      * @return an initialized connection.
      */
-    public static synchronized Connector getInstance() {
-        if (_instance == null) {
-            String connectorClassName = null;
-            String osName = System.getProperty("os.name");
-            if (osName.startsWith("Windows")) {
-                if (!isSWTAvailable()) {
-                    _useJNIConnector = true;
-                }
-                if (_useJNIConnector) {
-                    connectorClassName = "com.skype.connector.win32.Win32Connector";
-                } else {
-                    connectorClassName = "com.skype.connector.windows.WindowsConnector";
-                }
-            } else if (osName.startsWith("Linux") || osName.startsWith("LINUX")) {
-                if(useDBus != null && new Boolean(useDBus)) {
-                    connectorClassName = "com.skype.connector.linux.dbus.LinuxDBusConnector";
-                } else {
-                    connectorClassName = "com.skype.connector.linux.LinuxConnector";
-                }
-            } else if (osName.startsWith("Mac OS X")) {
-                connectorClassName = "com.skype.connector.osx.OSXConnector";
-            }
-            if (connectorClassName == null) {
-                throw new IllegalStateException("This platform is not supported by Skype4Java.");
-            }
-            try {
-                Class connectorClass = Class.forName(connectorClassName);
-                Method getInstance = connectorClass.getMethod("getInstance");
-                _instance = (Connector) getInstance.invoke(null);
-            } catch (Exception e) {
-                throw new IllegalStateException("The connector couldn't be initialized.", e);
-            }
-        }
-        return _instance;
-    }
-
-    /**
-     * Checks if SWT is available in the classpath.
-     * @return true if SWT is found
-     */
-    private static boolean isSWTAvailable() {
+    public static synchronized Connector getInstance(final Skype skype, final String aUsername, final String aPassword) {
         try {
-            Class.forName("org.eclipse.swt.SWT");
-        } catch(ClassNotFoundException e) {
-            return false;
+            Class connectorClass = Class.forName("com.skype.connector.linux.dbus.LinuxDBusConnector");
+            Constructor ctor = connectorClass.getConstructor(Skype.class, String.class, String.class);
+            return (Connector) ctor.newInstance(skype, aUsername, aPassword);
+        } catch(Exception e) {
+            throw new IllegalStateException("The connector couldn't be initialized.", e);
         }
-        return true;
-    }
-    
-    /**
-     * Sets the instance of the connector for test cases.
-     * @param newInstance The new instance.
-     * @throws ConnectorException thrown when instance is not valid.
-     */
-    protected static synchronized void setInstance(final Connector newInstance) throws ConnectorException {
-        if (_instance != null) {
-            _instance.dispose();
-        }
-        _instance = newInstance;
     }
 
     /**
@@ -196,11 +143,17 @@ public abstract class Connector {
     
     /** The properties of this connector **/
     private final Map<String, String> properties = new ConcurrentHashMap<String, String>();
+	private Skype skype;
 
     /**
      * Because this object should be a singleton the constructor is protected.
      */
-    protected Connector() {
+    public Connector(final Skype skype) {
+    	this.skype = skype;
+    }
+    
+    public Skype getSkype() {
+    	return skype;
     }
 
     /**
@@ -549,38 +502,38 @@ public abstract class Connector {
      * @throws NullPointerException if the specified command or processor is null
      * @throws ConnectorException if executing the command failed
      */
-    @Deprecated
-    public final void execute(final String command, final MessageProcessor processor) throws ConnectorException {
-        ConnectorUtils.checkNotNull("command", command);
-        ConnectorUtils.checkNotNull("processor", processor);
-        assureAttached();
-        final Object wait = new Object();
-        ConnectorListener listener = new AbstractConnectorListener() {
-            public void messageReceived(ConnectorMessageEvent event) {
-                processor.messageReceived(event.getMessage());
-            }
-        };
-        processor.init(wait, listener);
-        addConnectorListener(listener, false);
-        synchronized (wait) {
-            try {
-                fireMessageSent(command);
-                sendCommand(command);
-                long start = System.currentTimeMillis();
-                long commandResponseTime = getCommandTimeout();
-                wait.wait(commandResponseTime);
-                if (commandResponseTime <= System.currentTimeMillis() - start) {
-                    setStatus(Status.NOT_RUNNING);
-                    throw new NotAttachedException(Status.NOT_RUNNING);
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new ConnectorException("The '" + command + "' command was interrupted.", e);
-            } finally {
-                removeConnectorListener(listener);
-            }
-        }
-    }
+//    @Deprecated
+//    public final void execute(final String command, final MessageProcessor processor) throws ConnectorException {
+//        ConnectorUtils.checkNotNull("command", command);
+//        ConnectorUtils.checkNotNull("processor", processor);
+//        assureAttached();
+//        final Object wait = new Object();
+//        ConnectorListener listener = new AbstractConnectorListener() {
+//            public void messageReceived(ConnectorMessageEvent event) {
+//                processor.messageReceived(event.getMessage());
+//            }
+//        };
+//        processor.init(wait, listener);
+//        addConnectorListener(listener, false);
+//        synchronized (wait) {
+//            try {
+//                fireMessageSent(command);
+//                sendCommand(command);
+//                long start = System.currentTimeMillis();
+//                long commandResponseTime = getCommandTimeout();
+//                wait.wait(commandResponseTime);
+//                if (commandResponseTime <= System.currentTimeMillis() - start) {
+//                    setStatus(Status.NOT_RUNNING);
+//                    throw new NotAttachedException(Status.NOT_RUNNING);
+//                }
+//            } catch (InterruptedException e) {
+//                Thread.currentThread().interrupt();
+//                throw new ConnectorException("The '" + command + "' command was interrupted.", e);
+//            } finally {
+//                removeConnectorListener(listener);
+//            }
+//        }
+//    }
 
     /**
      * Executes the specified command and gets the response.

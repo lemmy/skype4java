@@ -39,7 +39,7 @@ import com.skype.connector.ConnectorMessageEvent;
  * Class to represent the Skype VoiceMail object.
  * @see https://developer.skype.com/Docs/ApiDoc/VOICEMAIL_object
  */
-public final class VoiceMail extends SkypeObject {
+public class VoiceMail extends SkypeObject {
 	/**
      * Collection of VoiceMail objects.
      */
@@ -60,10 +60,10 @@ public final class VoiceMail extends SkypeObject {
      * @param id the id whose associated VoiceMail object is to be returned.
      * @return VoiceMail object with ID == id.
      */
-    static VoiceMail getInstance(final String id) {
+    static VoiceMail getInstance(final Connector aConnector, final String id) {
         synchronized(voiceMails) {
             if (!voiceMails.containsKey(id)) {
-                voiceMails.put(id, new VoiceMail(id));
+                voiceMails.put(id, new VoiceMail(aConnector, id));
             }
             return voiceMails.get(id);
         }
@@ -138,16 +138,13 @@ public final class VoiceMail extends SkypeObject {
     private Status oldStatus;
 
     /**
-     * Exception handler.
-     */
-    private SkypeExceptionHandler exceptionHandler;
-
-    /**
      * Constructor.
+     * @param aConnector 
      * @param newId the ID of new VoiceMail object
      * @see VoiceMail#getInstance(String)
      */
-    private VoiceMail(String newId) {
+    private VoiceMail(final Connector aConnector, String newId) {
+    	super(aConnector);
         this.id = newId;
     }
 
@@ -201,7 +198,7 @@ public final class VoiceMail extends SkypeObject {
                             String propertyNameAndValue = data.substring(data.indexOf(' ') + 1);
                             String propertyName = propertyNameAndValue.substring(0, propertyNameAndValue.indexOf(' '));
                             if("STATUS".equals(propertyName)) {
-                                VoiceMail voiceMail = VoiceMail.getInstance(id);
+                                VoiceMail voiceMail = VoiceMail.getInstance(connector, id);
                                 String propertyValue = propertyNameAndValue.substring(propertyNameAndValue.indexOf(' ') + 1);
                                 VoiceMail.Status status = VoiceMail.Status.valueOf(propertyValue);
                                 voiceMail.fireStatusChanged(status);
@@ -210,7 +207,7 @@ public final class VoiceMail extends SkypeObject {
                     }
                 };
                 try {
-                    Connector.getInstance().addConnectorListener(voiceMailStatusChangedListener);
+                    connector.addConnectorListener(voiceMailStatusChangedListener);
                 } catch (ConnectorException e) {
                     Utils.convertToSkypeException(e);
                 }
@@ -228,7 +225,7 @@ public final class VoiceMail extends SkypeObject {
         synchronized(voiceMailStatusChangedListenerFieldMutex) {
             listeners.remove(listener);
             if (listeners.isEmpty()) {
-                Connector.getInstance().removeConnectorListener(voiceMailStatusChangedListener);
+                connector.removeConnectorListener(voiceMailStatusChangedListener);
                 voiceMailStatusChangedListener = null;
             }
         }
@@ -245,11 +242,7 @@ public final class VoiceMail extends SkypeObject {
         }
         oldStatus = status;
         for (VoiceMailStatusChangedListener listener : listeners) {
-            try {
                 listener.statusChanged(status);
-            } catch (Throwable e) {
-                Utils.handleUncaughtException(e, exceptionHandler);
-            }
         }
     }
 
@@ -260,7 +253,7 @@ public final class VoiceMail extends SkypeObject {
      */
     public Type getType() throws SkypeException {
         // call Utils#getPropertyWithCommandId(String, String, String) to prevent new event notification
-        return Type.valueOf(Utils.getPropertyWithCommandId("VOICEMAIL", getId(), "TYPE"));
+        return Type.valueOf(Utils.getPropertyWithCommandId(connector, "VOICEMAIL", getId(), "TYPE"));
     }
 
     /**
@@ -269,7 +262,7 @@ public final class VoiceMail extends SkypeObject {
      * @throws SkypeException if the connection is bad
      */
     public User getPartner() throws SkypeException {
-        return User.getInstance(getPartnerId());
+        return User.getInstance(connector, getPartnerId());
     }
 
     /**
@@ -297,7 +290,7 @@ public final class VoiceMail extends SkypeObject {
      */
     public Status getStatus() throws SkypeException {
         // call Utils#getPropertyWithCommandId(String, String, String) to prevent new event notification
-        return Status.valueOf(Utils.getPropertyWithCommandId("VOICEMAIL", getId(), "STATUS"));
+        return Status.valueOf(Utils.getPropertyWithCommandId(connector, "VOICEMAIL", getId(), "STATUS"));
     }
 
     /**
@@ -343,7 +336,7 @@ public final class VoiceMail extends SkypeObject {
      * @throws SkypeException if the connection is bad
      */
     private String getProperty(final String name) throws SkypeException {
-        return Utils.getProperty("VOICEMAIL", getId(), name);
+        return Utils.getProperty(connector, "VOICEMAIL", getId(), name);
     }
     
     /**
@@ -351,7 +344,7 @@ public final class VoiceMail extends SkypeObject {
      * @throws SkypeException if the connection is bad
      */
     public void startPlayback() throws SkypeException {
-        Utils.executeWithErrorCheck("ALTER VOICEMAIL " + getId() + " " + "STARTPLAYBACK");
+        Utils.executeWithErrorCheck(connector, "ALTER VOICEMAIL " + getId() + " " + "STARTPLAYBACK");
     }
     
     /**
@@ -359,7 +352,7 @@ public final class VoiceMail extends SkypeObject {
      * @throws SkypeException if the connection is bad
      */
     public void stopPlayback() throws SkypeException {
-        Utils.executeWithErrorCheck("ALTER VOICEMAIL " + getId() + " " + "STOPPLAYBACK");
+        Utils.executeWithErrorCheck(connector, "ALTER VOICEMAIL " + getId() + " " + "STOPPLAYBACK");
     }
     
     /**
@@ -367,7 +360,7 @@ public final class VoiceMail extends SkypeObject {
      * @throws SkypeException if the connection is bad
      */
     public void upload() throws SkypeException {
-        Utils.executeWithErrorCheck("ALTER VOICEMAIL " + getId() + " " + "UPLOAD");
+        Utils.executeWithErrorCheck(connector, "ALTER VOICEMAIL " + getId() + " " + "UPLOAD");
     }
     
     /**
@@ -375,7 +368,7 @@ public final class VoiceMail extends SkypeObject {
      * @throws SkypeException if the connection is bad
      */
     public void download() throws SkypeException {
-        Utils.executeWithErrorCheck("ALTER VOICEMAIL " + getId() + " " + "DOWNLOAD");
+        Utils.executeWithErrorCheck(connector, "ALTER VOICEMAIL " + getId() + " " + "DOWNLOAD");
     }
     
     /**
@@ -383,7 +376,7 @@ public final class VoiceMail extends SkypeObject {
      * @throws SkypeException if the connection is bad
      */
     public void startRecording() throws SkypeException {
-        Utils.executeWithErrorCheck("ALTER VOICEMAIL " + getId() + " " + "STARTRECORDING");
+        Utils.executeWithErrorCheck(connector, "ALTER VOICEMAIL " + getId() + " " + "STARTRECORDING");
     }
     
     /**
@@ -391,7 +384,7 @@ public final class VoiceMail extends SkypeObject {
      * @throws SkypeException if the connection is bad
      */
     public void stopRecording() throws SkypeException {
-        Utils.executeWithErrorCheck("ALTER VOICEMAIL " + getId() + " " + "STOPRECORDING");
+        Utils.executeWithErrorCheck(connector, "ALTER VOICEMAIL " + getId() + " " + "STOPRECORDING");
     }
     
     /**
@@ -399,7 +392,7 @@ public final class VoiceMail extends SkypeObject {
      * @throws SkypeException if the connection is bad
      */
     public void dispose() throws SkypeException {
-        Utils.executeWithErrorCheck("ALTER VOICEMAIL " + getId() + " " + "DELETE");
+        Utils.executeWithErrorCheck(connector, "ALTER VOICEMAIL " + getId() + " " + "DELETE");
     }
     
     /**
@@ -407,7 +400,7 @@ public final class VoiceMail extends SkypeObject {
      * @throws SkypeException if the connection is bad
      */
     public void openAndStartPlayback() throws SkypeException {
-        Utils.executeWithErrorCheck("OPEN VOICEMAIL " + getId());
+        Utils.executeWithErrorCheck(connector, "OPEN VOICEMAIL " + getId());
     }
 
     /**

@@ -33,13 +33,16 @@ import com.skype.connector.ConnectorException;
  * @see Skype
  * @author Koji Hisano
  */
-public final class SkypeClient {
+public class SkypeClient {
+    
+    private final Connector connector;
     
 	/**
 	 * 
 	 * This class should be used staticly, so making the constructor private prefents instantiation.
 	 */
-	private SkypeClient() {
+	public SkypeClient(final Connector aConnector) {
+	    connector = aConnector;
 	}
 	
 	/**
@@ -154,24 +157,24 @@ public final class SkypeClient {
      * Put focus on the Skype client window, not any Java window.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showSkypeWindow() throws SkypeException {
-        Utils.executeWithErrorCheck("FOCUS");
+    public void showSkypeWindow() throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "FOCUS");
     }
 
     /**
      * Remove focus on Skype client window, not any Java window.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void hideSkypeWindow() throws SkypeException {
-        Utils.executeWithErrorCheck("MINIMIZE");
+    public void hideSkypeWindow() throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "MINIMIZE");
     }
 
     /**
      * Open the "Add friend" window of Skype client.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showAddFriendWindow() throws SkypeException {
-        Utils.executeWithErrorCheck("OPEN ADDAFRIEND");
+    public void showAddFriendWindow() throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "OPEN ADDAFRIEND");
     }
 
     /**
@@ -179,9 +182,9 @@ public final class SkypeClient {
      * @param skypeId the Skype ID to check before opening the window.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showAddFriendWindow(String skypeId) throws SkypeException {
+    public void showAddFriendWindow(String skypeId) throws SkypeException {
         Utils.checkNotNull("skypeId", skypeId);
-        Utils.executeWithErrorCheck("OPEN ADDAFRIEND " + skypeId);
+        Utils.executeWithErrorCheck(connector, "OPEN ADDAFRIEND " + skypeId);
     }
 
     /**
@@ -189,9 +192,9 @@ public final class SkypeClient {
      * @param skypeId The user to open a chat with.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showChatWindow(String skypeId) throws SkypeException {
+    public void showChatWindow(String skypeId) throws SkypeException {
         Utils.checkNotNull("skypeId", skypeId);
-        Utils.executeWithErrorCheck("OPEN IM " + skypeId);
+        Utils.executeWithErrorCheck(connector, "OPEN IM " + skypeId);
     }
 
     /**
@@ -200,10 +203,10 @@ public final class SkypeClient {
      * @param message The message to send.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showChatWindow(String skypeId, String message) throws SkypeException {
+    public void showChatWindow(String skypeId, String message) throws SkypeException {
         Utils.checkNotNull("skypeId", skypeId);
         Utils.checkNotNull("message", message);
-        Utils.executeWithErrorCheck("OPEN IM " + skypeId + " " + message);
+        Utils.executeWithErrorCheck(connector, "OPEN IM " + skypeId + " " + message);
     }
 
     /**
@@ -211,9 +214,9 @@ public final class SkypeClient {
      * @param skypeId The user to send the file to.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showFileTransferWindow(String skypeId) throws SkypeException {
+    public void showFileTransferWindow(String skypeId) throws SkypeException {
         Utils.checkNotNull("skypeId", skypeId);
-        Utils.executeWithErrorCheck("OPEN FILETRANSFER " + skypeId);
+        Utils.executeWithErrorCheck(connector, "OPEN FILETRANSFER " + skypeId);
     }
 
     /**
@@ -222,10 +225,10 @@ public final class SkypeClient {
      * @param folder the folder to show in the window.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showFileTransferWindow(String skypeId, File folder) throws SkypeException {
+    public void showFileTransferWindow(String skypeId, File folder) throws SkypeException {
         Utils.checkNotNull("skypeId", skypeId);
         Utils.checkNotNull("folder", folder);
-        Utils.executeWithErrorCheck("OPEN FILETRANSFER " + skypeId + " IN " + folder);
+        Utils.executeWithErrorCheck(connector, "OPEN FILETRANSFER " + skypeId + " IN " + folder);
     }
 
     /**
@@ -233,9 +236,9 @@ public final class SkypeClient {
      * @param skypeIds multiple Skype users to send file to.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showFileTransferWindow(String[] skypeIds) throws SkypeException {
+    public void showFileTransferWindow(String[] skypeIds) throws SkypeException {
         Utils.checkNotNull("skypeIds", skypeIds);
-        Utils.executeWithErrorCheck("OPEN FILETRANSFER " + Utils.convertToCommaSeparatedString(skypeIds));
+        Utils.executeWithErrorCheck(connector, "OPEN FILETRANSFER " + Utils.convertToCommaSeparatedString(skypeIds));
     }
 
     /**
@@ -244,18 +247,18 @@ public final class SkypeClient {
      * @param folder the folder to open with the dialog.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showFileTransferWindow(String[] skypeIds, File folder) throws SkypeException {
+    public void showFileTransferWindow(String[] skypeIds, File folder) throws SkypeException {
         Utils.checkNotNull("skypeIds", skypeIds);
         Utils.checkNotNull("folder", folder);
-        Utils.executeWithErrorCheck("OPEN FILETRANSFER " + Utils.convertToCommaSeparatedString(skypeIds) + " IN " + folder);
+        Utils.executeWithErrorCheck(connector, "OPEN FILETRANSFER " + Utils.convertToCommaSeparatedString(skypeIds) + " IN " + folder);
     }
 
     /**
      * Open the Skype client profile window.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showProfileWindow() throws SkypeException {
-        Utils.executeWithErrorCheck("OPEN PROFILE");
+    public void showProfileWindow() throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "OPEN PROFILE");
     }
 
     /**
@@ -263,25 +266,25 @@ public final class SkypeClient {
      * @param skypeId The skype user to show.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showUserInformationWindow(String skypeId) throws SkypeException {
+    public void showUserInformationWindow(String skypeId) throws SkypeException {
         Utils.checkNotNull("skypeId", skypeId);
-        Utils.executeWithErrorCheck("OPEN USERINFO " + skypeId);
+        Utils.executeWithErrorCheck(connector, "OPEN USERINFO " + skypeId);
     }
 
     /**
      * Open the conference window of the Skype client.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showConferenceWindow() throws SkypeException {
-        Utils.executeWithErrorCheck("OPEN CONFERENCE");
+    public void showConferenceWindow() throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "OPEN CONFERENCE");
     }
 
     /**
      * Open the search window of the Skype Client.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showSearchWindow() throws SkypeException {
-        Utils.executeWithErrorCheck("OPEN SEARCH");
+    public void showSearchWindow() throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "OPEN SEARCH");
     }
 
     /**
@@ -290,64 +293,64 @@ public final class SkypeClient {
      * @param page the page to ope in front.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showOptionsWindow(OptionsPage page) throws SkypeException {
-        Utils.executeWithErrorCheck("OPEN OPTIONS " + page.toString().toLowerCase());
+    public void showOptionsWindow(OptionsPage page) throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "OPEN OPTIONS " + page.toString().toLowerCase());
     }
 
     /**
      * Focus the Call history tab of the Skype client.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showCallHistoryTab() throws SkypeException {
-        Utils.executeWithErrorCheck("OPEN CALLHISTORY");
+    public void showCallHistoryTab() throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "OPEN CALLHISTORY");
     }
 
     /**
      * Focus the Contacts tab of the Skype client window.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showContactsTab() throws SkypeException {
-        Utils.executeWithErrorCheck("OPEN CONTACTS");
+    public void showContactsTab() throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "OPEN CONTACTS");
     }
 
     /**
      * Focus dialpad tab on the Skype client window.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showDialPadTab() throws SkypeException {
-        Utils.executeWithErrorCheck("OPEN DIALPAD");
+    public void showDialPadTab() throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "OPEN DIALPAD");
     }
 
     /**
      * Open send contacts window.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showSendContactsWindow() throws SkypeException {
-        Utils.executeWithErrorCheck("OPEN SENDCONTACTS");
+    public void showSendContactsWindow() throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "OPEN SENDCONTACTS");
     }
 
     /**
      * Show blacked users window of the Skype client.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showBlockedUsersWindow() throws SkypeException {
-        Utils.executeWithErrorCheck("OPEN BLOCKEDUSERS");
+    public void showBlockedUsersWindow() throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "OPEN BLOCKEDUSERS");
     }
 
     /**
      * Show import contacts window of Skype client.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showImportContactsWindow() throws SkypeException {
-        Utils.executeWithErrorCheck("OPEN IMPORTCONTACTS");
+    public void showImportContactsWindow() throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "OPEN IMPORTCONTACTS");
     }
 
     /**
      * Show the getting started window of the Skype client.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showGettingStartedWindow() throws SkypeException {
-        Utils.executeWithErrorCheck("OPEN GETTINGSTARTED");
+    public void showGettingStartedWindow() throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "OPEN GETTINGSTARTED");
     }
 
     /**
@@ -355,8 +358,8 @@ public final class SkypeClient {
      * @param skypeId the User to ask authorisation for.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void showRequestAuthorizationWindow(String skypeId) throws SkypeException {
-        Utils.executeWithErrorCheck("OPEN AUTHORIZATION " + skypeId);
+    public void showRequestAuthorizationWindow(String skypeId) throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "OPEN AUTHORIZATION " + skypeId);
     }
 
     /**
@@ -365,8 +368,8 @@ public final class SkypeClient {
      * @param button The button to press.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void pressButton(Button button) throws SkypeException {
-        Utils.executeWithErrorCheck("BTN_PRESSED " + button.getKey());
+    public void pressButton(Button button) throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "BTN_PRESSED " + button.getKey());
     }
 
     /**
@@ -375,43 +378,43 @@ public final class SkypeClient {
      * @param button the button to release.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void releaseButton(Button button) throws SkypeException {
-        Utils.executeWithErrorCheck("BTN_RELEASED " + button.getKey());
+    public void releaseButton(Button button) throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "BTN_RELEASED " + button.getKey());
     }
 
     /**
      * Open the Test video dialog of the Skype client.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void openVideoTestWindow() throws SkypeException {
-        Utils.executeWithErrorCheck("OPEN VIDEOTEST");
+    public void openVideoTestWindow() throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "OPEN VIDEOTEST");
     }
 
     /**
      * Open the Video options window of the Skype client.
      * @throws SkypeException when connection has gone bad or ERROR reply.
      */
-    public static void openVideoOptionsWindow() throws SkypeException {
-        Utils.executeWithErrorCheck("OPEN OPTIONS VIDEO");
+    public void openVideoOptionsWindow() throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "OPEN OPTIONS VIDEO");
     }
     
-    public static String getUILanguageByISOCode() throws SkypeException {
-        return Utils.getProperty("UI_LANGUAGE");
+    public String getUILanguageByISOCode() throws SkypeException {
+        return Utils.getProperty(connector, "UI_LANGUAGE");
     }
 
-    public static void setUILanguageByISOCode(final String newValue) throws SkypeException {
-        Utils.setProperty("UI_LANGUAGE", newValue);
+    public void setUILanguageByISOCode(final String newValue) throws SkypeException {
+        Utils.setProperty(connector, "UI_LANGUAGE", newValue);
     }
     
-    public static File getWallPaper() throws SkypeException {
-        return new File(Utils.getProperty("WALLPAPER"));
+    public File getWallPaper() throws SkypeException {
+        return new File(Utils.getProperty(connector, "WALLPAPER"));
     }
 
-    public static void setWallPaper(final File newValue) throws SkypeException {
+    public void setWallPaper(final File newValue) throws SkypeException {
         if (newValue != null) {
-            Utils.setProperty("WALLPAPER", newValue.getAbsolutePath());
+            Utils.setProperty(connector, "WALLPAPER", newValue.getAbsolutePath());
         } else {
-            Utils.setProperty("WALLPAPER", "");
+            Utils.setProperty(connector, "WALLPAPER", "");
         }
     }
 
@@ -422,11 +425,11 @@ public final class SkypeClient {
      * @throws SkypeException when connection has gone bad or ERROR reply.
      * @since 2.6.0.84
      */
-    public static boolean setSilentMode(boolean on) throws SkypeException {
+    public boolean setSilentMode(boolean on) throws SkypeException {
         try {
             String command = "SET SILENT_MODE " + (on? "ON": "OFF");
             String responseHeader = "SILENT_MODE ";
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             Utils.checkError(response);
             String responseValue = response.substring(responseHeader.length());
             return "ON".equals(responseValue);
@@ -436,18 +439,18 @@ public final class SkypeClient {
         }
     }
 
-    public static EventMessage addEventMessage(String caption) throws SkypeException {
+    public EventMessage addEventMessage(String caption) throws SkypeException {
         return addEventMessage(caption, caption);
     }
     
-    public static EventMessage addEventMessage(String caption, String hint) throws SkypeException {
+    public EventMessage addEventMessage(String caption, String hint) throws SkypeException {
         Utils.checkNotNull("caption", caption);
         Utils.checkNotNull("hint", hint);
         try {
-            EventMessage eventMessage = EventMessage.addEventMessage(caption, hint);
+            EventMessage eventMessage = EventMessage.addEventMessage(connector, caption, hint);
             String command = "CREATE EVENT " + eventMessage.getId() + " CAPTION \"" + caption + "\" HINT \"" + hint + "\"";
             String responseHeader = "EVENT " + eventMessage.getId() + " CREATED";
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             Utils.checkError(response);
             return eventMessage;
         } catch (ConnectorException e) {
@@ -456,13 +459,13 @@ public final class SkypeClient {
         }
     }
     
-    public static void removeEventMessage(EventMessage eventMessage) throws SkypeException {
+    public void removeEventMessage(EventMessage eventMessage) throws SkypeException {
         eventMessage.dispose();
     }
     
-    public static MenuItem addMenuItem(MenuItem.Context context, String caption, String hint, File iconFile, boolean enabled, String targetSkypeId, boolean multipleContactsEnabled) throws SkypeException {
+    public MenuItem addMenuItem(MenuItem.Context context, String caption, String hint, File iconFile, boolean enabled, String targetSkypeId, boolean multipleContactsEnabled) throws SkypeException {
         try {
-            MenuItem menuItem = MenuItem.addMenuItem(context, caption, hint, iconFile, enabled, targetSkypeId, multipleContactsEnabled);
+            MenuItem menuItem = MenuItem.addMenuItem(connector, context, caption, hint, iconFile, enabled, targetSkypeId, multipleContactsEnabled);
             String command = "CREATE MENU_ITEM " + menuItem.getId() + " CONTEXT " + context.name().toLowerCase() + " CAPTION \"" + caption + "\"";
             if (hint != null) {
                 command += " HINT \"" + hint + "\"";
@@ -480,7 +483,7 @@ public final class SkypeClient {
                 command += " ENABLE_MULTIPLE_CONTACTS false";
             }
             String responseHeader = "MENU_ITEM " + menuItem.getId() + " CREATED";
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             Utils.checkError(response);
             return menuItem;
         } catch (ConnectorException e) {
@@ -489,15 +492,15 @@ public final class SkypeClient {
         }
     }
     
-    public static void removeMenuItem(MenuItem menuItem) throws SkypeException {
+    public void removeMenuItem(MenuItem menuItem) throws SkypeException {
         menuItem.dispose();
     }
     
-    public static void setMainWindowState(WindowState newValue) throws SkypeException {
-        Utils.setProperty("WINDOWSTATE", newValue.name());
+    public void setMainWindowState(WindowState newValue) throws SkypeException {
+        Utils.setProperty(connector, "WINDOWSTATE", newValue.name());
     }
     
-    public static WindowState getMainWindowState() throws SkypeException {
-        return WindowState.valueOf(Utils.getProperty("WINDOWSTATE"));
+    public WindowState getMainWindowState() throws SkypeException {
+        return WindowState.valueOf(Utils.getProperty(connector, "WINDOWSTATE"));
     }
 }

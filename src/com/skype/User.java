@@ -70,10 +70,10 @@ public class User extends SkypeObject {
      * @param id whose associated User object is to be returned.
      * @return User object with ID == id.
      */
-    public static User getInstance(final String id) {
+    public static User getInstance(final Connector aConnector, final String id) {
         synchronized(users) {
             if (!users.containsKey(id)) {
-                users.put(id, new User(id));
+                users.put(id, new User(aConnector, id));
             }
             return users.get(id);
         }
@@ -84,10 +84,10 @@ public class User extends SkypeObject {
      * @param id whose associated Friend object is to be returned.
      * @return Friend object with ID == id.
      */
-    static Friend getFriendInstance(String id) {
+    static Friend getFriendInstance(final Connector aConnector, String id) {
         synchronized(users) {
             if (!users.containsKey(id)) {
-                Friend friend = new Friend(id);
+                Friend friend = new Friend(aConnector, id);
                 users.put(id, friend);
                 return friend;
             } else {
@@ -95,7 +95,7 @@ public class User extends SkypeObject {
                 if (user instanceof Friend) {
                     return (Friend)user;
                 } else {
-                    Friend friend = new Friend(id);
+                    Friend friend = new Friend(aConnector, id);
                     friend.copyFrom(user);
                     users.put(id, friend);
                     return friend;
@@ -105,7 +105,7 @@ public class User extends SkypeObject {
     }
 
     public static void removeAllListener() {
-        for(Iterator iterator = users.values().iterator(); iterator.hasNext();) {
+        for(Iterator<User> iterator = users.values().iterator(); iterator.hasNext();) {
             User u = (User) iterator.next();
             u.removeAllPropertyChangeListener();
         }
@@ -197,9 +197,11 @@ public class User extends SkypeObject {
 
     /**
      * Constructor.
+     * @param aConnector 
      * @param newId The USER ID.
      */
-    User(String newId) {
+    User(Connector aConnector, String newId) {
+    	super(aConnector);
         this.id = newId;
     }
 
@@ -540,7 +542,7 @@ public class User extends SkypeObject {
         try {
             String command = "SET " + "USER" + " " + getId() + " " + "BUDDYSTATUS" + " " + (BuddyStatus.PENDING.ordinal() + " " + messageForAuthorization);
             String responseHeader = "USER" + " " + getId() + " " + "BUDDYSTATUS";
-            String response = Connector.getInstance().execute(command, responseHeader);
+            String response = connector.execute(command, responseHeader);
             Utils.checkError(response);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
@@ -616,7 +618,7 @@ public class User extends SkypeObject {
             final File file = Utils.createTempraryFile("get_avator_", "jpg");
             final String command = "GET USER " + getId() + " AVATAR 1 " + file.getAbsolutePath();
             final String responseHeader = "USER " + getId() + " AVATAR 1 ";
-            final String response = Connector.getInstance().execute(command, responseHeader);
+            final String response = connector.execute(command, responseHeader);
             Utils.checkError(response);
             final BufferedImage image = ImageIO.read(file);
             file.delete();
@@ -636,7 +638,7 @@ public class User extends SkypeObject {
      * @throws SkypeException when connection to Skype client has gone bad.
      */
     private String getProperty(String name) throws SkypeException {
-        return Utils.getProperty("USER", getId(), name);
+        return Utils.getProperty(connector, "USER", getId(), name);
     }
 
     private void setProperty(String name, boolean newValue) throws SkypeException {
@@ -644,7 +646,7 @@ public class User extends SkypeObject {
     }
     
     private void setProperty(String name, String newValue) throws SkypeException {
-        Utils.setProperty("USER", getId(), name, newValue);
+        Utils.setProperty(connector, "USER", getId(), name, newValue);
     }
 
     /**
@@ -653,7 +655,7 @@ public class User extends SkypeObject {
      * @throws SkypeException when connection to Skype client has gone bad.
      */
     public final Call call() throws SkypeException {
-        return Skype.call(getId());
+        return connector.getSkype().call(getId());
     }
 
     /**
@@ -662,7 +664,7 @@ public class User extends SkypeObject {
      * @throws SkypeException when connection to Skype client has gone bad.
      */
     public final Chat chat() throws SkypeException {
-        return Skype.chat(getId());
+        return connector.getSkype().chat(getId());
     }
 
     /**
@@ -672,7 +674,7 @@ public class User extends SkypeObject {
      * @throws SkypeException when connection to Skype client has gone bad.
      */
     public final ChatMessage send(String message) throws SkypeException {
-        return Skype.chat(getId()).send(message);
+        return connector.getSkype().chat(getId()).send(message);
     }
 
     /**
@@ -681,7 +683,7 @@ public class User extends SkypeObject {
      * @throws SkypeException when connection to Skype client has gone bad.
      */
     public final VoiceMail voiceMail() throws SkypeException {
-        return Skype.voiceMail(getId());
+        return connector.getSkype().voiceMail(getId());
     }
 
     /**
@@ -690,7 +692,7 @@ public class User extends SkypeObject {
      * @throws SkypeException  when connection to Skype client has gone bad.
      */
     public final void setDisplayName(String newValue) throws SkypeException {
-        Utils.setProperty("USER", getId(), "DISPLAYNAME", newValue);
+        Utils.setProperty(connector, "USER", getId(), "DISPLAYNAME", newValue);
     }
 
     /**
@@ -702,7 +704,7 @@ public class User extends SkypeObject {
         String[] ids = getHistory("CHATMESSAGES");
         ChatMessage[] messages = new ChatMessage[ids.length];
         for (int i = 0; i < ids.length; i++) {
-            messages[i] = ChatMessage.getInstance(ids[i]);
+            messages[i] = ChatMessage.getInstance(connector, ids[i]);
         }
         List<ChatMessage> messageList = Arrays.asList(messages);
         Collections.reverse(messageList);
@@ -718,7 +720,7 @@ public class User extends SkypeObject {
         String[] ids = getHistory("CALLS");
         Call[] calls = new Call[ids.length];
         for (int i = 0; i < ids.length; i++) {
-            calls[i] = Call.getInstance(ids[i]);
+            calls[i] = Call.getInstance(connector, ids[i]);
         }
         return calls;
     }
@@ -732,7 +734,7 @@ public class User extends SkypeObject {
     private String[] getHistory(String type) throws SkypeException {
         try {
             String responseHeader = type + " ";
-            String response = Connector.getInstance().execute("SEARCH " + type + " " + getId(), responseHeader);
+            String response = connector.execute("SEARCH " + type + " " + getId(), responseHeader);
             Utils.checkError(response);
             String data = response.substring(responseHeader.length());
             return Utils.convertToArray(data);
@@ -781,15 +783,15 @@ public class User extends SkypeObject {
                             String propertyName = data.substring(0, data.indexOf(' '));
                             String propertyValue = data.substring(data.indexOf(' ') + 1);
                             if (propertyName.equals("ONLINESTATUS")) {
-                                User.getInstance(skypeId).firePropertyChanged(STATUS_PROPERTY, null, Status.valueOf(propertyValue));
+                                User.getInstance(connector, skypeId).firePropertyChanged(STATUS_PROPERTY, null, Status.valueOf(propertyValue));
                             } else if (propertyName.equals("MOOD_TEXT")) {
-                                User.getInstance(skypeId).firePropertyChanged(MOOD_TEXT_PROPERTY, null, propertyValue);
+                                User.getInstance(connector, skypeId).firePropertyChanged(MOOD_TEXT_PROPERTY, null, propertyValue);
                             }
                         }
                     }
                 };
                 try {
-                    Connector.getInstance().addConnectorListener(connectorListener);
+                    connector.addConnectorListener(connectorListener);
                     propertyChangeListener = connectorListener;
                 } catch(ConnectorException e) {
                     Utils.convertToSkypeException(e);

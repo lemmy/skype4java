@@ -40,36 +40,33 @@ import com.skype.connector.ConnectorException;
  * Implementation of the connector for Linux
  */
 public final class LinuxDBusConnector extends Connector {
-    private static LinuxDBusConnector _instance = null;
 
-    /**
-     * Get singleton instance.
-     * 
-     * @return instance.
-     */
-    public static synchronized Connector getInstance() {
-        if(_instance == null) {
-            _instance = new LinuxDBusConnector();
-        }
-        return _instance;
-    }
+    private String profilePath;
+
+	private final String pass;
+
+	private final String user;
+
+	private SkypeFramework skypeFramework;
 
     private SkypeFrameworkListener listener = new SkypeFrameworkListener() {
         public void notificationReceived(String notificationString) {
             fireMessageReceived(notificationString);
         }
     };
-
-    private String profilePath;
-
+    
     /**
      * Constructor.
      */
-    private LinuxDBusConnector() {
+    public LinuxDBusConnector(final Skype skype, final String aUsername, final String aPassword) {
+    	super(skype);
+    	user = aUsername;
+    	pass = aPassword;
+    	profilePath = System.getProperty("user.home") + File.separator + ".Skype" + File.separator + user;
     }
 
     public boolean isRunning() throws ConnectorException {
-        return SkypeFramework.isRunning();
+        return skypeFramework.isRunning();
     }
 
     /**
@@ -85,23 +82,14 @@ public final class LinuxDBusConnector extends Connector {
             return null;
         }
     }
-    
-    private String getProfilePath() {
-        // profile path does not change at runtime
-        if (profilePath == null) {
-            final String userHome = System.getProperty("user.home");
-            final String account = SkypeFramework.sendCommndWithResponse("GET CURRENTUSERHANDLE");
-            profilePath = userHome + File.separator + ".Skype" + File.separator + account.split(" ")[1];
-        }
-        return profilePath;
-    }
 
     /**
      * Initializes this connector.
      */
     protected void initializeImpl() throws ConnectorException {
-        SkypeFramework.init();
-        SkypeFramework.addSkypeFrameworkListener(listener);
+    	skypeFramework = new SkypeFramework(user, pass);
+    	skypeFramework.init();
+    	skypeFramework.addSkypeFrameworkListener(listener);
     }
 
     /**
@@ -112,7 +100,7 @@ public final class LinuxDBusConnector extends Connector {
      * @throws ConnectorException when connection can not be established.
      */
     protected Status connect(int timeout) throws ConnectorException {
-        if(!SkypeFramework.isRunning()) {
+        if(!skypeFramework.isRunning()) {
             setStatus(Status.NOT_RUNNING);
             return getStatus();
         }
@@ -130,10 +118,10 @@ public final class LinuxDBusConnector extends Connector {
                 }
             };
             setStatus(Status.PENDING_AUTHORIZATION);
-            SkypeFramework.addSkypeFrameworkListener(initListener);
-            SkypeFramework.sendCommand("NAME " + getApplicationName());
+            skypeFramework.addSkypeFrameworkListener(initListener);
+            skypeFramework.sendCommand("NAME " + getApplicationName());
             String result = queue.take();
-            SkypeFramework.removeSkypeFrameworkListener(initListener);
+            skypeFramework.removeSkypeFrameworkListener(initListener);
             if("OK".equals(result)) {
                 setStatus(Status.ATTACHED);
             } else if("CONNSTATUS OFFLINE".equals(result)) {
@@ -158,10 +146,10 @@ public final class LinuxDBusConnector extends Connector {
         if(command.toLowerCase().contains("avatar")) {
             final String[] split = command.split(" ");
             final String userId = split[2];
-            readAvatarToFile(getProfilePath(), userId, split[5]);
-            SkypeFramework.fireNotificationReceived("USER " + userId + " AVATAR 1 ");
+            readAvatarToFile(profilePath, userId, split[5]);
+            skypeFramework.fireNotificationReceived("USER " + userId + " AVATAR 1 ");
         } else {
-            SkypeFramework.sendCommand(command);
+        	skypeFramework.sendCommand(command);
         }
     }
 
@@ -169,8 +157,8 @@ public final class LinuxDBusConnector extends Connector {
      * Cleans up the connector and the native library.
      */
     protected void disposeImpl() {
-        SkypeFramework.removeSkypeFrameworkListener(listener);
-        SkypeFramework.dispose();
+        skypeFramework.removeSkypeFrameworkListener(listener);
+        skypeFramework.dispose();
     }
 
     /**
@@ -284,9 +272,5 @@ public final class LinuxDBusConnector extends Connector {
 
     private int indexOf(byte[] bytes, byte[] key, int from) {
         return indexOf(bytes, key, from, bytes.length);
-    }
-    
-    private int indexOf(byte[] bytes, byte[] key) {
-        return indexOf(bytes, key, 0);
     }
 }
