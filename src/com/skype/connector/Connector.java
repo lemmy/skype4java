@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Koji Hisano <hisano@gmail.com>
  */
 public abstract class Connector {
-    private static final String useDBus = System.getProperty("com.skype.connector.Connector.useDBus");
+    private static final String useDBus = System.getProperty("com.skype.connector.Connector.useDBus", "true");
     
     /**
      * Enumeration of the connector status.
