@@ -101,7 +101,6 @@ public final class ChatMessage extends SkypeObject {
      * ID of this CHATMESSAGE.
      */
     private final String id;
-	private Connector connector;
 
     /**
      * Constructor.

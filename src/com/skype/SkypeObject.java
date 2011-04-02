@@ -48,6 +48,7 @@ class SkypeObject {
     protected final Connector connector;
     
     public SkypeObject(final Connector aConnector) {
+    	assert aConnector != null;
     	this.connector = aConnector;
     }
     
