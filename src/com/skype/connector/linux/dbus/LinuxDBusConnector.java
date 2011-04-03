@@ -41,11 +41,9 @@ import com.skype.connector.ConnectorException;
  */
 public final class LinuxDBusConnector extends Connector {
 
-    private String profilePath;
-
 	private final String pass;
-
 	private final String user;
+	private final AvatarReader avatarReader;
 
 	private SkypeFramework skypeFramework;
 
@@ -62,7 +60,7 @@ public final class LinuxDBusConnector extends Connector {
     	super(skype);
     	user = aUsername;
     	pass = aPassword;
-    	profilePath = System.getProperty("user.home") + File.separator + ".Skype" + File.separator + user;
+    	avatarReader = new AvatarReader(user);
     }
 
     public boolean isRunning() throws ConnectorException {
@@ -146,7 +144,8 @@ public final class LinuxDBusConnector extends Connector {
         if(command.toLowerCase().contains("avatar")) {
             final String[] split = command.split(" ");
             final String userId = split[2];
-            readAvatarToFile(profilePath, userId, split[5]);
+            final String path = split[5];
+            avatarReader.readAvatarToFile(userId, path);
             skypeFramework.fireNotificationReceived("USER " + userId + " AVATAR 1 ");
         } else {
         	skypeFramework.sendCommand(command);
@@ -159,118 +158,5 @@ public final class LinuxDBusConnector extends Connector {
     protected void disposeImpl() {
         skypeFramework.removeSkypeFrameworkListener(listener);
         skypeFramework.dispose();
-    }
-
-    /**
-     * The Skype files that make up the user database
-     */
-    private static final String[] DBBs = new String[]{/*"user256.dbb",*/ "user1024.dbb", "user4096.dbb", "user16384.dbb", "user32768.dbb", "user65536.dbb"};
-
-    /**
-     * JPG Magic markers
-     */
-    private static final byte[] JPG_START_MARKER = new byte[]{(byte) 0xFF, (byte) 0xD8};
-    private static final byte[] JPG_END_MARKER = new byte[]{(byte) 0xFF, (byte) 0xD9};
-    
-    /**
-     * Marker which (appears to) separate user entries in .dbb files
-     */
-    private static final byte[] L33L_MARKER = "l33l".getBytes();
-
-    private void readAvatarToFile(final String installPath, final String userId, final String path) {
-        try {
-            for(int i = 0; i < DBBs.length; i++) {
-                File file = new File(installPath + File.separator + DBBs[i]);
-                if(file != null && file.exists()) {
-                    // read dbb file into a byte[]
-                    final DataInputStream stream = new DataInputStream(new FileInputStream(file));
-                    final byte[] bytes = new byte[stream.available()];
-                    stream.read(bytes);
-
-                    int pos = 0;
-                    while(pos != bytes.length - 1) {
-                        int l33l1 = indexOf(bytes, L33L_MARKER, pos);
-                        if(l33l1 == -1) {
-                            break;
-                        }
-                        
-                        int l33l2 = indexOf(bytes, L33L_MARKER, l33l1 + 1);
-                        if(l33l2 == -1) { // end of file
-                            l33l2 = bytes.length - 1;
-                        }
-                        
-                        // is userid owner of current l33l block?
-                        int user = indexOf(bytes, userId.getBytes(), l33l1, l33l2);
-                        if(user != -1) { // current l33l block is user we are looking for
-                            
-                            int jpgStart = indexOf(bytes, JPG_START_MARKER, l33l1, l33l2);
-                            if(jpgStart != -1) { // l33l block contains jpg image
-
-                                int jpgEnd = indexOf(bytes, JPG_END_MARKER, jpgStart, l33l2);
-                                if(jpgEnd != -1) { // might happen as well
-                                    
-                                    // slice off jpg from dbb
-                                    byte[] bs = Arrays.copyOfRange(bytes, jpgStart, jpgEnd + 2);
-                                    
-                                    // write to temp file
-                                    FileOutputStream fos = new FileOutputStream(path);
-                                    fos.write(bs);
-                                    fos.close();
-                                    
-                                    return;
-                                }
-                            } else {
-                                break;
-                            }
-                        }
-                        
-                        // advance to the next l33l marker
-                        pos = l33l2;
-                    }
-                }    
-            }
-
-            // write dummy file
-            InputStream in = getClass().getResourceAsStream("/dummy.jpg");
-            FileOutputStream out = new FileOutputStream(path);
-            // Transfer bytes from in to out
-            byte[] buf = new byte[1024];
-            int len;
-            while((len = in.read(buf)) > 0) {
-                out.write(buf, 0, len);
-            }
-            in.close();
-            out.close();
-
-        } catch(FileNotFoundException e) {
-            e.printStackTrace();
-        } catch(IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * @param bytes Where to search in
-     * @param key The key to search for
-     * @param from Must be < bytes.length
-     * @return The first occurrence of the given key in bytes
-     */
-    private int indexOf(byte[] bytes, byte[] key, int from, int to) {
-        OUTER: for(int i = from; i < to; i++) {
-            // try to match first byte
-            if(bytes[i] == key[0]) {
-                for(int j = 0; j < key.length; j++) {
-                    if(key[j] != bytes[i + j]) {
-                        continue OUTER;
-                    }
-                }
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private int indexOf(byte[] bytes, byte[] key, int from) {
-        return indexOf(bytes, key, from, bytes.length);
     }
 }
