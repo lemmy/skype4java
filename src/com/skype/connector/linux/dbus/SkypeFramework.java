@@ -22,9 +22,6 @@
 package com.skype.connector.linux.dbus;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -39,12 +36,14 @@ import com.Skype.Client;
 import com.skype.connector.ConnectorException;
 
 public class SkypeFramework {
-	private static final String SERVER_PATH = "/com/Skype";
+    private static final boolean DEBUG = Boolean.getBoolean("com.skype.connector.linux.dbus.SkypeFramework.debug");
+
+    private static final String SERVER_PATH = "/com/Skype";
 	private static final String CLIENT_PATH = "/com/Skype/Client";
 	
 	private class SkypeDBusNotify implements Client  {
 		
-		private SkypeFramework fw;
+        private SkypeFramework fw;
 
 		public SkypeDBusNotify(SkypeFramework fw) {
 			this.fw = fw;
@@ -55,7 +54,9 @@ public class SkypeFramework {
 		}
 
 		public void Notify(String message) {
-		    System.out.println("<= fireListenerNotify: " + message);
+		    if(DEBUG) {
+		        System.out.println("<= fireListenerNotify: " + message);
+		    }
 		    fw.fireNotificationReceived(message);
 		}
 	}
@@ -68,17 +69,24 @@ public class SkypeFramework {
 	private DBusConnection conn;
     private String source;
 
+    private ProcessHelper processHelper;
+
+	private ProcessListener processListener;
+	private int pid;
+
 	public SkypeFramework(String aUsername, String aPassword) {
 		this.user = aUsername;
 		this.pass = aPassword;
+		this.processHelper = ProcessHelper.getInstance();
 	}
 
-    void init() throws ConnectorException {
+    void init(ProcessListener aProcessListener) throws ConnectorException {
         try {
-            final int pid = spawnSkypeProcess(user, pass);
+        	this.processListener = aProcessListener;
+            pid = processHelper.getSkypeProcess(aProcessListener, user, pass);
             
             conn = DBusConnection.getConnection(DBusConnection.SESSION);
-            source = pidToDBusAddress(pid);
+            source = getDBusAddressByPid(pid);
             
             // get handle for server
             skypeDBus = conn.getRemoteObject("com.Skype.API", SERVER_PATH, API.class);
@@ -92,12 +100,16 @@ public class SkypeFramework {
         }
 	}
 
-    private String pidToDBusAddress(int pid) throws DBusException {
+    private String getDBusAddressByPid(int pid) throws DBusException {
         final DBus dbus = conn.getRemoteObject("org.freedesktop.DBus", "/org/freedesktop/DBus", DBus.class);
 
+        int max = 0;
         String source = "";
         // find skype DBus name by process id
         while ("".equals(source)) {
+        	if(max++ == 10) {
+        		throw new ConnectorException("No Skype instance with pid " + pid + " found attached to DBus t");
+        	}
             // might take some time for skype to register with dbus
             try {
                 Thread.sleep(5000); 
@@ -121,48 +133,6 @@ public class SkypeFramework {
         }
         return source;
     }
-
-    private int getPID(Process process) {
-	    if(process.getClass().getName().equals("java.lang.UNIXProcess")) {
-	        try {
-	            Field f = process.getClass().getDeclaredField("pid");
-	            f.setAccessible(true);
-	            return f.getInt(process);
-	        } catch (SecurityException e) {
-	            e.printStackTrace();
-            } catch (NoSuchFieldException e) {
-                e.printStackTrace();
-            } catch (IllegalArgumentException e) {
-                e.printStackTrace();
-	        } catch (IllegalAccessException e) {
-	            e.printStackTrace();
-	        }
-	    }
-	    return -1;
-    }
-
-    private int spawnSkypeProcess(final String user, final String pass) throws IOException {
-        final List<String> cmds = new ArrayList<String>();
-        cmds.add("/usr/bin/skype");
-        cmds.add("--pipelogin");
-        
-        final Runtime runtime = Runtime.getRuntime();
-
-        final Process process = runtime.exec(cmds.toArray(new String[cmds.size()]));
-        runtime.addShutdownHook(new Thread(new Runnable() {
-            public void run() {
-                if(process != null) {
-                    process.destroy();
-                }
-            }
-        }));
-
-        final OutputStream outputStream = process.getOutputStream();
-        outputStream.write((user + " " + pass).getBytes());
-        outputStream.close();
-
-        return getPID(process);
-    }
     
     void addSkypeFrameworkListener(SkypeFrameworkListener listener) {
 		listeners.add(listener);
@@ -177,7 +147,9 @@ public class SkypeFramework {
 	}
 
 	void sendCommand(String command) {
-	    System.err.println("=> sendcommand: " + command);
+	    if(DEBUG) {
+	        System.err.println("=> sendcommand: " + command);
+	    }
 	    final String response = skypeDBus.Invoke(command);
 		fireNotificationReceived(response);
 	}
@@ -187,8 +159,10 @@ public class SkypeFramework {
 	}
 
 	void fireNotificationReceived(String notificationString) {
-		System.out
-				.println("<= fireNotificationReceived: " + notificationString);
+	    if(DEBUG) {
+	        System.out
+	        .println("<= fireNotificationReceived: " + notificationString);
+	    }
 		for (SkypeFrameworkListener listener : listeners) {
 			listener.notificationReceived(notificationString);
 		}
@@ -198,5 +172,6 @@ public class SkypeFramework {
 		conn.unExportObject(CLIENT_PATH, source);
 		conn.disconnect();
 		conn = null; 
+		processHelper.removeProcessListener(pid, processListener);
 	}
 }
