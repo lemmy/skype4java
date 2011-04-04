@@ -32,7 +32,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -57,8 +56,8 @@ public class User extends SkypeObject {
      */
     private static final Map<String, User> users = new HashMap<String, User>();
     
-    private static Object propertyChangeListenerMutex = new Object();
-    private static ConnectorListener propertyChangeListener;
+    private Object propertyChangeListenerMutex = new Object();
+    private ConnectorListener propertyChangeListener;
     
     /** Identifies the status property. */
     public static final String STATUS_PROPERTY = "status";
@@ -101,13 +100,6 @@ public class User extends SkypeObject {
                     return friend;
                 }
             }
-        }
-    }
-
-    public static void removeAllListener() {
-        for(Iterator<User> iterator = users.values().iterator(); iterator.hasNext();) {
-            User u = (User) iterator.next();
-            u.removeAllPropertyChangeListener();
         }
     }
     

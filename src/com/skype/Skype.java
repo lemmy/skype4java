@@ -28,6 +28,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.skype.connector.AbstractConnectorListener;
 import com.skype.connector.Connector;
+import com.skype.connector.Connector.Status;
 import com.skype.connector.ConnectorException;
 import com.skype.connector.ConnectorListener;
 import com.skype.connector.ConnectorMessageEvent;
@@ -86,12 +87,10 @@ public class Skype {
     /** refrence to the default exception handler. */
     private SkypeExceptionHandler exceptionHandler = defaultExceptionHandler;
 
-	private final Connector connector;
-
+	private Connector connector;
 
     public Skype(String user, String pass) {
     	connector = Connector.getInstance(this, user, pass);
-    	connector.connect();
 	}
 
 	/**
@@ -1030,9 +1029,24 @@ public class Skype {
 
 	public void dispose() {
 		connector.dispose();
+		connector = null;
+		removeAllListeners();
 	}
 
 	public Connector getConnector() {
 		return connector;
+	}
+
+	public Status getStatus() {
+		return connector.getStatus();
+	}
+
+	public void addConnectorListener(
+			ConnectorListener skypeConnectorListener) {
+		connector.addConnectorListener(skypeConnectorListener, false);
+	}
+
+	public Status connect() {
+		return connector.connect();
 	}
 }

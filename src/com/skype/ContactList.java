@@ -38,8 +38,8 @@ import com.skype.connector.ConnectorMessageEvent;
  */
 public final class ContactList {
     public static final String STATUS_PROPERTY = "com.skype.ContactList.status";
-    private static Object propertyChangeListenerMutex = new Object();
-    private static ConnectorListener propertyChangeListener;
+    private Object propertyChangeListenerMutex = new Object();
+    private ConnectorListener propertyChangeListener;
     private PropertyChangeSupport listeners = new PropertyChangeSupport(this);
 	private final Connector connector;
 
