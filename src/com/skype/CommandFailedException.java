@@ -49,12 +49,18 @@ public final class CommandFailedException extends SkypeException {
      */
     CommandFailedException(String response) {
         super(response);
-        if (response.startsWith("ERROR ")) {
-            response = response.substring("ERROR ".length());
+        try {
+        	if (response.startsWith("ERROR ")) {
+        		response = response.substring("ERROR ".length());
+        	}
+        	int spaceIndex = response.indexOf(' ');
+        	code = Integer.parseInt(response.substring(0, spaceIndex));
+        	message = response.substring(spaceIndex + 1);
+        } catch(StringIndexOutOfBoundsException e) {
+        	System.err.println(response);
+        	code = -1;
+        	message="";
         }
-        int spaceIndex = response.indexOf(' ');
-        code = Integer.parseInt(response.substring(0, spaceIndex));
-        message = response.substring(spaceIndex + 1);
     }
 
     /**

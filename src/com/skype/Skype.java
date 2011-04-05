@@ -347,22 +347,6 @@ public class Skype {
 	public Status connect() {
 		return connector.connect();
 	}
-	
-	private final Map<String, Friend> idToFriends = new HashMap<String, Friend>();
-    /**
-     * @param string
-     * @return
-     */
-    public Friend getFriend(final String anId) {
-    	synchronized (idToFriends) {
-    		Friend friend = idToFriends.get(anId);
-    		if(friend == null) {
-    			friend = new Friend(connector, anId);
-    			idToFriends.put(anId, friend);
-    		}
-    		return friend;
-		}
-    }
 
 	private final Map<String, User> idToUsers = new HashMap<String, User>();
     /**

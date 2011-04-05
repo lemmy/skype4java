@@ -39,21 +39,21 @@ public final class Group extends SkypeObject {
     public enum Type {
     	/**
     	 * ALL_USERS - This group contains all users I know about, including users in my contactlist, users I recently contacted and blocked users.
-		 * ALL_FRIENDS - This group contains all contacts in my contactlist (also known as friends).
-		 * SKYPE_FRIENDS - This group contains Skype contacts in my contactlist.
-		 * SkypeOut_FRIENDS - This group contains SkypeOut contacts in my contactlist.
-		 * ONLINE_FRIENDS - This group contains Skype contacts in my contactlist who are online.
-		 * UNKNOWN_OR_PENDINGAUTH_FRIENDS - This group contains contacts in my contactlist who have not yet authorized me.
-		 * RECENTLY_CONTACTED_USERS - This group contains contacts I have conversed with recently, including non-friends.
-		 * USERS_WAITING_MY_AUTHORIZATION - This group contains contacts who are awating my response to an authorisation request, including non-friends.
-		 * USERS_AUTHORIZED_BY_ME - This group contains all contacts I have authorised, including non-friends.
-		 * USERS_BLOCKED_BY_ME - This group contains all contacts I have blocked, including non-friends.
-		 * UNGROUPED_FRIENDS - This group contains all contacts in my contactlist that do not belong to any custom group.
+		 * ALL_UserS - This group contains all contacts in my contactlist (also known as Users).
+		 * SKYPE_UserS - This group contains Skype contacts in my contactlist.
+		 * SkypeOut_UserS - This group contains SkypeOut contacts in my contactlist.
+		 * ONLINE_UserS - This group contains Skype contacts in my contactlist who are online.
+		 * UNKNOWN_OR_PENDINGAUTH_UserS - This group contains contacts in my contactlist who have not yet authorized me.
+		 * RECENTLY_CONTACTED_USERS - This group contains contacts I have conversed with recently, including non-Users.
+		 * USERS_WAITING_MY_AUTHORIZATION - This group contains contacts who are awating my response to an authorisation request, including non-Users.
+		 * USERS_AUTHORIZED_BY_ME - This group contains all contacts I have authorised, including non-Users.
+		 * USERS_BLOCKED_BY_ME - This group contains all contacts I have blocked, including non-Users.
+		 * UNGROUPED_UserS - This group contains all contacts in my contactlist that do not belong to any custom group.
 		 * CUSTOM_GROUP - This group type is reserved for user-defined groups. 
 		 * SHARED_GROUP - @TODO: check API docs 
 		 * PROPOSED_SHARED_GROUP - @TODO: check API docs
     	 */
-        ALL_USERS, ALL_FRIENDS, SKYPE_FRIENDS, SKYPEOUT_FRIENDS, ONLINE_FRIENDS, UNKNOWN_OR_PENDINGAUTH_FRIENDS, RECENTLY_CONTACTED_USERS, USERS_WAITING_MY_AUTHORIZATION, USERS_AUTHORIZED_BY_ME, USERS_BLOCKED_BY_ME, UNGROUPED_FRIENDS, CUSTOM_GROUP, SHARED_GROUP, PROPOSED_SHARED_GROUP;
+        ALL_USERS, ALL_UserS, SKYPE_UserS, SKYPEOUT_UserS, ONLINE_UserS, UNKNOWN_OR_PENDINGAUTH_UserS, RECENTLY_CONTACTED_USERS, USERS_WAITING_MY_AUTHORIZATION, USERS_AUTHORIZED_BY_ME, USERS_BLOCKED_BY_ME, UNGROUPED_UserS, CUSTOM_GROUP, SHARED_GROUP, PROPOSED_SHARED_GROUP;
     }
 
     /**
@@ -110,12 +110,12 @@ public final class Group extends SkypeObject {
     }
 
     /**
-     * Add friend to this GROUP.
-     * @param friend to add.
+     * Add User to this GROUP.
+     * @param User to add.
      * @throws SkypeException when the connection has gone bad.
      */
-    public void addFriend(Friend friend) throws SkypeException {
-        Utils.executeWithErrorCheck(connector, "ALTER GROUP " + getId() + " ADDUSER " + friend.getId());
+    public void addUser(User User) throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "ALTER GROUP " + getId() + " ADDUSER " + User.getId());
     }
 
     /**
@@ -128,12 +128,12 @@ public final class Group extends SkypeObject {
     }
 
     /**
-     * Remove a friend from this GROUP.
-     * @param friend The User to remove from this group.
+     * Remove a User from this GROUP.
+     * @param User The User to remove from this group.
      * @throws SkypeException when connection has gone bad.
      */
-    public void removeFriend(Friend friend) throws SkypeException {
-        Utils.executeWithErrorCheck(connector, "ALTER GROUP " + getId() + " REMOVEUSER " + friend.getId());
+    public void removeUser(User User) throws SkypeException {
+        Utils.executeWithErrorCheck(connector, "ALTER GROUP " + getId() + " REMOVEUSER " + User.getId());
     }
 
     /**
@@ -148,12 +148,12 @@ public final class Group extends SkypeObject {
     /**
      * changes the display name for a contact.
      * @TODO: move this command to ContactList.java
-     * @param friend The User to change this for.
+     * @param User The User to change this for.
      * @param displayName The new name.
      * @throws SkypeException when connection has gone bad.
      */
-    public void changeFriendDisplayName(Friend friend, String displayName) throws SkypeException {
-        friend.setDisplayName(displayName);
+    public void changeUserDisplayName(User User, String displayName) throws SkypeException {
+        User.setDisplayName(displayName);
     }
 
     /**
@@ -169,27 +169,27 @@ public final class Group extends SkypeObject {
 
     /**
      * Return all authorized users.
-     * @return Array of Friends.
+     * @return Array of Users.
      * @throws SkypeException when the connection has gone bad.
      */
-    public Friend[] getAllFriends() throws SkypeException {
+    public User[] getAllUsers() throws SkypeException {
         String[] ids = Utils.convertToArray(getProperty("USERS"));
-        Friend[] friends = new Friend[ids.length];
+        User[] Users = new User[ids.length];
         for (int i = 0; i < ids.length; i++) {
-            friends[i] = connector.getSkype().getContactList().getFriend(ids[i]);
+            Users[i] = connector.getSkype().getContactList().getUser(ids[i]);
         }
-        return friends;
+        return Users;
     }
 
     /**
-     * Check for any friends.
-     * @param checked the friend to check against.
-     * @return True if friend is authorized.
+     * Check for any Users.
+     * @param checked the User to check against.
+     * @return True if User is authorized.
      * @throws SkypeException when connection has gone bad.
      */
-    public boolean hasFriend(Friend checked) throws SkypeException {
-        for (Friend friend : getAllFriends()) {
-            if (checked.equals(friend)) {
+    public boolean hasUser(User checked) throws SkypeException {
+        for (User User : getAllUsers()) {
+            if (checked.equals(User)) {
                 return true;
             }
         }

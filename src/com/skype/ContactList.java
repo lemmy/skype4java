@@ -27,7 +27,7 @@ import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
 
 /**
- * This object can be used for all actions normal to a contactlist, like searching users and friends.
+ * This object can be used for all actions normal to a contactlist, like searching users and Users.
  * @author Koji Hisano.
  */
 public final class ContactList {
@@ -44,21 +44,21 @@ public final class ContactList {
 
     /**
      * Get all authorized users.
-     * @return array of friends.
+     * @return array of Users.
      * @throws SkypeException when the connection has gone bad.
      */
-    public Friend[] getAllFriends() throws SkypeException {
+    public User[] getAllUsers() throws SkypeException {
         try {
             String responseHeader = "USERS ";
             String response = connector.execute("SEARCH FRIENDS", responseHeader);
             Utils.checkError(response);
             String data = response.substring(responseHeader.length());
             String[] ids = Utils.convertToArray(data);
-            Friend[] friends = new Friend[ids.length];
+            User[] Users = new User[ids.length];
             for (int i = 0; i < ids.length; i++) {
-                friends[i] = connector.getSkype().getFriend(ids[i]);
+                Users[i] = connector.getSkype().getUser(ids[i]);
             }
-            return friends;
+            return Users;
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return null;
@@ -70,16 +70,16 @@ public final class ContactList {
      * @return array of users.
      * @throws SkypeException when the connection has gone bad.
      */
-    public Friend[] getAllUserWaitingForAuthorization() throws SkypeException {
+    public User[] getAllUserWaitingForAuthorization() throws SkypeException {
         try {
             String responseHeader = "USERS ";
             String response = connector.execute("SEARCH USERSWAITINGMYAUTHORIZATION", responseHeader);
             Utils.checkError(response);
             String data = response.substring(responseHeader.length());
             String[] ids = Utils.convertToArray(data);
-            Friend[] users = new Friend[ids.length];
+            User[] users = new User[ids.length];
             for (int i = 0; i < ids.length; i++) {
-                users[i] = connector.getSkype().getFriend(ids[i]);
+                users[i] = connector.getSkype().getUser(ids[i]);
             }
             return users;
         } catch (ConnectorException e) {
@@ -89,16 +89,16 @@ public final class ContactList {
     }
     
     /**
-     * Get the Friend object for one of the authorized users.
-     * @param skypeId Skype ID of the friend.
-     * @return the friend or null if friend isn't found.
+     * Get the User object for one of the authorized users.
+     * @param skypeId Skype ID of the User.
+     * @return the User or null if User isn't found.
      * @throws SkypeException when a connection has gone bad.
      */
-    public Friend getFriend(String skypeId) throws SkypeException {
+    public User getUser(String skypeId) throws SkypeException {
         Utils.checkNotNull(skypeId, "skypeId");
-        for (Friend friend : getAllFriends()) {
-            if (skypeId.equals(friend.getId())) {
-                return friend;
+        for (User User : getAllUsers()) {
+            if (skypeId.equals(User.getId())) {
+                return User;
             }
         }
         return null;
@@ -203,32 +203,32 @@ public final class ContactList {
     /**
      * Add user to contactlist.
      * @param user user to be added.
-     * @return Added friend.
+     * @return Added User.
      * @throws SkypeException when connection has gone bad.
      */
-    public Friend addFriend(User user, String messageForAuthorization) throws SkypeException {
-        return addFriend(user.getId(), messageForAuthorization);
+    public User addUser(User user, String messageForAuthorization) throws SkypeException {
+        return addUser(user.getId(), messageForAuthorization);
     }
 
     /**
      * Add user to contactlist.
      * @param skypeId skype id of user to be added.
-     * @return Added friend.
+     * @return Added User.
      * @throws SkypeException when connection has gone bad.
      */
-    public Friend addFriend(String skypeId, String messageForAuthorization) throws SkypeException {
-        Friend friend = connector.getSkype().getFriend(skypeId);
-        friend.askForAuthorization(messageForAuthorization);
-        return friend;
+    public User addUser(String skypeId, String messageForAuthorization) throws SkypeException {
+        User User = connector.getSkype().getUser(skypeId);
+        User.askForAuthorization(messageForAuthorization);
+        return User;
     }
     
     /**
-     * Removes friend from this contact list.
-     * @param friend friend to be removed.
+     * Removes User from this contact list.
+     * @param User User to be removed.
      * @throws SkypeException when connection has gone bad.
      */
-    public void removeFriend(Friend friend) throws SkypeException {
-        friend.removeFromContactList();
+    public void removeUser(User User) throws SkypeException {
+        User.removeFromContactList();
     }
 
     /** 

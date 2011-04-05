@@ -712,6 +712,9 @@ public class User extends SkypeObject {
                         if (message.startsWith("USER ")) {
                             String data = message.substring("USER ".length());
                             String skypeId = data.substring(0, data.indexOf(' '));
+                            if(!User.this.id.equals(skypeId)) {
+                            	return;
+                            }
                             data = data.substring(data.indexOf(' ') + 1);
                             String propertyName = data.substring(0, data.indexOf(' '));
                             String propertyValue = data.substring(data.indexOf(' ') + 1);
