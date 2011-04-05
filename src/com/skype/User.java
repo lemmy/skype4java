@@ -31,9 +31,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.imageio.ImageIO;
 
@@ -51,13 +49,6 @@ import com.skype.connector.ConnectorMessageEvent;
  * </p>
  */
 public class User extends SkypeObject {
-    /**
-     * Collection of User objects.
-     */
-    private static final Map<String, User> users = new HashMap<String, User>();
-    
-    private Object propertyChangeListenerMutex = new Object();
-    private ConnectorListener propertyChangeListener;
     
     /** Identifies the status property. */
     public static final String STATUS_PROPERTY = "status";
@@ -65,43 +56,29 @@ public class User extends SkypeObject {
     public static final String MOOD_TEXT_PROPERTY = "moodText";
 
     /**
-     * Returns the User object by the specified id.
-     * @param id whose associated User object is to be returned.
-     * @return User object with ID == id.
-     */
-    public static User getInstance(final Connector aConnector, final String id) {
-        synchronized(users) {
-            if (!users.containsKey(id)) {
-                users.put(id, new User(aConnector, id));
-            }
-            return users.get(id);
-        }
-    }
-    
-    /**
      * Returns the Friend object by the specified id.
      * @param id whose associated Friend object is to be returned.
      * @return Friend object with ID == id.
      */
-    static Friend getFriendInstance(final Connector aConnector, String id) {
-        synchronized(users) {
-            if (!users.containsKey(id)) {
-                Friend friend = new Friend(aConnector, id);
-                users.put(id, friend);
-                return friend;
-            } else {
-                User user = users.get(id);
-                if (user instanceof Friend) {
-                    return (Friend)user;
-                } else {
-                    Friend friend = new Friend(aConnector, id);
-                    friend.copyFrom(user);
-                    users.put(id, friend);
-                    return friend;
-                }
-            }
-        }
-    }
+//    static Friend getFriendInstance(final Connector aConnector, String id) {
+//        synchronized(users) {
+//            if (!users.containsKey(id)) {
+//                Friend friend = new Friend(aConnector, id);
+//                users.put(id, friend);
+//                return friend;
+//            } else {
+//                User user = users.get(id);
+//                if (user instanceof Friend) {
+//                    return (Friend)user;
+//                } else {
+//                    Friend friend = new Friend(aConnector, id);
+//                    friend.copyFrom(user);
+//                    users.put(id, friend);
+//                    return friend;
+//                }
+//            }
+//        }
+//    }
     
     /**
      * The <code>Status</code> enum contains the online status constants of the skype user.
@@ -185,6 +162,9 @@ public class User extends SkypeObject {
 
     /** ID of this User. */
     private String id;
+    
+    private Object propertyChangeListenerMutex = new Object();
+    private ConnectorListener propertyChangeListener;
     private PropertyChangeSupport listeners = new PropertyChangeSupport(this);
 
     /**
@@ -642,15 +622,6 @@ public class User extends SkypeObject {
     }
 
     /**
-     * Start a call to this User.
-     * @return new Call object.
-     * @throws SkypeException when connection to Skype client has gone bad.
-     */
-    public final Call call() throws SkypeException {
-        return connector.getSkype().call(getId());
-    }
-
-    /**
      * Start a chat to this User.
      * @return new Chat object.
      * @throws SkypeException when connection to Skype client has gone bad.
@@ -667,15 +638,6 @@ public class User extends SkypeObject {
      */
     public final ChatMessage send(String message) throws SkypeException {
         return connector.getSkype().chat(getId()).send(message);
-    }
-
-    /**
-     * Leave a voicemail for this User.
-     * @return new VoiceMail object.
-     * @throws SkypeException when connection to Skype client has gone bad.
-     */
-    public final VoiceMail voiceMail() throws SkypeException {
-        return connector.getSkype().voiceMail(getId());
     }
 
     /**
@@ -696,25 +658,11 @@ public class User extends SkypeObject {
         String[] ids = getHistory("CHATMESSAGES");
         ChatMessage[] messages = new ChatMessage[ids.length];
         for (int i = 0; i < ids.length; i++) {
-            messages[i] = ChatMessage.getInstance(connector, ids[i]);
+            messages[i] = connector.getSkype().getChatMessage(ids[i]);
         }
         List<ChatMessage> messageList = Arrays.asList(messages);
         Collections.reverse(messageList);
         return messageList.toArray(new ChatMessage[0]);
-    }
-
-    /**
-     * Search all calls to and from this User.
-     * @return an array of found calls.
-     * @throws SkypeException when connection to Skype client has gone bad.
-     */
-    public final Call[] getAllCalls() throws SkypeException {
-        String[] ids = getHistory("CALLS");
-        Call[] calls = new Call[ids.length];
-        for (int i = 0; i < ids.length; i++) {
-            calls[i] = Call.getInstance(connector, ids[i]);
-        }
-        return calls;
     }
 
     /**
@@ -734,13 +682,6 @@ public class User extends SkypeObject {
             Utils.convertToSkypeException(e);
             return null;
         }
-    }
-
-    /**
-     * Remove this User from the list of watchable Users.
-     */
-    final void dispose() {
-        users.remove(getId());
     }
     
     private void firePropertyChanged(String propertyName, Object oldValue, Object newValue) {
@@ -775,9 +716,9 @@ public class User extends SkypeObject {
                             String propertyName = data.substring(0, data.indexOf(' '));
                             String propertyValue = data.substring(data.indexOf(' ') + 1);
                             if (propertyName.equals("ONLINESTATUS")) {
-                                User.getInstance(connector, skypeId).firePropertyChanged(STATUS_PROPERTY, null, Status.valueOf(propertyValue));
+                            	connector.getSkype().getUser(skypeId).firePropertyChanged(STATUS_PROPERTY, null, Status.valueOf(propertyValue));
                             } else if (propertyName.equals("MOOD_TEXT")) {
-                                User.getInstance(connector, skypeId).firePropertyChanged(MOOD_TEXT_PROPERTY, null, propertyValue);
+                            	connector.getSkype().getUser(skypeId).firePropertyChanged(MOOD_TEXT_PROPERTY, null, propertyValue);
                             }
                         }
                     }

@@ -22,23 +22,16 @@
 package com.skype;
 
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import javax.imageio.ImageIO;
 
-import com.skype.connector.AbstractConnectorListener;
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
-import com.skype.connector.ConnectorListener;
-import com.skype.connector.ConnectorMessageEvent;
 
 /**
  * The <code>Profile</code> class contains the current user's information.
@@ -120,88 +113,7 @@ public final class Profile {
         FEMALE;
     }
 
-    /**
-     * The <code>CallForwardingRule</code> class contains the information of a call forwarding rule.
-     */
-    public static final class CallForwardingRule {
-        /** startSecond value. */
-    	private final int startSecond;
-    	/** endSecond value. */
-    	private final int endSecond;
-        /** target String. */
-    	private final String target;
-
-        /**
-         * Constructs a call forwarding rule.
-         * @param newStartSecond the time in seconds when connecting to this number/user starts.
-         * @param newEndSecond the time in seconds when ringing to this number/user ends.
-         * @param newTarget the target Skype username to forward calls to, or the PSTN number to forward a call.
-         */
-        public CallForwardingRule(int newStartSecond, int newEndSecond, String newTarget) {
-            this.startSecond = newStartSecond;
-            this.endSecond = newEndSecond;
-            if (newTarget.startsWith("+")) {
-                newTarget = newTarget.replaceAll("-", "");
-            }
-            this.target = newTarget;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public int hashCode() {
-            return toString().hashCode();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean equals(Object compared) {
-            if (compared instanceof CallForwardingRule) {
-                return toString().equals(((CallForwardingRule)compared).toString());
-            }
-            return false;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String toString() {
-            return startSecond + "," + endSecond + "," + target;
-        }
-
-        /**
-         * Gets the time in seconds when connecting to this number/user starts.
-         * @return the time in seconds when connecting to this number/user starts.
-         */
-        public int getStartSecond() {
-            return startSecond;
-        }
-
-        /**
-         * Gets the time in seconds when ringing to this number/user ends.
-         * @return the time in seconds when ringing to this number/user ends.
-         */
-        public int getEndSecond() {
-            return endSecond;
-        }
-
-        /**
-         * Gets the target Skype username to forward calls to, or the PSTN number to forward a call.
-         * @return the target Skype username to forward calls to, or the PSTN number to forward a call.
-         */
-        public String getTarget() {
-            return target;
-        }
-    }
-    
-    private PropertyChangeSupport listeners = new PropertyChangeSupport(this);
-    private Object propertyChangeListenerMutex = new Object();
-    private ConnectorListener propertyChangeListener;
-	private Connector connector;
+    private final Connector connector;
 
     /**
      * Constructor.
@@ -239,81 +151,6 @@ public final class Profile {
      */
     public String getId() throws SkypeException {
         return Utils.getProperty(connector, "CURRENTUSERHANDLE");
-    }
-
-    /**
-     * Indicates whether the current user can do SkypeOut.
-     * @return <code>true</code> if the current user can do SkypeOut; <code>false</code> otherwise.
-     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
-     */
-    public boolean canDoSkypeOut() throws SkypeException {
-        return canDo("SKYPEOUT");
-    }
-
-    /**
-     * Indicates whether the current user can do SkypeIn.
-     * @return <code>true</code> if the current user can do SkypeIn; <code>false</code> otherwise.
-     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
-     */
-    public boolean canDoSkypeIn() throws SkypeException {
-        return canDo("SKYPEIN");
-    }
-
-    /**
-     * Indicates whether the current user can do VoiceMail.
-     * @return <code>true</code> if the current user can do VoiceMail; <code>false</code> otherwise.
-     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
-     */
-    public boolean canDoVoiceMail() throws SkypeException {
-        return canDo("VOICEMAIL");
-    }
-
-    /**
-     * Check for a privilege.
-     * @param name The name of the privilege to check.
-     * @return true if this privilege is ok.
-     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
-     */
-    private boolean canDo(final String name) throws SkypeException {
-        return Boolean.parseBoolean(Utils.getProperty(connector, "PRIVILEGE", name));
-    }
-
-    /**
-     * Gets the balance of the current user.
-     * @return the balance of the current user.
-     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
-     */
-    @Deprecated
-    public int getPSTNBalance() throws SkypeException {
-        return Integer.parseInt(getProperty("PSTN_BALANCE"));
-    }
-
-    /**
-     * Gets the credit of the current user.
-     * @return the balance of the current user.
-     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
-     */
-    public int getCredit() throws SkypeException {
-        return getPSTNBalance();
-    }
-
-    /**
-     * Gets the currency code of the current user.
-     * @return the currency code of the current user.
-     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
-     */
-    @Deprecated
-    public String getPSTNBalanceCurrencyUnit() throws SkypeException {
-        return getProperty("PSTN_BALANCE_CURRENCY");
-    }
-
-    /**
-     * Gets the credit currency unit of the current user.
-     * @return the currency code of the current user.
-     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
-     */
-    public String getCreditCurrencyUnit() throws SkypeException {
-        return getPSTNBalanceCurrencyUnit();
     }
 
     /**
@@ -799,96 +636,6 @@ public final class Profile {
     }
 
     /**
-     * Indicates whether the current user has a web camera.
-     * @return <code>true</code> if the current user has a web camera; <code>false</code> otherwise.
-     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
-     */
-    public boolean isVideoCapable() throws SkypeException {
-        return Boolean.parseBoolean(getProperty("IS_VIDEO_CAPABLE"));
-    }
-
-    /**
-     * Gets the wait time in seconds before starting a call forwarding.
-     * @return the wait time in seconds before starting a call forwarding.
-     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
-     * @see #setWaitTimeBeforeCallForwarding(int)
-     */
-    public int getWaitTimeBeforeCallForwarding() throws SkypeException {
-        return Integer.parseInt(getProperty("CALL_NOANSWER_TIMEOUT"));
-    }
-
-    /**
-     * Sets the wait time in seconds before starting a call forwarding.
-     * @param newValue the new wait time in seconds before starting a call forwarding.
-     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
-     * @see #getWaitTimeBeforeCallForwarding()
-     */
-    public void setWaitTimeBeforeCallForwarding(final int newValue) throws SkypeException {
-        setProperty("CALL_NOANSWER_TIMEOUT", "" + newValue);
-    }
-
-    /**
-     * Indicates whether the call forwarding function is on.
-     * @return <code>true</code> if the call forwarding function is on; <code>false</code> otherwise.
-     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
-     * @see #setCallForwarding(boolean)
-     */
-    public boolean isCallForwarding() throws SkypeException {
-        return Boolean.parseBoolean(getProperty("CALL_APPLY_CF"));
-    }
-
-    /**
-     * Starts or stops the call forwarding function.
-     * @param on if <code>true</code>, starts the call forwarding function; otherwise, stops the call forwarding function
-     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
-     * @see #isCallForwarding()
-     */
-    public void setCallForwarding(final boolean on) throws SkypeException {
-        setProperty("CALL_APPLY_CF", ("" + on).toUpperCase());
-    }
-
-    /**
-     * Gets the all call forwarding rules of the current user.
-     * @return the all call forwarding rules of the current user.
-     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
-     * @see #setAllCallForwardingRules(CallForwardingRule[])
-     */
-    public CallForwardingRule[] getAllCallForwardingRules() throws SkypeException {
-        List<CallForwardingRule> rules = new ArrayList<CallForwardingRule>();
-        String value = getProperty("CALL_FORWARD_RULES");
-        if ("".equals(value)) {
-            return new CallForwardingRule[0];
-        }
-        for (String rule : value.split(" ")) {
-            String[] elements = rule.split(",");
-            rules.add(new CallForwardingRule(Integer.parseInt(elements[0]), Integer.parseInt(elements[1]), elements[2]));
-        }
-        return rules.toArray(new CallForwardingRule[0]);
-    }
-
-    /**
-     * Sets the all call forwarding rules of the current user.
-     * @param newValues the new all call forwarding rules of the current user.
-     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
-     * @see #getAllCallForwardingRules()
-     */
-    public void setAllCallForwardingRules(CallForwardingRule[] newValues) throws SkypeException {
-        if (newValues == null) {
-            newValues = new CallForwardingRule[0];
-        }
-        setProperty("CALL_FORWARD_RULES", toSpaceSeparatedString(newValues));
-    }
-
-    /**
-     * Return all the valid SMS numbers.
-     * @return Array of Strings with the numbers.
-     * @throws SkypeException when the connection has gone bad or an ERROR message is received.
-     */
-    public String[] getAllValidSMSNumbers() throws SkypeException {
-        return Utils.convertToArray(getProperty("SMS_VALIDATED_NUMBERS"));
-    }
-
-    /**
      * Return the value of a property for PROFILE object.
      * @param name name of the parameter.
      * @return the value of the parameter.
@@ -907,65 +654,65 @@ public final class Profile {
     private void setProperty(final String name, final String value) throws SkypeException {
         Utils.setProperty(connector, "PROFILE", name, Utils.convertNullToEmptyString(value));
     }
-    
-    /**
-     * Adds a PropertyChangeListener to this user.
-     * <p>
-     * The listener is registered for all bound properties of this user, including the following:
-     * <ul>
-     *    <li>this user's status ("status")</li>
-     *    <li>this user's mood message ("moodMessage")</li>
-     * </ul>
-     * </p><p>
-     * If listener is null, no exception is thrown and no action is performed.
-     * </p>
-     * @param listener the PropertyChangeListener to be added
-     * @see #removePropertyChangeListener(PropertyChangeListener)
-     */
-    public final void addPropertyChangeListener(PropertyChangeListener listener) throws SkypeException {
-        synchronized (propertyChangeListenerMutex) {
-            if (propertyChangeListener == null) {
-                ConnectorListener connectorListener = new AbstractConnectorListener() {
-                    @Override
-                    public void messageReceived(ConnectorMessageEvent event) {
-                        String message = event.getMessage();
-                        if (message.startsWith("PROFILE ")) {
-                            String data = message.substring("PROFILE ".length());
-                            String propertyName = data.substring(0, data.indexOf(' '));
-                            String propertyValue = data.substring(data.indexOf(' ') + 1);
-                            if (propertyName.equals("MOOD_TEXT")) {
-                                firePropertyChanged(MOOD_TEXT_PROPERTY, null, propertyValue);
-                            }
-                        } else if (message.startsWith("USERSTATUS ")) {
-                            String value = message.substring("USERSTATUS ".length());
-                            firePropertyChanged(STATUS_PROPERTY, null, Status.valueOf(value));
-                        }
-                    }
-                };
-                try {
-                	connector.addConnectorListener(connectorListener);
-                    propertyChangeListener = connectorListener;
-                } catch(ConnectorException e) {
-                    Utils.convertToSkypeException(e);
-                }
-            }
-        }
-        listeners.addPropertyChangeListener(listener);
-    }
-    
-    private void firePropertyChanged(String propertyName, Object oldValue, Object newValue) {
-        listeners.firePropertyChange(propertyName, oldValue, newValue);
-    }
-    
-    /**
-     * Removes the PropertyChangeListener from this user.
-     * <p>
-     * If listener is null, no exception is thrown and no action is performed.
-     * </p>
-     * @param listener the PropertyChangeListener to be removed
-     * @see #addPropertyChangeListener(PropertyChangeListener)
-     */
-    public final void removePropertyChangeListener(PropertyChangeListener listener) {
-        listeners.removePropertyChangeListener(listener);
-    }
+//    
+//    /**
+//     * Adds a PropertyChangeListener to this user.
+//     * <p>
+//     * The listener is registered for all bound properties of this user, including the following:
+//     * <ul>
+//     *    <li>this user's status ("status")</li>
+//     *    <li>this user's mood message ("moodMessage")</li>
+//     * </ul>
+//     * </p><p>
+//     * If listener is null, no exception is thrown and no action is performed.
+//     * </p>
+//     * @param listener the PropertyChangeListener to be added
+//     * @see #removePropertyChangeListener(PropertyChangeListener)
+//     */
+//    public final void addPropertyChangeListener(PropertyChangeListener listener) throws SkypeException {
+//        synchronized (propertyChangeListenerMutex) {
+//            if (propertyChangeListener == null) {
+//                ConnectorListener connectorListener = new AbstractConnectorListener() {
+//                    @Override
+//                    public void messageReceived(ConnectorMessageEvent event) {
+//                        String message = event.getMessage();
+//                        if (message.startsWith("PROFILE ")) {
+//                            String data = message.substring("PROFILE ".length());
+//                            String propertyName = data.substring(0, data.indexOf(' '));
+//                            String propertyValue = data.substring(data.indexOf(' ') + 1);
+//                            if (propertyName.equals("MOOD_TEXT")) {
+//                                firePropertyChanged(MOOD_TEXT_PROPERTY, null, propertyValue);
+//                            }
+//                        } else if (message.startsWith("USERSTATUS ")) {
+//                            String value = message.substring("USERSTATUS ".length());
+//                            firePropertyChanged(STATUS_PROPERTY, null, Status.valueOf(value));
+//                        }
+//                    }
+//                };
+//                try {
+//                	connector.addConnectorListener(connectorListener);
+//                    propertyChangeListener = connectorListener;
+//                } catch(ConnectorException e) {
+//                    Utils.convertToSkypeException(e);
+//                }
+//            }
+//        }
+//        listeners.addPropertyChangeListener(listener);
+//    }
+//    
+//    private void firePropertyChanged(String propertyName, Object oldValue, Object newValue) {
+//        listeners.firePropertyChange(propertyName, oldValue, newValue);
+//    }
+//    
+//    /**
+//     * Removes the PropertyChangeListener from this user.
+//     * <p>
+//     * If listener is null, no exception is thrown and no action is performed.
+//     * </p>
+//     * @param listener the PropertyChangeListener to be removed
+//     * @see #addPropertyChangeListener(PropertyChangeListener)
+//     */
+//    public final void removePropertyChangeListener(PropertyChangeListener listener) {
+//        listeners.removePropertyChangeListener(listener);
+//    }
 }

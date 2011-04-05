@@ -23,14 +23,8 @@
  ******************************************************************************/
 package com.skype;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-
-import com.skype.connector.AbstractConnectorListener;
 import com.skype.connector.Connector;
 import com.skype.connector.ConnectorException;
-import com.skype.connector.ConnectorListener;
-import com.skype.connector.ConnectorMessageEvent;
 
 /**
  * This object can be used for all actions normal to a contactlist, like searching users and friends.
@@ -38,9 +32,6 @@ import com.skype.connector.ConnectorMessageEvent;
  */
 public final class ContactList {
     public static final String STATUS_PROPERTY = "com.skype.ContactList.status";
-    private Object propertyChangeListenerMutex = new Object();
-    private ConnectorListener propertyChangeListener;
-    private PropertyChangeSupport listeners = new PropertyChangeSupport(this);
 	private final Connector connector;
 
     /**
@@ -65,7 +56,7 @@ public final class ContactList {
             String[] ids = Utils.convertToArray(data);
             Friend[] friends = new Friend[ids.length];
             for (int i = 0; i < ids.length; i++) {
-                friends[i] = User.getFriendInstance(connector, ids[i]);
+                friends[i] = connector.getSkype().getFriend(ids[i]);
             }
             return friends;
         } catch (ConnectorException e) {
@@ -88,7 +79,7 @@ public final class ContactList {
             String[] ids = Utils.convertToArray(data);
             Friend[] users = new Friend[ids.length];
             for (int i = 0; i < ids.length; i++) {
-                users[i] = User.getFriendInstance(connector, ids[i]);
+                users[i] = connector.getSkype().getFriend(ids[i]);
             }
             return users;
         } catch (ConnectorException e) {
@@ -165,7 +156,7 @@ public final class ContactList {
             String[] ids = Utils.convertToArray(data);
             Group[] groups = new Group[ids.length];
             for (int i = 0; i < ids.length; i++) {
-                groups[i] = Group.getInstance(connector, ids[i]);
+                groups[i] = connector.getSkype().getGroup(ids[i]);
             }
             return groups;
         } catch (ConnectorException e) {
@@ -202,7 +193,7 @@ public final class ContactList {
             String response = connector.execute("CREATE GROUP " + name, responseHeader).substring(responseHeader.length());
             Utils.checkError(response);
             String id = response.substring(0, response.indexOf(' '));
-            return Group.getInstance(connector, id);
+            return connector.getSkype().getGroup(id);
         } catch (ConnectorException e) {
             Utils.convertToSkypeException(e);
             return null;
@@ -226,7 +217,7 @@ public final class ContactList {
      * @throws SkypeException when connection has gone bad.
      */
     public Friend addFriend(String skypeId, String messageForAuthorization) throws SkypeException {
-        Friend friend = Friend.getFriendInstance(connector, skypeId);
+        Friend friend = connector.getSkype().getFriend(skypeId);
         friend.askForAuthorization(messageForAuthorization);
         return friend;
     }
@@ -247,67 +238,5 @@ public final class ContactList {
      */
     public void removeGroup(Group group) throws SkypeException {
         group.dispose();
-    }
-    
-    /**
-     * Adds a PropertyChangeListener to this user.
-     * <p>
-     * The listener is registered for all bound properties of this contact list, including the following:
-     * <ul>
-     *    <li>All changes to the contact list</li>
-     * </ul>
-     * </p><p>
-     * If listener is null, no exception is thrown and no action is performed.
-     * </p>
-     * @param listener the PropertyChangeListener to be added
-     * @see #removePropertyChangeListener(PropertyChangeListener)
-     */
-    public final void addPropertyChangeListener(PropertyChangeListener listener) throws SkypeException {
-        synchronized (propertyChangeListenerMutex) {
-            if (propertyChangeListener == null) {
-                ConnectorListener connectorListener = new AbstractConnectorListener() {
-                    @Override
-                    public void messageReceived(ConnectorMessageEvent event) {
-                        String message = event.getMessage();
-                        if (message.startsWith("GROUP ")) {
-                            String data = message.substring("GROUP ".length());
-                            String groupId = data.substring(0, data.indexOf(' '));
-//                            data = data.substring(data.indexOf(' ') + 1);
-//                            String propertyName = data.substring(0, data.indexOf(' '));
-//                            String propertyValue = data.substring(data.indexOf(' ') + 1);
-                            listeners.firePropertyChange(STATUS_PROPERTY, null, groupId);
-                        }
-                    }
-                };
-                try {
-                    connector.addConnectorListener(connectorListener);
-                    propertyChangeListener = connectorListener;
-                } catch(ConnectorException e) {
-                    Utils.convertToSkypeException(e);
-                }
-            }
-        }
-        listeners.addPropertyChangeListener(listener);
-    }
-    
-    /**
-     * Removes the PropertyChangeListener from this user.
-     * <p>
-     * If listener is null, no exception is thrown and no action is performed.
-     * </p>
-     * @param listener the PropertyChangeListener to be removed
-     * @see #addPropertyChangeListener(PropertyChangeListener)
-     */
-    public final void removePropertyChangeListener(PropertyChangeListener listener) {
-        listeners.removePropertyChangeListener(listener);
-    }
-
-
-    public void removeAllListener() {
-        PropertyChangeListener[] propertyChangeListeners = listeners.getPropertyChangeListeners();
-        for(int i = 0; i < propertyChangeListeners.length; i++) {
-            PropertyChangeListener propertyChangeListener = propertyChangeListeners[i];
-            removePropertyChangeListener(propertyChangeListener);
-        }
     }
 }

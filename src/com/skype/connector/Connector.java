@@ -22,9 +22,6 @@
  ******************************************************************************/
 package com.skype.connector;
 
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -38,10 +35,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.skype.Skype;
+import com.skype.connector.linux.dbus.LinuxDBusConnector;
 
 /**
  * Base class for all platform specific connectors.
@@ -73,29 +70,8 @@ public abstract class Connector {
      * @return an initialized connection.
      */
     public static synchronized Connector getInstance(final Skype skype, final String aUsername, final String aPassword) {
-        try {
-            Class connectorClass = Class.forName("com.skype.connector.linux.dbus.LinuxDBusConnector");
-            Constructor ctor = connectorClass.getConstructor(Skype.class, String.class, String.class);
-            return (Connector) ctor.newInstance(skype, aUsername, aPassword);
-        } catch(Exception e) {
-            throw new IllegalStateException("The connector couldn't be initialized.", e);
-        }
+        return new LinuxDBusConnector(skype, aUsername, aPassword);
     }
-
-    /**
-     * The mutex object for the _debugListener field.
-     */
-    private final Object _debugListenerMutex = new Object();
-    /**
-     * The connector listener for debug out.
-     */
-    private ConnectorListener _debugListener;
-
-    /**
-     * The debug output stream.
-     * This stream is initialized by <tt>new PrintWriter(System.out, true)</tt>.
-     */
-    private volatile PrintWriter _debugOut = new PrintWriter(System.out, true);
 
     /**
      * The application name used to get the access grant of Skype API.
@@ -164,71 +140,6 @@ public abstract class Connector {
      */
     public String getInstalledPath() {
         return "skype";
-    }
-
-    /**
-     * Enable or disable debug printing for more information.
-     * @param on if true debug output will be written to System.out
-     * @throws ConnectorException thrown when connection to Skype Client has gone bad.
-     */
-    public final void setDebug(final boolean on) throws ConnectorException {
-        synchronized (_debugListenerMutex) {
-            if (on) {
-                if (_debugListener == null) {
-                    _debugListener = new AbstractConnectorListener() {
-                        @Override
-                        public void messageReceived(final ConnectorMessageEvent event) {
-                            getDebugOut().println("<- " + event.getMessage());
-                        }
-
-                        @Override
-                        public void messageSent(final ConnectorMessageEvent event) {
-                            getDebugOut().println("-> " + event.getMessage());
-                        }
-                    };
-                    addConnectorListener(_debugListener, true, true);
-                }
-            } else {
-                if (_debugListener != null) {
-                    removeConnectorListener(_debugListener);
-                    _debugListener = null;
-                }
-            }
-        }
-    }
-
-    /**
-     * Sets the debug output stream.
-     * @param newDebugOut the new debug output stream
-     * @throws NullPointerException if the specified new debug out is null
-     * @see #setDebugOut(PrintStream)
-     * @see #getDebugOut()
-     */
-    public final void setDebugOut(final PrintWriter newDebugOut) {
-        ConnectorUtils.checkNotNull("debugOut", newDebugOut);
-        _debugOut = newDebugOut;
-    }
-
-    /**
-     * Sets the debug output stream.
-     * @param newDebugOut the new debug output stream
-     * @throws NullPointerException if the specified new debug out is null
-     * @see #setDebugOut(PrintWriter)
-     * @see #getDebugOut()
-     */
-    public final void setDebugOut(final PrintStream newDebugOut) {
-        ConnectorUtils.checkNotNull("debugOut", newDebugOut);
-        setDebugOut(new PrintWriter(newDebugOut, true));
-    }
-
-    /**
-     * Gets the debug output stream.
-     * @return the current debug output stream
-     * @see #setDebugOut(PrintWriter)
-     * @see #setDebugOut(PrintStream)
-     */
-    public final PrintWriter getDebugOut() {
-        return _debugOut;
     }
 
     /**
@@ -465,12 +376,6 @@ public abstract class Connector {
             _syncListeners.clear();
             _asyncListeners.clear();
 
-            synchronized(_debugListenerMutex) {
-                if (_debugListener != null) {
-                    addConnectorListener(_debugListener, false, true);
-                }
-            }
-
             _isInitialized = false;
         }
     }
@@ -494,46 +399,6 @@ public abstract class Connector {
             return false;
         }
     }
-
-    /**
-     * Executes the specified command and handles the response by the specified message processor.
-     * @param command the command to execute
-     * @param processor the message processor
-     * @throws NullPointerException if the specified command or processor is null
-     * @throws ConnectorException if executing the command failed
-     */
-//    @Deprecated
-//    public final void execute(final String command, final MessageProcessor processor) throws ConnectorException {
-//        ConnectorUtils.checkNotNull("command", command);
-//        ConnectorUtils.checkNotNull("processor", processor);
-//        assureAttached();
-//        final Object wait = new Object();
-//        ConnectorListener listener = new AbstractConnectorListener() {
-//            public void messageReceived(ConnectorMessageEvent event) {
-//                processor.messageReceived(event.getMessage());
-//            }
-//        };
-//        processor.init(wait, listener);
-//        addConnectorListener(listener, false);
-//        synchronized (wait) {
-//            try {
-//                fireMessageSent(command);
-//                sendCommand(command);
-//                long start = System.currentTimeMillis();
-//                long commandResponseTime = getCommandTimeout();
-//                wait.wait(commandResponseTime);
-//                if (commandResponseTime <= System.currentTimeMillis() - start) {
-//                    setStatus(Status.NOT_RUNNING);
-//                    throw new NotAttachedException(Status.NOT_RUNNING);
-//                }
-//            } catch (InterruptedException e) {
-//                Thread.currentThread().interrupt();
-//                throw new ConnectorException("The '" + command + "' command was interrupted.", e);
-//            } finally {
-//                removeConnectorListener(listener);
-//            }
-//        }
-//    }
 
     /**
      * Executes the specified command and gets the response.
@@ -563,59 +428,6 @@ public abstract class Connector {
         final String header = "#" + _commandCount.getAndIncrement() + " ";
         final String response = execute(header + command, new String[] { header + responseHeader, header + "ERROR " }, true);
         return response.substring(header.length());
-    }
-
-    /**
-     * Executes the specified command and gets the future using a command ID.
-     * @param command the command to execute
-     * @param responseHeader the response header to get the accurate first response
-     * @param checker the notification checker to detect the end
-     * @return the future to wait for the end of the execution
-     * @throws NullPointerException if the specified command, responseHeader or checker is null
-     * @throws ConnectorException if executing the command failed
-     */
-    public final Future waitForEndWithId(final String command, final String responseHeader, final NotificationChecker checker) throws ConnectorException {
-        ConnectorUtils.checkNotNull("command", command);
-        ConnectorUtils.checkNotNull("responseHeader", responseHeader);
-        ConnectorUtils.checkNotNull("responseHeader", checker);
-        final String header = "#" + _commandCount.getAndIncrement() + " ";
-        final NotificationChecker wrappedChecker = new NotificationChecker() {
-            public boolean isTarget(String message) {
-                if (checker.isTarget(message)) {
-                    return true;
-                }
-                return message.startsWith(header + "ERROR ");
-            }
-        };
-        final Future<String> future = execute(header + command, wrappedChecker, true, false);
-        return new Future<String>() {
-            public boolean isDone() {
-                return future.isDone();
-            }
-        
-            public boolean isCancelled() {
-                return future.isCancelled();
-            }
-        
-            public String get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-                return removeId(future.get(timeout, unit));
-            }
-        
-            public String get() throws InterruptedException, ExecutionException {
-                return removeId(future.get());
-            }
-        
-            private String removeId(String message) {
-                if (message.startsWith(header)) {
-                    return message.substring(header.length());
-                }
-                return message;
-            }
-
-            public boolean cancel(boolean mayInterruptIfRunning) {
-                return future.cancel(mayInterruptIfRunning);
-            }
-        };
     }
 
     /**
@@ -686,7 +498,6 @@ public abstract class Connector {
     private String execute(final String command, final String[] responseHeaders, final boolean checkAttached, boolean withoutTimeout) throws ConnectorException {
         final NotificationChecker checker = new NotificationChecker() {
             public boolean isTarget(String message) {
-//                System.out.println(message);
                 for (String responseHeader : responseHeaders) {
                     if (message.startsWith(responseHeader)) {
                         return true;

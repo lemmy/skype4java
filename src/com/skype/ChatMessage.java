@@ -23,8 +23,6 @@
 package com.skype;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.skype.connector.Connector;
 
@@ -35,24 +33,6 @@ import com.skype.connector.Connector;
  * @author Koji Hisano
  */
 public final class ChatMessage extends SkypeObject {
-    /**
-     * Collection of ChatMessage objects.
-     */
-    private static final Map<String, ChatMessage> chatMessages = new HashMap<String, ChatMessage>();
-    
-    /**
-     * Returns the ChatMessage object by the specified id.
-     * @param id whose associated ChatMessage object is to be returned.
-     * @return ChatMessage object with ID == id.
-     */
-    static ChatMessage getInstance(final Connector aConnector, final String id) {
-        synchronized(chatMessages) {
-            if (!chatMessages.containsKey(id)) {
-                chatMessages.put(id, new ChatMessage(aConnector, id));
-            }
-            return chatMessages.get(id);
-        }
-    }
 
     /**
      * Enumeration for type.
@@ -107,7 +87,7 @@ public final class ChatMessage extends SkypeObject {
      * @param aConnector 
      * @param newId The ID of this CHATMESSAGE.
      */
-    private ChatMessage(Connector aConnector, String newId) {
+    ChatMessage(Connector aConnector, String newId) {
     	super(aConnector);
         this.id = newId;
     }
@@ -158,7 +138,7 @@ public final class ChatMessage extends SkypeObject {
      * @throws SkypeException when connection has gone bad.
      */
     public User getSender() throws SkypeException {
-        return User.getInstance(connector, getSenderId());
+        return connector.getSkype().getUser(getSenderId());
     }
 
     /**
@@ -245,7 +225,7 @@ public final class ChatMessage extends SkypeObject {
      * @throws SkypeException when the connection has gone bad.
      */
     public Chat getChat() throws SkypeException {
-        return Chat.getInstance(connector, getProperty("CHATNAME"));
+        return connector.getSkype().getChat(getProperty("CHATNAME"));
     }
 
     /**
@@ -261,7 +241,7 @@ public final class ChatMessage extends SkypeObject {
         String[] ids = value.split(" ");
         User[] users = new User[ids.length];
         for (int i = 0; i < ids.length; i++) {
-            users[i] = User.getInstance(connector, ids[i]);
+            users[i] = connector.getSkype().getUser(ids[i]);
         }
         return users;
     }
@@ -279,6 +259,4 @@ public final class ChatMessage extends SkypeObject {
     private void setProperty(String name, String value) throws SkypeException {
         Utils.setProperty(connector, "CHATMESSAGE", getId(), name, value);
     }
-    // TODO void setSeen()
-    // TODO boolean isSeen()
 }

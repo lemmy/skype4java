@@ -89,7 +89,7 @@ public class SkypeFramework {
             source = getDBusAddressByPid(pid);
             
             // get handle for server
-            skypeDBus = conn.getRemoteObject("com.Skype.API", SERVER_PATH, API.class);
+            skypeDBus = conn.getRemoteObject(source, SERVER_PATH, API.class);
             
             // add generic client listener for the given skype name
             conn.exportObject(CLIENT_PATH, source, new SkypeDBusNotify(this));
