@@ -168,12 +168,14 @@ final class Utils {
      * @throws SkypeException when connection to Skype client has gone bad or reply contains ERROR.
      */
     static void setProperty(Connector connector, String type, String id, String name, String value) throws SkypeException {
+    	String command = "";
         try {
-            String command = "SET " + type + " " + id + " " + name + " " + value;
+			command = "SET " + type + " " + id + " " + name + " " + value;
             String responseHeader = type + " " + id + " " + name + " " + value;
             String response = connector.execute(command, responseHeader);
             checkError(response);
         } catch (ConnectorException e) {
+        	System.err.println("Command before exception was: "+ command);
             convertToSkypeException(e);
         }
     }
@@ -186,12 +188,14 @@ final class Utils {
      * @throws SkypeException when connection to Skype client has gone bad or reply contains ERROR.
      */
     static void setProperty(Connector connector, String type, String name, String value) throws SkypeException {
+    	String command = "";
         try {
-            String command = "SET " + type + " " + name + " " + value;
+			command = "SET " + type + " " + name + " " + value;
             String responseHeader = type + " " + name + " " + value;
             String response = connector.execute(command, responseHeader);
             checkError(response);
         } catch (ConnectorException e) {
+        	System.err.println("Command before exception was: "+ command);
             convertToSkypeException(e);
         }
     }
@@ -203,12 +207,14 @@ final class Utils {
      * @throws SkypeException when connection to Skype client has gone bad or reply contains ERROR.
      */
     static void setProperty(Connector connector, String name, String value) throws SkypeException {
+    	String command = "";
         try {
-            String command = "SET " + name + " " + value;
+			command = "SET " + name + " " + value;
             String responseHeader = name + " " + value;
             String response = connector.execute(command, responseHeader);
             checkError(response);
         } catch (ConnectorException e) {
+        	System.err.println("Command before exception was: "+ command);
             convertToSkypeException(e);
         }
     }

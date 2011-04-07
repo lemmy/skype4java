@@ -138,6 +138,9 @@ public final class LinuxDBusConnector extends Connector {
      * @param command The command to send.
      */
     protected void sendCommand(final String command) {
+    	if(isDisposed()) {
+    		return;
+    	}
         // using dbus to receive a user avatar fails with a general syntax error, thus
         // read the avatar from the skype .dbb files directly
         if(command.toLowerCase().contains("avatar")) {

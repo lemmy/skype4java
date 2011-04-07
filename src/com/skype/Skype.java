@@ -343,6 +343,10 @@ public class Skype {
 			ConnectorListener skypeConnectorListener) {
 		connector.addConnectorListener(skypeConnectorListener, false);
 	}
+	
+	public void removeConnectorListener(ConnectorListener skypeConnectorListener) {
+		connector.removeConnectorListener(skypeConnectorListener);
+	}
 
 	public Status connect() {
 		return connector.connect();
@@ -411,5 +415,9 @@ public class Skype {
     		}
     		return group;
 		}
+	}
+	
+	public boolean isDisposed() {
+		return connector.isDisposed();
 	}
 }

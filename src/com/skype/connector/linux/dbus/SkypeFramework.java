@@ -150,7 +150,14 @@ public class SkypeFramework {
 	    if(DEBUG) {
 	        System.err.println("=> sendcommand: " + command);
 	    }
-	    final String response = skypeDBus.Invoke(command);
+	    String response = skypeDBus.Invoke(command);
+	    if((response == null || "".equals(response))) {
+	    	if(command.startsWith("GET GROUP")) {
+	    		response = command.substring(4);
+	    	} else {
+	    		response = "";
+	    	}
+	    }
 		fireNotificationReceived(response);
 	}
 	

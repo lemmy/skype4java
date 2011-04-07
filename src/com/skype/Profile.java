@@ -141,6 +141,7 @@ public final class Profile {
      */
     public void setStatus(final Status newValue) throws SkypeException {
         Utils.checkNotNull("newValue", newValue);
+        System.out.println("Setting new USERSTATUS to: " + newValue.toString());
         Utils.setProperty(connector, "USERSTATUS", newValue.toString());
     }
 

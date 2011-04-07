@@ -121,6 +121,8 @@ public abstract class Connector {
     private final Map<String, String> properties = new ConcurrentHashMap<String, String>();
 	private Skype skype;
 
+	private volatile boolean disposed = false;
+
     /**
      * Because this object should be a singleton the constructor is protected.
      */
@@ -181,6 +183,7 @@ public abstract class Connector {
      * @param newStatus the new status
      */
     private void fireStatusChanged(final Status newStatus) {
+    	System.out.println("Set status to " + newStatus.toString() + " for skype instance: " + getSkype());
         _syncSender.execute(new Runnable() {
             public void run() {
                 // use listener array instead of list because of reverse iteration
@@ -210,6 +213,9 @@ public abstract class Connector {
      * @param newStatus the new status
      */
     private void fireStatusChanged(final ConnectorListener[] listeners, final Status newStatus) {
+    	if(isDisposed()) {
+    		return;
+    	}
         final ConnectorStatusEvent event = new ConnectorStatusEvent(this, newStatus);
         for (int i = listeners.length - 1; 0 <= i; i--) {
             listeners[i].statusChanged(event);
@@ -366,6 +372,7 @@ public abstract class Connector {
             if (!_isInitialized) {
                 return;
             }
+            disposed = true;
             disposeImpl();
             setStatus(Status.NOT_RUNNING);
             _commandExecutor.shutdown();
@@ -496,7 +503,11 @@ public abstract class Connector {
      * @throws ConnectorException if executing the command failed
      */
     private String execute(final String command, final String[] responseHeaders, final boolean checkAttached, boolean withoutTimeout) throws ConnectorException {
-        final NotificationChecker checker = new NotificationChecker() {
+    	if(disposed) {
+    		return "";
+    	}
+    	
+    	final NotificationChecker checker = new NotificationChecker() {
             public boolean isTarget(String message) {
                 for (String responseHeader : responseHeaders) {
                     if (message.startsWith(responseHeader)) {
@@ -533,6 +544,9 @@ public abstract class Connector {
      * @throws ConnectorException if executing the command failed
      */
     private Future<String> execute(final String command, final NotificationChecker responseChecker, final boolean checkAttached, boolean withoutTimeout) throws ConnectorException {
+    	if(disposed) {
+    		return null;
+    	}
         ConnectorUtils.checkNotNull("command", command);
         ConnectorUtils.checkNotNull("responseChecker", responseChecker);
 
@@ -542,6 +556,9 @@ public abstract class Connector {
         
         return _commandExecutor.submit(new Callable<String>() {
             public String call() throws Exception {
+            	if(disposed) {
+            		return "";
+            	}
                 final BlockingQueue<String> responses = new LinkedBlockingQueue<String>();
 
                 ConnectorListener listener = new AbstractConnectorListener() {
@@ -558,7 +575,7 @@ public abstract class Connector {
                 sendCommand(command);
                 try {
                     boolean pinged = false;
-                    while (true) {
+                    while (!disposed) {
                         // to cancel getting responses, you must call Futrue#cancel(true)
                         String response = responses.poll(getCommandTimeout(), TimeUnit.MILLISECONDS);
                         if (response == null) {
@@ -579,6 +596,7 @@ public abstract class Connector {
                             return response;
                         }
                     }
+                    return ""; // disposed, actual response does not matter
                 } finally {
                     removeConnectorListener(listener);
                 }
@@ -684,6 +702,9 @@ public abstract class Connector {
      * @param isReceived the message is a received type or not
      */
     private void fireMessageEvent(final String message, final boolean isReceived) {
+    	if(disposed) {
+    		return;
+    	}
         ConnectorUtils.checkNotNull("message", message);
         _syncSender.execute(new Runnable() {
             public void run() {
@@ -741,5 +762,9 @@ public abstract class Connector {
     public final String getStringProperty(final String name) {
         ConnectorUtils.checkNotNull("name", name);
         return properties.get(name);
+    }
+    
+    public boolean isDisposed() {
+    	return disposed;
     }
 }
